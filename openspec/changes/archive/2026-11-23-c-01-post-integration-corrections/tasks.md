@@ -22,7 +22,7 @@
 ## 4. Verificación del seguimiento correctivo
 
 - [x] 4.1 Ejecutar build, unitarias y lint relevantes del backend; registrar comandos y resultados en `verification.md`, diferenciando cualquier fallo preexistente de una regresión del change.
-- [x] 4.2 Ejecutar `node scripts/change-scope/check.mjs --branch change/c-01-foundation-and-contracts --base main` y `openspec validate c-01-foundation-and-contracts --strict`; registrar resultados y confirmar que el diff permanece dentro de los paths previstos.
+- [x] 4.2 Ejecutar `node scripts/change-scope/check.mjs --branch change/c-01-foundation-and-contracts --base main` y `openspec validate c-01-post-integration-corrections --strict`; registrar resultados y confirmar que el diff permanece dentro de los paths previstos.
 - [x] 4.3 Completar `verification.md` con el commit base `8a97930`, archivos modificados, evidencia automática, comprobaciones no realizadas y las instrucciones exactas para que C-02/C-04 retomen sus tareas bloqueadas.
 
 ## Workflow follow-up

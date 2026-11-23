@@ -54,7 +54,7 @@
 
 - `node scripts/change-scope/check.mjs --branch change/c-01-foundation-and-contracts --base main`: PASS.
 - Auditoría adicional del working tree, incluidos archivos no committeados y nuevos: PASS, 19 paths dentro de la política C-01.
-- `openspec validate c-01-foundation-and-contracts --strict`: PASS; `skip_specs` aceptado porque no cambian requisitos canónicos.
+- `openspec validate c-01-post-integration-corrections --strict`: PASS; `skip_specs` aceptado porque no cambian requisitos canónicos.
 - `git diff --check`: PASS.
 
 ## Inventario del change
@@ -73,7 +73,7 @@
 - `backend/src/modules/availability/availability.integration-spec.ts`
 - `scripts/change-scope/check.mjs`
 - `scripts/change-scope/check.test.mjs`
-- `openspec/changes/c-01-foundation-and-contracts/**`
+- `openspec/changes/c-01-post-integration-corrections/**`
 
 ## Comprobaciones no realizadas
 
