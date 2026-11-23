@@ -1,6 +1,7 @@
 import { execFileSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
+import path from 'node:path'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 
 const scriptDirectory = fileURLToPath(new URL('.', import.meta.url))
 const scopeMap = JSON.parse(readFileSync(new URL('scope-map.json', import.meta.url), 'utf8'))
@@ -65,4 +66,4 @@ function main() {
   console.log(`Scope check passed for ${branch}`)
 }
 
-if (process.argv[1] && fileURLToPath(import.meta.url) === fileURLToPath(new URL(`file:///${process.argv[1].replaceAll('\\', '/')}`))) main()
+if (process.argv[1] && pathToFileURL(path.resolve(process.argv[1])).href === import.meta.url) main()

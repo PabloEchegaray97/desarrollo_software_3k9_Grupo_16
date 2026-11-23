@@ -1,4 +1,9 @@
-import { BadRequestException, type ArgumentsHost, Logger } from '@nestjs/common';
+import {
+  BadRequestException,
+  type ArgumentsHost,
+  HttpException,
+  Logger,
+} from '@nestjs/common';
 import { jest } from '@jest/globals';
 import type { Response } from 'express';
 import { ApiExceptionFilter } from './api-exception.filter.js';
@@ -53,6 +58,58 @@ describe('ApiExceptionFilter', () => {
         requestId: 'request-1234',
         details: ['name must not be empty'],
       },
+    });
+  });
+
+  it('preserves a valid domain code and object details', () => {
+    const captured: CapturedResponse = {};
+    const exception = new HttpException(
+      {
+        code: 'PATIENT_POSSIBLE_DUPLICATE',
+        message: 'A possible duplicate requires confirmation',
+        details: { candidateIds: ['00000000-0000-4000-8000-000000000001'] },
+      },
+      409,
+    );
+
+    new ApiExceptionFilter().catch(exception, createHost(captured));
+
+    expect(captured.status).toBe(409);
+    expect(captured.body).toEqual({
+      error: {
+        code: 'PATIENT_POSSIBLE_DUPLICATE',
+        message: 'A possible duplicate requires confirmation',
+        requestId: 'request-1234',
+        details: { candidateIds: ['00000000-0000-4000-8000-000000000001'] },
+      },
+    });
+  });
+
+  it('falls back to the HTTP code when a domain code is invalid', () => {
+    const captured: CapturedResponse = {};
+    const exception = new HttpException(
+      { code: 'patient-conflict', message: 'Conflict', details: { reason: 'duplicate' } },
+      409,
+    );
+
+    new ApiExceptionFilter().catch(exception, createHost(captured));
+
+    expect(captured.body).toEqual({
+      error: { code: 'HTTP_409', message: 'Conflict', requestId: 'request-1234' },
+    });
+  });
+
+  it('omits unsupported details while preserving a valid domain code', () => {
+    const captured: CapturedResponse = {};
+    const exception = new HttpException(
+      { code: 'CATALOG_CONFLICT', message: 'Conflict', details: 'not-structured' },
+      409,
+    );
+
+    new ApiExceptionFilter().catch(exception, createHost(captured));
+
+    expect(captured.body).toEqual({
+      error: { code: 'CATALOG_CONFLICT', message: 'Conflict', requestId: 'request-1234' },
     });
   });
 

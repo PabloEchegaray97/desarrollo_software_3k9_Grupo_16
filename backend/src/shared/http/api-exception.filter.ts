@@ -10,7 +10,21 @@ import type { Response } from 'express';
 import type { ApiErrorBody, ApiErrorDetails } from './api-error.js';
 import type { RequestWithId } from './request-with-id.js';
 
-type NestErrorResponse = { message?: string | string[]; error?: string };
+type NestErrorResponse = {
+  message?: string | string[];
+  error?: string;
+  code?: unknown;
+  details?: unknown;
+};
+
+const DOMAIN_CODE = /^[A-Z][A-Z0-9_]*$/u;
+
+function isApiErrorDetails(value: unknown): value is ApiErrorDetails {
+  if (Array.isArray(value)) {
+    return value.every((item) => typeof item === 'string');
+  }
+  return typeof value === 'object' && value !== null;
+}
 
 @Catch()
 export class ApiExceptionFilter implements ExceptionFilter {
@@ -41,6 +55,17 @@ export class ApiExceptionFilter implements ExceptionFilter {
       : undefined;
     const safeMessage =
       typeof normalized.message === 'string' ? normalized.message : exception.message;
+
+    if (typeof normalized.code === 'string' && DOMAIN_CODE.test(normalized.code)) {
+      return {
+        error: {
+          code: normalized.code,
+          message: safeMessage,
+          requestId,
+          ...(isApiErrorDetails(normalized.details) ? { details: normalized.details } : {}),
+        },
+      };
+    }
 
     return {
       error: {
