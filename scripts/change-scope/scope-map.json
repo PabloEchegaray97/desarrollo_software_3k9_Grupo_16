@@ -1,0 +1,45 @@
+{
+  "protected": [
+    "openspec/specs/",
+    "openspec/changes/archive/",
+    ".active-orchestrator-state.json",
+    "AGENTS.md",
+    "CLAUDE.md",
+    "CHANGES.md",
+    "knowledge-base/"
+  ],
+  "policies": {
+    "change/c-01-foundation-and-contracts": {
+      "id": "C01",
+      "allow": [".env.example", ".gitignore", ".github/workflows/change-scope.yml", "README.md", "CONTRIBUTING.md", "backend/", "frontend/", "scripts/change-scope/", "openspec/changes/c-01-foundation-and-contracts/"]
+    },
+    "change/c-02-patients-and-catalogs": {
+      "id": "C02",
+      "allow": ["backend/src/modules/patients/", "backend/src/modules/catalogs/", "frontend/src/features/patients/", "frontend/src/features/catalog/", "backend/src/database/migrations/", "openspec/changes/c-02-patients-and-catalogs/"]
+    },
+    "change/c-03-availability-and-schedule-settings": {
+      "id": "C03",
+      "allow": ["backend/src/modules/availability/", "frontend/src/features/availability/", "backend/src/database/migrations/", "openspec/changes/c-03-availability-and-schedule-settings/"]
+    },
+    "change/c-04-authentication-and-app-shell": {
+      "id": "C04",
+      "allow": ["backend/src/modules/auth/", "frontend/src/features/auth/", "frontend/src/app/shell/", "frontend/src/app/routes/auth.routes.tsx", "backend/src/database/migrations/", "backend/package.json", "backend/package-lock.json", "frontend/package.json", "frontend/package-lock.json", "openspec/changes/c-04-authentication-and-app-shell/"]
+    },
+    "change/c-05-appointment-creation-engine": {
+      "id": "C05",
+      "allow": ["backend/src/modules/appointments/core/", "backend/src/modules/appointments/creation/", "frontend/src/features/appointments/create/", "backend/src/database/migrations/", "openspec/changes/c-05-appointment-creation-engine/"]
+    },
+    "change/c-06-appointment-lifecycle-history": {
+      "id": "C06",
+      "allow": ["backend/src/modules/appointments/lifecycle/", "backend/src/modules/appointments/history/", "frontend/src/features/appointments/lifecycle/", "backend/src/database/migrations/", "openspec/changes/c-06-appointment-lifecycle-history/"]
+    },
+    "change/c-07-agenda-experience": {
+      "id": "C07",
+      "allow": ["backend/src/modules/appointments/agenda/", "frontend/src/features/agenda/", "openspec/changes/c-07-agenda-experience/"]
+    },
+    "change/c-08-integration-ui-polish": {
+      "id": "C08",
+      "allow": ["backend/test/integration/", "frontend/src/app/", "frontend/src/shared/", "docs/demo/", "README.md", ".env.example", "backend/package.json", "backend/package-lock.json", "frontend/package.json", "frontend/package-lock.json", "backend/src/app.module.ts", "frontend/src/main.tsx", "design-system/", "backend/src/modules/", "frontend/src/features/", "openspec/changes/c-08-integration-ui-polish/"]
+    }
+  }
+}
