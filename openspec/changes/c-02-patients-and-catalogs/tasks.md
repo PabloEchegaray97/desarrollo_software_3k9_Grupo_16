@@ -27,9 +27,9 @@
 
 ## 4. Verificación backend con MariaDB real
 
-- [ ] 4.1 Crear fixtures ficticios compartidos por los tests de C-02 ("Paciente Ficticio N", `11 5555-00NN`, DNI `3000000N`, `@example.test`); verificar por revisión que no hay datos reales.
-- [ ] 4.2 Escribir `catalogs.integration-spec.ts` con Supertest sobre `AppModule` y MariaDB real: límites de duración/intervalo, nombre repetido activo e inactivo, listado solo activos, desactivar/reactivar y catálogo vacío.
-- [ ] 4.3 Escribir `patients.integration-spec.ts`: alta mínima, DNI repetido con formato distinto, varios DNI `NULL`, edición que repite DNI, dos altas concurrentes con el mismo DNI (exactamente una 201), advertencia y confirmación de duplicado, búsqueda por nombre/teléfono/DNI, paginación inválida, inactivos ocultos y `DELETE` inexistente.
+- [x] 4.1 Crear fixtures ficticios compartidos por los tests de C-02 ("Paciente Ficticio N", `11 5555-00NN`, DNI `3000000N`, `@example.test`); verificar por revisión que no hay datos reales.
+- [x] 4.2 Escribir `catalogs.integration-spec.ts` con Supertest sobre `AppModule` y MariaDB real: límites de duración/intervalo, nombre repetido activo e inactivo, listado solo activos, desactivar/reactivar y catálogo vacío.
+- [x] 4.3 Escribir `patients.integration-spec.ts`: alta mínima, DNI repetido con formato distinto, varios DNI `NULL`, edición que repite DNI, dos altas concurrentes con el mismo DNI (exactamente una 201), advertencia y confirmación de duplicado, búsqueda por nombre/teléfono/DNI, paginación inválida, inactivos ocultos y `DELETE` inexistente.
 - [ ] 4.4 Con CR-01 y CR-02 integrados, ejecutar `npm run test:integration` contra MariaDB real y registrar en `verification.md` versión de MariaDB, comando y resultado; si falta alguno, registrar la tarea como bloqueada sin usar otro motor.
 
 ## 5. Frontend

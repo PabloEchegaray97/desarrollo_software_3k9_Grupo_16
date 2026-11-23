@@ -13,7 +13,7 @@ Registro de evidencia por grupo de tareas. Datos usados: exclusivamente ficticio
 
 | Pedido | Estado |
 |---|---|
-| CR-01 — filtro global propaga `code`/`details` | Pendiente de enviar a Pablo. Confirmado en ejecución real: los errores de dominio salen como `HTTP_409`/`HTTP_404` con el mensaje correcto. |
+| CR-01 — filtro global propaga `code`/`details` | Pendiente de enviar a Pablo; propuesta verificada en `coordination.md`. Confirmado en ejecución real: los errores de dominio salen como `HTTP_409`/`HTTP_404` con el mensaje correcto. |
 | CR-02 — integración descubre `src/**/*.integration-spec.ts` | Pendiente de enviar a Pablo. |
 | Hallazgo para Pablo — guard de scope inerte en Linux | `node scripts/change-scope/check.mjs --branch nonexistent-branch --base main` termina con código 0 y sin salida: la comparación de `import.meta.url` con `file:///` + ruta absoluta POSIX nunca coincide, así que `main()` no se ejecuta en `ubuntu-latest`. `validateChanges` funciona invocado directamente (0 violaciones para C-02; 6 con la política de C-03). |
 | Observaciones menores de C-01 | `tsc --noEmit` reporta 3 errores de tipos preexistentes en `health.service.spec.ts` y `request-id.middleware.spec.ts`; al arrancar, Nest advierte `LegacyRouteConverter` por `forRoutes('*')`. No afectan a C-02. |
@@ -64,6 +64,16 @@ Registro de evidencia por grupo de tareas. Datos usados: exclusivamente ficticio
 - Dependencia de CR-01 en la interfaz: hasta que el filtro propague `code`, el backend real responde `HTTP_409` y la interfaz muestra el mensaje genérico arriba del formulario en lugar de la advertencia de duplicado o el error junto al DNI/nombre. Los tests cubren el contrato acordado.
 - **Revisión visual manual: pendiente (tarea 6.1).** Este entorno no tiene navegador permitido para el proyecto (sin Playwright por regla 9); debe hacerse en una máquina del equipo.
 
+## Grupo 4 — Integración con MariaDB real
+
+- Fixtures ficticios: `patients/testing/fictional-patients.support-spec.ts` ("Paciente Ficticio N", `11 5555-00NN`, DNI `3000000N`, `@example.test`). Soporte compartido: `catalogs/testing/integration-harness.support-spec.ts` (migra la base de pruebas, levanta `AppModule` como `main.ts`, limpia tablas). El sufijo `.support-spec.ts` los excluye del build y de ambas suites.
+- Suites: `catalogs.integration-spec.ts` (18 casos) y `patients.integration-spec.ts` (18 casos), ejecutadas cada una con `--testMatch` explícito porque la configuración compartida no las descubre (CR-02).
+- **Rama actual, sin CR-01: 27/36.** Las 9 fallas son exclusivamente la aserción final de `code` (`HTTP_409`/`HTTP_404` en lugar del código de dominio); todo lo anterior en esos casos sí se verificó (estado HTTP, filas, concurrencia).
+- **Con el parche propuesto de CR-01 aplicado en un worktree temporal (fuera de esta rama): 36/36**, y unitarias backend 121/121.
+- Cubre: límites de duración/intervalo por API y `CHECK` de la base; nombre de catálogo repetido (también contra inactivo) y reactivación; mismo nombre en catálogos distintos; orden, paginación e inactivos; búsqueda con comodines escapados; catálogo vacío; edición sin efecto sobre otras filas; alta mínima y normalización; cinco casos inválidos sin crear filas; varios DNI `NULL`; DNI repetido con otro formato y al editar; **5 altas concurrentes con el mismo DNI → `[201, 409, 409, 409, 409]` y 1 fila**; posible duplicado y confirmación; teléfono compartido; edición sin cambio de identidad; búsqueda por nombre/teléfono/DNI; paginación inválida; DNI de inactivo reservado; sin `DELETE`; 404; `down` y `up` de la migración C02.
+- Hallazgo para CR-02: la configuración de integración no admite más de una suite por proceso (`Test environment has been torn down`), lo que también afecta a la suite de C-01. Detalle y opciones en `coordination.md`.
+- Tarea 4.4 sigue abierta: requiere CR-01 y CR-02 integrados en `main` para correr `npm run test:integration` tal como está definido.
+
 ## Pendiente
 
-- Grupos 4 y 6 (`tasks.md`). Las suites `*.integration-spec.ts` de C-02 dependen de CR-02 para ejecutarse con `npm run test:integration`.
+- Tareas 0.1, 0.2, 4.4, 6.1 y 6.2. (`tasks.md`). Las suites `*.integration-spec.ts` de C-02 dependen de CR-02 para ejecutarse con `npm run test:integration`.
