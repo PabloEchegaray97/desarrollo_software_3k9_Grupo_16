@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+
+# Build and test outputs
+dist/
+build/
+coverage/
+.vite/
+*.tsbuildinfo
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+
+# Logs and runtime files
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.pid
+
+# Editor and operating-system files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Local browser tooling and obsolete generated captures
+.playwright-mcp/
+.preview-edge-*/
+design-system/previews/desktop.png
+design-system/previews/mobile.png
+
+# Active Orchestrator local recovery snapshots
+.active-orchestrator-state.json.bak*
+
