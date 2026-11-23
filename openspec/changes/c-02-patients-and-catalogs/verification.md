@@ -52,6 +52,18 @@ Registro de evidencia por grupo de tareas. Datos usados: exclusivamente ficticio
 - Mejora aplicada tras la prueba: la búsqueda por dígitos solo se activa si `q` contiene únicamente dígitos y signos de formato.
 - Logs del servidor durante la prueba: 0 apariciones de nombres, teléfonos, DNI o emails ficticios.
 
+## Grupo 5 — Frontend
+
+- `npm test` (Vitest + RTL): **33/33** (26 nuevos en `ui/ui.test.tsx`, `catalog.test.tsx`, `patients.test.tsx`; los 7 de C-01 siguen pasando, incluido `routes.test.tsx` que renderiza `/pacientes` sin `fetch` simulado).
+  - Modal: título y descripción accesibles, cierre con `X` y con Esc (evento `cancel`, con `preventDefault`), sin contenido al estar cerrado.
+  - Campos: `aria-invalid` y `aria-describedby` asocian error y ayuda.
+  - Catálogo: "usa intervalo global" vs. "intervalo posterior N min", badge Inactivo, cambio a Sillones con `?seccion=sillones` sin salir de `/prestaciones`, sección inicial desde la URL, estado vacío, error con Reintentar, error de rango del backend junto al campo conservando valores, validación local de presencia/tipo sin llamar al backend, conflicto de nombre junto al campo, desactivar y recargar.
+  - Pacientes: listado con teléfono/DNI/email, estado vacío, búsqueda con debounce (una sola solicitud), DNI/email vacíos → `null`, **advertencia de posible duplicado con candidatos y reenvío con `confirmarPosibleDuplicado: true`**, "Volver a revisar" conserva el formulario sin guardar, advertencia sin candidatos (comportamiento actual previo a CR-01), DNI repetido junto al campo, obligatorios locales, edición con `PUT`.
+- `npx tsc -b`, `npm run lint` (oxlint) y `npm run build` sin errores. Sin `any`. `frontend/dist` está ignorado por git.
+- Hallazgo corregido durante los tests: el estado vacío mostraba un segundo botón "Nuevo …" igual al de la barra.
+- Dependencia de CR-01 en la interfaz: hasta que el filtro propague `code`, el backend real responde `HTTP_409` y la interfaz muestra el mensaje genérico arriba del formulario en lugar de la advertencia de duplicado o el error junto al DNI/nombre. Los tests cubren el contrato acordado.
+- **Revisión visual manual: pendiente (tarea 6.1).** Este entorno no tiene navegador permitido para el proyecto (sin Playwright por regla 9); debe hacerse en una máquina del equipo.
+
 ## Pendiente
 
-- Grupos 4 a 6 (`tasks.md`). Las suites `*.integration-spec.ts` de C-02 dependen de CR-02 para ejecutarse con `npm run test:integration`.
+- Grupos 4 y 6 (`tasks.md`). Las suites `*.integration-spec.ts` de C-02 dependen de CR-02 para ejecutarse con `npm run test:integration`.

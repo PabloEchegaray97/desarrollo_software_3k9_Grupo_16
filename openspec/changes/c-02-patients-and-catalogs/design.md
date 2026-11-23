@@ -122,17 +122,19 @@ backend/src/modules/catalogs/
 ```text
 frontend/src/features/patients/
   index.tsx                     PatientsPage (export ya usado por routes.tsx)
-  api.ts                        llamadas tipadas vía shared apiRequest
+  api.ts                        llamadas tipadas y lectura de candidatos de duplicado
   types.ts
-  PatientForm.tsx, PatientList.tsx, DuplicateWarning.tsx
-  *.test.tsx
+  PatientForm.tsx, DuplicateWarning.tsx
+  patients.test.tsx
 frontend/src/features/catalog/
   index.tsx                     CatalogPage con secciones Prestaciones | Sillones
   api.ts, types.ts
-  ProcedureForm.tsx, ChairForm.tsx, CatalogList.tsx
+  CatalogPanel.tsx              listado genérico (búsqueda, inactivos, paginación, estados, alta/edición, activar)
+  ProcedureForm.tsx, ChairForm.tsx
   ui/AdminModal.tsx             <dialog> nativo según component-contract
-  ui/fields.tsx                 label arriba, ayuda y error debajo
-  *.test.tsx
+  ui/fields.tsx, ui/Button.tsx, ui/list.tsx, ui/hooks.ts, ui/api-errors.ts
+  ui/admin-ui.css               estilos de C-02, solo con tokens del design system
+  test-utils.ts, catalog.test.tsx, ui/ui.test.tsx
 ```
 
 - Sillones se gestionan dentro de `CatalogPage` mediante pestañas con estado en el query string (`?seccion=sillones`), sin tocar `frontend/src/app/routes.tsx`.
@@ -140,6 +142,10 @@ frontend/src/features/catalog/
 - La validación en el cliente se limita a campos obligatorios y tipos numéricos para dar feedback inmediato; los rangos y unicidades se muestran a partir de la respuesta del backend, que es la autoridad.
 - Los errores `ApiClientError` se mapean a campos por `code` (`PATIENT_DNI_CONFLICT` → DNI, `*_NAME_CONFLICT` → nombre) y por los mensajes de `details` de `VALIDATION_ERROR`; el resto va a un `StatePanel` de error.
 - La búsqueda usa debounce de 300 ms y paginación simple "anterior/siguiente".
+- `CatalogPanel` es genérico y también lo usa `PatientsPage` (misma interacción de listado); el formulario de cada entidad se inyecta. Así no se duplica la lógica de carga, estados y paginación.
+- Los estilos viven en `features/catalog/ui/admin-ui.css` con prefijo `adm-` y solo tokens; `frontend/src/styles/**` no se modifica.
+- El estado vacío no repite el botón de alta: la única acción es la de la barra (contrato: "una sola acción útil").
+- Los tests llaman a `cleanup()` explícitamente porque la configuración compartida de Vitest no habilita `globals`.
 - Se corrige el texto placeholder de `CatalogPage` que atribuía el módulo a C-03.
 
 ### 10. Estrategia de pruebas

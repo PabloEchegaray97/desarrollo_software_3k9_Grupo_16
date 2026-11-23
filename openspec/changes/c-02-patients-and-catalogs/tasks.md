@@ -34,11 +34,11 @@
 
 ## 5. Frontend
 
-- [ ] 5.1 Crear `features/catalog/ui/AdminModal.tsx` con `<dialog>` nativo y `ui/fields.tsx` (label arriba, ayuda, error debajo) según `design-system/component-contract.md`; verificar con Vitest apertura, cierre con `X`/`Esc` y asociación accesible de errores.
-- [ ] 5.2 Implementar `features/catalog/api.ts` y `types.ts` tipados sobre `apiRequest`, y `CatalogPage` con secciones Prestaciones/Sillones en `?seccion=`, listado, búsqueda, alta, edición, desactivar/reactivar, estados carga/vacío/error e indicación "usa intervalo global"; verificar con tests de componentes de cambio de sección, estado vacío y error de rango por campo.
-- [ ] 5.3 Implementar `features/patients/api.ts`, `types.ts` y `PatientsPage` con búsqueda con debounce, paginación anterior/siguiente, alta/edición en modal, desactivar/reactivar y estados carga/vacío/error; verificar con tests de componentes del listado y del estado vacío.
-- [ ] 5.4 Implementar `DuplicateWarning` y el mapeo de `PATIENT_DNI_CONFLICT`/`VALIDATION_ERROR` a campos; verificar con tests que continuar reenvía con `confirmarPosibleDuplicado: true`, cancelar conserva el formulario y el DNI repetido se muestra junto al campo.
-- [ ] 5.5 Ejecutar `npm run build`, `npm test` y `npm run lint` en `frontend/` sin errores ni `any`.
+- [x] 5.1 Crear `features/catalog/ui/AdminModal.tsx` con `<dialog>` nativo y `ui/fields.tsx` (label arriba, ayuda, error debajo) según `design-system/component-contract.md`; verificar con Vitest apertura, cierre con `X`/`Esc` y asociación accesible de errores.
+- [x] 5.2 Implementar `features/catalog/api.ts` y `types.ts` tipados sobre `apiRequest`, y `CatalogPage` con secciones Prestaciones/Sillones en `?seccion=`, listado, búsqueda, alta, edición, desactivar/reactivar, estados carga/vacío/error e indicación "usa intervalo global"; verificar con tests de componentes de cambio de sección, estado vacío y error de rango por campo.
+- [x] 5.3 Implementar `features/patients/api.ts`, `types.ts` y `PatientsPage` con búsqueda con debounce, paginación anterior/siguiente, alta/edición en modal, desactivar/reactivar y estados carga/vacío/error; verificar con tests de componentes del listado y del estado vacío.
+- [x] 5.4 Implementar `DuplicateWarning` y el mapeo de `PATIENT_DNI_CONFLICT`/`VALIDATION_ERROR` a campos; verificar con tests que continuar reenvía con `confirmarPosibleDuplicado: true`, cancelar conserva el formulario y el DNI repetido se muestra junto al campo.
+- [x] 5.5 Ejecutar `npm run build`, `npm test` y `npm run lint` en `frontend/` sin errores ni `any`.
 
 ## 6. Verificación integral
 
