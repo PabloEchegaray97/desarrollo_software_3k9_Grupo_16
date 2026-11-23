@@ -36,7 +36,7 @@ Cada tabla tiene `activo BOOLEAN NOT NULL DEFAULT TRUE`. El cambio de estado se 
 
 ### 2. Esquema y migración
 
-Una migración `<timestamp>-C02-CreatePatientsAndCatalogs.ts`, con timestamp posterior a la migración C-01 y `down` que elimina las tres tablas. Ids `CHAR(36)` UUID generados por TypeORM (`PrimaryGeneratedColumn('uuid')`); `created_at`/`updated_at` `DATETIME(6)` en UTC. Charset `utf8mb4` con collation case-insensitive.
+Una migración `<timestamp>-C02-CreatePatientsAndCatalogs.ts`, con timestamp posterior a la migración C-01 y `down` que elimina las tres tablas. Ids `CHAR(36)` con UUID generado en el servicio mediante `crypto.randomUUID()` y `PrimaryColumn` (evita que TypeORM mapee `uuid` al tipo nativo de MariaDB ≥ 10.7 y diverja de la migración). `created_at`/`updated_at` `DATETIME(6)`; `updated_at` lo mantiene MariaDB con `ON UPDATE CURRENT_TIMESTAMP(6)` porque `@UpdateDateColumn` escribe `CURRENT_TIMESTAMP` sin microsegundos y dejaba `updatedAt` anterior a `createdAt`. Las entidades declaran los mismos índices y `CHECK` que la migración, de modo que el schema builder de TypeORM no detecta diferencias. Charset `utf8mb4` con collation case-insensitive.
 
 | Tabla | Columnas relevantes | Índices |
 |---|---|---|
@@ -105,7 +105,7 @@ backend/src/modules/patients/
 backend/src/modules/catalogs/
   catalogs.module.ts            exporta CatalogReferences
   procedure.entity.ts, chair.entity.ts
-  procedures.controller.ts, chairs.controller.ts
+  catalogs.controllers.ts       ProceduresController y ChairsController
   procedures.service.ts, chairs.service.ts
   catalog-references.ts
   catalog-normalization.ts

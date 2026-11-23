@@ -7,15 +7,15 @@
 
 ## 1. Persistencia
 
-- [ ] 1.1 Agregar `backend/src/database/migrations/<timestamp>-C02-CreatePatientsAndCatalogs.ts` con `patients`, `procedures` y `chairs`, `active` por defecto `TRUE`, `UNIQUE(dni)`, `UNIQUE(name)` en catálogos, índices de búsqueda y `CHECK` de rangos; verificar con `npm run build` y ejecutando `up`/`down` contra MariaDB real de pruebas.
-- [ ] 1.2 Crear las entidades `patient.entity.ts`, `procedure.entity.ts` y `chair.entity.ts` con mapeo de columnas `snake_case` a propiedades tipadas, sin `synchronize`; verificar con `npm run build` y `npm run lint` que no hay `any` ni términos prohibidos por `architecture-boundaries.spec.ts`.
+- [x] 1.1 Agregar `backend/src/database/migrations/<timestamp>-C02-CreatePatientsAndCatalogs.ts` con `patients`, `procedures` y `chairs`, `active` por defecto `TRUE`, `UNIQUE(dni)`, `UNIQUE(name)` en catálogos, índices de búsqueda y `CHECK` de rangos; verificar con `npm run build` y ejecutando `up`/`down` contra MariaDB real de pruebas.
+- [x] 1.2 Crear las entidades `patient.entity.ts`, `procedure.entity.ts` y `chair.entity.ts` con mapeo de columnas `snake_case` a propiedades tipadas, sin `synchronize`; verificar con `npm run build` y `npm run lint` que no hay `any` ni términos prohibidos por `architecture-boundaries.spec.ts`.
 
 ## 2. Catálogos backend (prestaciones y sillones)
 
-- [ ] 2.1 Implementar normalización de nombres y DTO de prestación/sillón con `class-validator` (duración entera `1..240`, intervalo entero `0..30` o `null`, paginación `page>=1`, `pageSize 1..100`); verificar con tests unitarios de límites 0/1/240/241 y -1/0/30/31.
-- [ ] 2.2 Implementar `ProceduresService`/`ChairsService` con alta, edición `PUT`, detalle, listado paginado ordenado por nombre con `q` e `incluirInactivos`, cambio de estado y traducción de `ER_DUP_ENTRY` a `*_NAME_CONFLICT`; verificar con tests unitarios usando repositorio simulado.
-- [ ] 2.3 Implementar `ProceduresController` y `ChairsController` en `/prestaciones` y `/sillones` con `ParseUUIDPipe`, errores `*_NOT_FOUND` y sin `DELETE`; verificar con test unitario del controlador y `npm run build`.
-- [ ] 2.4 Implementar y exportar `CatalogReferences` (`findProcedureById`, `findChairById`, con `EntityManager` opcional) desde `CatalogsModule`; verificar con test unitario que devuelve `activo`, duración e intervalo posiblemente `null`, y `null` para ids inexistentes.
+- [x] 2.1 Implementar normalización de nombres y DTO de prestación/sillón con `class-validator` (duración entera `1..240`, intervalo entero `0..30` o `null`, paginación `page>=1`, `pageSize 1..100`); verificar con tests unitarios de límites 0/1/240/241 y -1/0/30/31.
+- [x] 2.2 Implementar `ProceduresService`/`ChairsService` con alta, edición `PUT`, detalle, listado paginado ordenado por nombre con `q` e `incluirInactivos`, cambio de estado y traducción de `ER_DUP_ENTRY` a `*_NAME_CONFLICT`; verificar con tests unitarios usando repositorio simulado.
+- [x] 2.3 Implementar `ProceduresController` y `ChairsController` en `/prestaciones` y `/sillones` con `ParseUUIDPipe`, errores `*_NOT_FOUND` y sin `DELETE`; verificar con test unitario del controlador y `npm run build`.
+- [x] 2.4 Implementar y exportar `CatalogReferences` (`findProcedureById`, `findChairById`, con `EntityManager` opcional) desde `CatalogsModule`; verificar con test unitario que devuelve `activo`, duración e intervalo posiblemente `null`, y `null` para ids inexistentes.
 
 ## 3. Pacientes backend
 
