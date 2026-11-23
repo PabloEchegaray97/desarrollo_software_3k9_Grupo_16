@@ -19,11 +19,11 @@
 
 ## 3. Pacientes backend
 
-- [ ] 3.1 Implementar normalización de pacientes (espacios, email vacío → `null` y minúsculas, `phone_digits`, DNI sin `.`/espacios/`-`) y DTO con teléfono de 6–20 dígitos y DNI de 7–8 dígitos; verificar con tests unitarios de cada regla y de los casos inválidos de la spec.
-- [ ] 3.2 Implementar en `PatientsService` alta y edición con detección de posible duplicado (mismo nombre case-insensitive y `phone_digits`, excluyendo el propio registro, solo si cambian nombre/teléfono en edición) y `409 PATIENT_POSSIBLE_DUPLICATE` con candidatos `{ id, nombre, activo }` salvo `confirmarPosibleDuplicado: true`; verificar con tests unitarios de coincidencia, confirmación, teléfono compartido y edición sin cambios.
-- [ ] 3.3 Implementar en `PatientsService` la traducción de `ER_DUP_ENTRY` a `PATIENT_DNI_CONFLICT`, búsqueda paginada por nombre/teléfono/DNI con escape de `%` y `_`, detalle y cambio de estado; verificar con tests unitarios de búsqueda, escape y mapeo de errores.
-- [ ] 3.4 Implementar `PatientsController` en `/pacientes` (GET lista, GET `:id`, POST, PUT `:id`, PATCH `:id/estado`, sin `DELETE`) y exportar `PatientReferences.findById` desde `PatientsModule`; verificar con tests unitarios y `npm run build`.
-- [ ] 3.5 Verificar que ningún log de los módulos incluye nombre, teléfono, DNI ni email revisando los `Logger` agregados y ejecutando `npm test` completo del backend sin fallos.
+- [x] 3.1 Implementar normalización de pacientes (espacios, email vacío → `null` y minúsculas, `phone_digits`, DNI sin `.`/espacios/`-`) y DTO con teléfono de 6–20 dígitos y DNI de 7–8 dígitos; verificar con tests unitarios de cada regla y de los casos inválidos de la spec.
+- [x] 3.2 Implementar en `PatientsService` alta y edición con detección de posible duplicado (mismo nombre case-insensitive y `phone_digits`, excluyendo el propio registro, solo si cambian nombre/teléfono en edición) y `409 PATIENT_POSSIBLE_DUPLICATE` con candidatos `{ id, nombre, activo }` salvo `confirmarPosibleDuplicado: true`; verificar con tests unitarios de coincidencia, confirmación, teléfono compartido y edición sin cambios.
+- [x] 3.3 Implementar en `PatientsService` la traducción de `ER_DUP_ENTRY` a `PATIENT_DNI_CONFLICT`, búsqueda paginada por nombre/teléfono/DNI con escape de `%` y `_`, detalle y cambio de estado; verificar con tests unitarios de búsqueda, escape y mapeo de errores.
+- [x] 3.4 Implementar `PatientsController` en `/pacientes` (GET lista, GET `:id`, POST, PUT `:id`, PATCH `:id/estado`, sin `DELETE`) y exportar `PatientReferences.findById` desde `PatientsModule`; verificar con tests unitarios y `npm run build`.
+- [x] 3.5 Verificar que ningún log de los módulos incluye nombre, teléfono, DNI ni email revisando los `Logger` agregados y ejecutando `npm test` completo del backend sin fallos.
 
 ## 4. Verificación backend con MariaDB real
 

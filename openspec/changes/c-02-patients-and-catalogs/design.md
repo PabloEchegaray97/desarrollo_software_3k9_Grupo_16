@@ -85,7 +85,7 @@ Códigos: `VALIDATION_ERROR` (400, ya provisto por el filtro), `PATIENT_NOT_FOUN
 
 `PUT` (reemplazo completo) en lugar de `PATCH` parcial porque los formularios siempre envían todos los campos y evita ambigüedad entre "omitido" y `null` en opcionales.
 
-Respuesta de lista: `{ items, page, pageSize, total }`, `page` desde 1, `pageSize` por defecto 20 y máximo 100. El tipo `Paginated<T>` vive en cada módulo (duplicación mínima y deliberada) y se propone para promoción a `shared` en C-08. La búsqueda de pacientes compara `q` con `name LIKE %q%` y, si `q` contiene dígitos, con `phone_digits LIKE %digitos%` y `dni LIKE %digitos%`. Los comodines `%` y `_` de `q` se escapan. Orden: nombre ascendente, luego id.
+Respuesta de lista: `{ items, page, pageSize, total }`, `page` desde 1, `pageSize` por defecto 20 y máximo 100. El tipo `Paginated<T>` vive en cada módulo (duplicación mínima y deliberada) y se propone para promoción a `shared` en C-08. La búsqueda de pacientes compara `q` con `name LIKE %q%` y, solo si `q` está formado únicamente por dígitos y signos de formato (`5555-0001`, `30.000.001`), también con `phone_digits LIKE %digitos%` y `dni LIKE %digitos%`. Un texto mixto como `Ficticio 1` busca solo por nombre, para no devolver cualquier teléfono que contenga un 1. Los comodines `%` y `_` de `q` se escapan. Orden: nombre ascendente, luego id.
 
 Campos JSON en español según la KB: `id`, `nombre`, `telefono`, `dni`, `email`, `activo`, `duracionPredeterminadaMinutos`, `intervaloPosteriorMinutos`, `createdAt`, `updatedAt`. Columnas en inglés `snake_case`, consistente con C-01; el mapeo está en las entidades.
 
