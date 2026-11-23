@@ -180,7 +180,17 @@ describe('Persistencia C03 (integración MariaDB real)', () => {
 describe('API C03 (integración MariaDB real)', () => {
   let context: AvailabilityApiContext | undefined;
 
-  const http = () => request(context!.app.getHttpServer());
+  const http = () => {
+    const client = request(context!.app.getHttpServer());
+    const authenticated = (testRequest: request.Test) =>
+      testRequest.set('Cookie', context!.sessionCookie);
+    return {
+      get: (url: string) => authenticated(client.get(url)),
+      patch: (url: string) => authenticated(client.patch(url)),
+      post: (url: string) => authenticated(client.post(url)),
+      put: (url: string) => authenticated(client.put(url)),
+    };
+  };
 
   beforeAll(async () => {
     context = await startAvailabilityApi();

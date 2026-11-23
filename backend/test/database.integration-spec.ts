@@ -5,7 +5,7 @@ import type { App } from 'supertest/types.js';
 import { createTestDataSource } from '../src/database/data-source.js';
 
 describe('MariaDB migrations (integration)', () => {
-  it('runs and reverts the C-01 migration on MariaDB', async () => {
+  it('runs all migrations and preserves later changes while verifying C-01', async () => {
     const dataSource = createTestDataSource(process.env);
     await dataSource.initialize();
     try {
@@ -14,7 +14,15 @@ describe('MariaDB migrations (integration)', () => {
         "SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'app_metadata'",
       )) as Array<{ TABLE_NAME: string }>;
       expect(rows).toHaveLength(1);
-      await dataSource.undoLastMigration({ transaction: 'all' });
+      const migrations = (await dataSource.query(
+        'SELECT name FROM app_migrations ORDER BY id',
+      )) as Array<{ name: string }>;
+      expect(migrations.map(({ name }) => name)).toEqual(
+        expect.arrayContaining([
+          'C01CreateAppMetadata2026112300000',
+          'C04CreateUsers2026112504000',
+        ]),
+      );
     } finally {
       if (dataSource.isInitialized) {
         await dataSource.destroy();

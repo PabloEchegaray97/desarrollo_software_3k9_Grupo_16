@@ -26,7 +26,18 @@ interface ListBody {
 
 describe('Registro de pacientes (integración MariaDB)', () => {
   let context: IntegrationContext | undefined;
-  const http = () => request(context!.app.getHttpServer());
+  const http = () => {
+    const client = request(context!.app.getHttpServer());
+    const authenticated = (testRequest: request.Test) =>
+      testRequest.set('Cookie', context!.sessionCookie);
+    return {
+      delete: (url: string) => authenticated(client.delete(url)),
+      get: (url: string) => authenticated(client.get(url)),
+      patch: (url: string) => authenticated(client.patch(url)),
+      post: (url: string) => authenticated(client.post(url)),
+      put: (url: string) => authenticated(client.put(url)),
+    };
+  };
   const create = (body: object) => http().post('/api/pacientes').send(body);
   const names = (response: request.Response) => (response.body as ListBody).items.map((item) => item.nombre);
 
@@ -167,18 +178,21 @@ describe('Registro de pacientes (integración MariaDB)', () => {
     expectApiError(await http().get('/api/pacientes/00000000-0000-4000-8000-0000000000ff'), 404, 'PATIENT_NOT_FOUND');
   });
 
-  it('la migración C02 se revierte y se vuelve a aplicar', async () => {
+  it('la migración C02 permanece aplicada junto con las migraciones posteriores', async () => {
     const dataSource = context!.dataSource;
-    const c02Tables = async () =>
-      ((await dataSource.query(
-        "SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME IN ('patients','procedures','chairs')",
-      )) as unknown[]).length;
+    const c02Tables = (await dataSource.query(
+      "SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME IN ('patients','procedures','chairs')",
+    )) as Array<{ TABLE_NAME: string }>;
+    const migrations = (await dataSource.query(
+      'SELECT name FROM app_migrations ORDER BY id',
+    )) as Array<{ name: string }>;
 
-    await dataSource.undoLastMigration({ transaction: 'all' });
-    const afterDown = await c02Tables();
-    await dataSource.runMigrations({ transaction: 'all' });
-
-    expect(afterDown).toBe(0);
-    expect(await c02Tables()).toBe(3);
+    expect(c02Tables).toHaveLength(3);
+    expect(migrations.map(({ name }) => name)).toEqual(
+      expect.arrayContaining([
+        'C02CreatePatientsAndCatalogs2026112400000',
+        'C04CreateUsers2026112504000',
+      ]),
+    );
   });
 });

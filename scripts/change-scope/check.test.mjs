@@ -1,5 +1,10 @@
 import assert from 'node:assert/strict'
+import { spawnSync } from 'node:child_process'
+import { mkdtemp, rm, writeFile } from 'node:fs/promises'
+import os from 'node:os'
+import path from 'node:path'
 import test from 'node:test'
+import { fileURLToPath } from 'node:url'
 import { parseNameStatus, validateChanges } from './check.mjs'
 
 test('accepts a domain file and an add-only migration with the change ID', () => {
@@ -32,4 +37,23 @@ test('rejects modified or incorrectly named migrations', () => {
 test('handles renamed paths using their destination', () => {
   const changes = parseNameStatus('R100\told.ts\tfrontend/src/features/agenda/new.ts')
   assert.deepEqual(validateChanges('change/c-07-agenda-experience', changes), [])
+})
+
+test('direct invocation executes the guard and diagnoses an unknown branch', async () => {
+  const temporaryDirectory = await mkdtemp(path.join(os.tmpdir(), 'agenda-scope-guard-'))
+  const diffFile = path.join(temporaryDirectory, 'diff.txt')
+  const checkFile = fileURLToPath(new URL('./check.mjs', import.meta.url))
+  try {
+    await writeFile(diffFile, 'M\tREADME.md\n', 'utf8')
+    const result = spawnSync(
+      process.execPath,
+      [checkFile, '--branch', 'change/c-99-no-registrado', '--diff-file', diffFile],
+      { encoding: 'utf8' },
+    )
+
+    assert.equal(result.status, 1)
+    assert.match(result.stderr, /Unknown or unauthorized change branch/)
+  } finally {
+    await rm(temporaryDirectory, { recursive: true, force: true })
+  }
 })

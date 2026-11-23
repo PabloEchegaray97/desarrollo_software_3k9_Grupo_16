@@ -20,7 +20,7 @@
     "test:cov": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --config test/jest.config.cjs --coverage --runInBand",
     "test:debug": "node --experimental-vm-modules --inspect-brk ./node_modules/jest/bin/jest.js --config test/jest.config.cjs --runInBand",
     "test:e2e": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --config test/jest.e2e.config.cjs --runInBand",
-    "test:integration": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --config test/jest.integration.config.cjs --runInBand",
+    "test:integration": "node test/run-integration-tests.mjs",
     "migration:run": "npm run build && typeorm migration:run -d dist/database/cli-data-source.js",
     "migration:revert": "npm run build && typeorm migration:revert -d dist/database/cli-data-source.js",
     "provision:admin": "npm run build && node dist/modules/auth/provision-admin.js"

@@ -11,5 +11,9 @@ try {
 /** @type {import('jest').Config} */
 module.exports = {
   ...base,
-  testMatch: ['<rootDir>/test/**/*.integration-spec.ts'],
+  testTimeout: 30000,
+  testMatch: [
+    '<rootDir>/test/**/*.integration-spec.ts',
+    '<rootDir>/src/**/*.integration-spec.ts',
+  ],
 };

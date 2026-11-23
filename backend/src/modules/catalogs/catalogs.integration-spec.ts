@@ -24,7 +24,18 @@ interface ListBody<T> {
 
 describe('Catálogos de prestaciones y sillones (integración MariaDB)', () => {
   let context: IntegrationContext | undefined;
-  const http = () => request(context!.app.getHttpServer());
+  const http = () => {
+    const client = request(context!.app.getHttpServer());
+    const authenticated = (testRequest: request.Test) =>
+      testRequest.set('Cookie', context!.sessionCookie);
+    return {
+      delete: (url: string) => authenticated(client.delete(url)),
+      get: (url: string) => authenticated(client.get(url)),
+      patch: (url: string) => authenticated(client.patch(url)),
+      post: (url: string) => authenticated(client.post(url)),
+      put: (url: string) => authenticated(client.put(url)),
+    };
+  };
 
   beforeAll(async () => {
     context = await startIntegrationApp();

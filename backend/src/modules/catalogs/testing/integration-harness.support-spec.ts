@@ -11,10 +11,12 @@ import type { Response } from 'supertest';
 import type { App } from 'supertest/types.js';
 import type { DataSource } from 'typeorm';
 import { createTestDataSource } from '../../../database/data-source.js';
+import { authenticatedCookie } from '../../auth/testing/session-test.support-spec.js';
 
 export interface IntegrationContext {
   app: INestApplication<App>;
   dataSource: DataSource;
+  sessionCookie: string;
 }
 
 /** Aplica migraciones sobre la base de pruebas y levanta `AppModule` como en `main.ts`. */
@@ -22,6 +24,7 @@ export async function startIntegrationApp(): Promise<IntegrationContext> {
   const dataSource = createTestDataSource(process.env);
   await dataSource.initialize();
   await dataSource.runMigrations({ transaction: 'all' });
+  const sessionCookie = await authenticatedCookie(dataSource);
 
   Object.assign(process.env, {
     APP_ENV: 'test',
@@ -41,7 +44,7 @@ export async function startIntegrationApp(): Promise<IntegrationContext> {
   app.setGlobalPrefix('api');
   app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true, forbidNonWhitelisted: true }));
   await app.init();
-  return { app, dataSource };
+  return { app, dataSource, sessionCookie };
 }
 
 export async function stopIntegrationApp(context: IntegrationContext | undefined): Promise<void> {

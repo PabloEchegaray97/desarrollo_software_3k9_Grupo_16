@@ -18,10 +18,13 @@ import { ExcepcionDisponibilidadEntity } from '../entities/excepcion-disponibili
 import { ChairEntity } from '../../catalogs/chair.entity.js';
 import { ProcedureEntity } from '../../catalogs/procedure.entity.js';
 import { PatientEntity } from '../../patients/patient.entity.js';
+import { UserEntity } from '../../auth/user.entity.js';
+import { authenticatedCookie } from '../../auth/testing/session-test.support-spec.js';
 
 export interface AvailabilityApiContext {
   app: INestApplication<App>;
   dataSource: DataSource;
+  sessionCookie: string;
 }
 
 /** Levanta `AppModule` contra la base de pruebas con la configuración temporal de C-03. */
@@ -36,10 +39,12 @@ export async function startAvailabilityApi(): Promise<AvailabilityApiContext> {
       ChairEntity,
       ProcedureEntity,
       PatientEntity,
+      UserEntity,
     ],
   });
   await dataSource.initialize();
   await dataSource.runMigrations({ transaction: 'all' });
+  const sessionCookie = await authenticatedCookie(dataSource);
 
   Object.assign(process.env, {
     APP_ENV: 'test',
@@ -65,7 +70,7 @@ export async function startAvailabilityApi(): Promise<AvailabilityApiContext> {
     new ValidationPipe({ transform: true, whitelist: true, forbidNonWhitelisted: true }),
   );
   await app.init();
-  return { app, dataSource };
+  return { app, dataSource, sessionCookie };
 }
 
 export async function stopAvailabilityApi(context: AvailabilityApiContext | undefined): Promise<void> {
