@@ -1,27 +1,32 @@
 import type { PropsWithChildren } from 'react'
-import { NavLink } from 'react-router-dom'
+import { useLocation } from 'react-router-dom'
+import { SessionProvider } from '../../features/auth/session'
+import { authRoute } from '../routes/auth.routes'
+import { RequireSession } from './RequireSession'
+import { ShellNavigation } from './ShellNavigation'
+import './app-shell.css'
 
-const navigation = [
-  { to: '/', label: 'Inicio' },
-  { to: '/agenda', label: 'Agenda' },
-  { to: '/pacientes', label: 'Pacientes' },
-  { to: '/prestaciones', label: 'Prestaciones' },
-  { to: '/disponibilidad', label: 'Disponibilidad' },
-] as const
+function ShellFrame({ children }: PropsWithChildren) {
+  const { pathname } = useLocation()
+
+  if (pathname === authRoute.path) {
+    return <div className="app-shell shell--public"><main className="shell-public-main">{children}</main></div>
+  }
+
+  return (
+    <RequireSession>
+      <div className="app-shell">
+        <ShellNavigation />
+        <main className="app-main">{children}</main>
+      </div>
+    </RequireSession>
+  )
+}
 
 export function AppShell({ children }: PropsWithChildren) {
   return (
-    <div className="app-shell">
-      <header className="app-header">
-        <NavLink className="app-brand" to="/" aria-label="Ir al inicio">
-          <span className="app-brand__mark" aria-hidden="true">+</span>
-          Agenda odontológica
-        </NavLink>
-        <nav className="app-nav" aria-label="Navegación principal">
-          {navigation.map((item) => <NavLink key={item.to} to={item.to} end={item.to === '/'}>{item.label}</NavLink>)}
-        </nav>
-      </header>
-      <main className="app-main">{children}</main>
-    </div>
+    <SessionProvider>
+      <ShellFrame>{children}</ShellFrame>
+    </SessionProvider>
   )
 }
