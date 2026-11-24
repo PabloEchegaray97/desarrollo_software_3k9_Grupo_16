@@ -3,6 +3,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module.js';
 import { validateEnvironment } from './config/env.validation.js';
 
+process.loadEnvFile();
 async function bootstrap() {
   const environment = validateEnvironment(process.env);
   const app = await NestFactory.create(AppModule);
