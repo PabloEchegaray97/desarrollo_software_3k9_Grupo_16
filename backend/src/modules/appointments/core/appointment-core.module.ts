@@ -1,11 +1,12 @@
 import { Module } from '@nestjs/common';
 import { DatabaseModule } from '../../../database/database.module.js';
 import { APPOINTMENT_CLOCK, SystemClock } from './clock.js';
+import { AppointmentWriter } from './database/appointment-writer.js';
 import { APPOINTMENT_TRANSACTION_BOUNDARY, TypeOrmTransactionBoundary } from './database/typeorm-transaction-boundary.js';
 
 /**
  * Núcleo compartido de turnos. Contrato para C-06/C-07: entidades, estados, política,
- * `findBlockingConflicts`, frontera transaccional con lock de agenda y reloj.
+ * `findBlockingConflicts`, frontera transaccional con lock de agenda, escritor de turnos/eventos y reloj.
  */
 @Module({
   imports: [DatabaseModule],
@@ -13,7 +14,8 @@ import { APPOINTMENT_TRANSACTION_BOUNDARY, TypeOrmTransactionBoundary } from './
     TypeOrmTransactionBoundary,
     { provide: APPOINTMENT_TRANSACTION_BOUNDARY, useExisting: TypeOrmTransactionBoundary },
     { provide: APPOINTMENT_CLOCK, useClass: SystemClock },
+    AppointmentWriter,
   ],
-  exports: [APPOINTMENT_TRANSACTION_BOUNDARY, APPOINTMENT_CLOCK],
+  exports: [APPOINTMENT_TRANSACTION_BOUNDARY, APPOINTMENT_CLOCK, AppointmentWriter],
 })
 export class AppointmentCoreModule {}
