@@ -14,17 +14,17 @@
 
 ## 2. Alta de turnos (`appointments/creation`)
 
-- [ ] 2.1 Implementar `CreateAppointmentDto` (UUIDs, fecha `YYYY-MM-DD`, hora `HH:mm`, sobrescrituras `1..240` y `0..30`, motivo obligatorio y recortado de 1–500 si `fueraDisponibilidad`) y `appointment-errors.ts` con los códigos de la spec; verificar con tests unitarios de cada límite y del motivo condicional.
-- [ ] 2.2 Implementar `CreateAppointmentService` con el orden de la decisión 3 del design (lock → referencias → tiempos → evaluación → pasado → conflictos → disponibilidad → turno + eventos); verificar con tests unitarios con dobles: orden de errores, override innecesario, referencias inexistentes e inactivas, reloj fijo y eventos `CREADO`/`EXCEPCION`.
-- [ ] 2.3 Implementar `AppointmentsController` (`POST /turnos`) y componer `AppointmentCreationModule` con Core, Patients, Catalogs y Availability sin tocar `app.module.ts`; verificar con un test del controlador (201, 400) y con el arranque de `AppModule` en `npm run build`.
+- [x] 2.1 Implementar `CreateAppointmentDto` (UUIDs, fecha `YYYY-MM-DD`, hora `HH:mm`, sobrescrituras `1..240` y `0..30`, motivo obligatorio y recortado de 1–500 si `fueraDisponibilidad`) y `appointment-errors.ts` con los códigos de la spec; verificar con tests unitarios de cada límite y del motivo condicional.
+- [x] 2.2 Implementar `CreateAppointmentService` con el orden de la decisión 3 del design (lock → referencias → tiempos → evaluación → pasado → conflictos → disponibilidad → turno + eventos); verificar con tests unitarios con dobles: orden de errores, override innecesario, referencias inexistentes e inactivas, reloj fijo y eventos `CREADO`/`EXCEPCION`.
+- [x] 2.3 Implementar `AppointmentsController` (`POST /turnos`) y componer `AppointmentCreationModule` con Core, Patients, Catalogs y Availability sin tocar `app.module.ts`; verificar con un test del controlador (201, 400) y con el arranque de `AppModule` en `npm run build`.
 
 ## 3. Verificación backend con MariaDB real
 
-- [ ] 3.1 Crear fixtures ficticios y el harness de integración (migraciones, sesión con `authenticatedCookie`, disponibilidad semanal y excepciones vía la API de C-03, reloj fijo); verificar por revisión que no hay datos reales.
-- [ ] 3.2 Escribir pruebas de integración de reglas: alta feliz con tiempos efectivos persistidos y evento `CREADO`, precedencia del intervalo global, contigüidad exacta, conflicto en otro sillón y en el mismo, `CANCELADO` no bloquea, `ATENDIDO`/`AUSENTE` bloquean y cambios posteriores de prestación o global no reescriben el turno.
-- [ ] 3.3 Escribir pruebas de integración de disponibilidad: fuera de horario sin y con motivo (eventos `CREADO` + `EXCEPCION`), override sin motivo, override que no salva un conflicto, día con `FERIADO` rechazado aun con override, override innecesario, referencias inactivas, inicio pasado y hora inválida.
-- [ ] 3.4 Escribir pruebas de concurrencia: dos y cinco altas simultáneas incompatibles, en el mismo sillón y en sillones distintos, con exactamente una 201 y las demás 409 `APPOINTMENT_CONFLICT`.
-- [ ] 3.5 Escribir la prueba de atomicidad: con el escritor de eventos reemplazado por uno que falla, la solicitud no deja turno ni eventos.
+- [x] 3.1 Crear fixtures ficticios y el harness de integración (migraciones, sesión con `authenticatedCookie`, disponibilidad semanal y excepciones vía la API de C-03, reloj fijo) que **borre turnos y eventos en `afterAll`**: la suite de C-05 corre primera en el runner y la FK `RESTRICT` rompería la limpieza de pacientes, prestaciones y sillones de C-02/C-03; verificar por revisión que no hay datos reales y con `npm run test:integration` completo.
+- [x] 3.2 Escribir pruebas de integración de reglas: alta feliz con tiempos efectivos persistidos y evento `CREADO`, precedencia del intervalo global, contigüidad exacta, conflicto en otro sillón y en el mismo, `CANCELADO` no bloquea, `ATENDIDO`/`AUSENTE` bloquean y cambios posteriores de prestación o global no reescriben el turno.
+- [x] 3.3 Escribir pruebas de integración de disponibilidad: fuera de horario sin y con motivo (eventos `CREADO` + `EXCEPCION`), override sin motivo, override que no salva un conflicto, día con `FERIADO` rechazado aun con override, override innecesario, referencias inactivas, inicio pasado y hora inválida.
+- [x] 3.4 Escribir pruebas de concurrencia: dos y cinco altas simultáneas incompatibles, en el mismo sillón y en sillones distintos, con exactamente una 201 y las demás 409 `APPOINTMENT_CONFLICT`.
+- [x] 3.5 Escribir la prueba de atomicidad: con el escritor de eventos reemplazado por uno que falla, la solicitud no deja turno ni eventos.
 - [ ] 3.6 Ejecutar `npm run test:integration` (runner de C-01) contra MariaDB real y registrar en `verification.md` versión, comando y resultado; con CR-05-01 integrado, ejecutar además la suite con `TZ=America/Argentina/Buenos_Aires` y verificar los valores UTC literales. Sin CR-05-01, registrar esa parte como bloqueada.
 
 ## 4. Frontend (`features/appointments/create`)

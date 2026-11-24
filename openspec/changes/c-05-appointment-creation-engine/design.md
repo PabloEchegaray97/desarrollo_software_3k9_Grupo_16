@@ -179,7 +179,9 @@ Los nombres JSON van en español, como en C-02 y C-03. Los errores son `HttpExce
 
 Las entidades usan `Date` en columnas `DATETIME(6)`. Correcto en UTC depende de que la conexión mysql2 use `timezone: 'Z'`, y hoy `data-source.ts` no lo fija (C-01). Se pide a Pablo como **CR-05-01**: una línea en `applicationDataSourceOptions` y `testDataSourceOptions`, más su prueba.
 
-Hasta que esté integrado, las suites corren en el contenedor con `TZ=UTC` y son correctas. La prueba de la spec "Proceso en otra zona horaria" ejecuta la suite con `TZ=America/Argentina/Buenos_Aires` y verifica el valor literal con `DATE_FORMAT`; queda bloqueada sin CR-05-01, igual que CR-01 en C-02.
+Hasta que esté integrado, las suites corren en el contenedor con `TZ=UTC` y son correctas. La prueba "guarda el instante UTC literal" verifica el valor con `DATE_FORMAT`, sin conversión del driver, y debe pasar en cualquier zona del proceso. Se ejecuta con la zona fijada al arrancar (`TZ=America/Argentina/Buenos_Aires npm run test:integration`), porque cambiar `process.env.TZ` dentro de Jest no tiene efecto: el entorno trabaja con una copia de `env`. Hoy pasa con `TZ=UTC` y falla con la zona de Argentina; queda bloqueada sin CR-05-01, igual que CR-01 en C-02.
+
+El harness de C-05 **no** reemplaza el `DataSource` de la aplicación, para probar la conexión de producción. El harness de C-03 sí lo reemplaza por uno con `timezone: 'Z'`, y por eso sus suites no detectan el defecto.
 
 **Alternativa descartada:** un transformer propio en las entidades de C-05 escondería el problema para los demás changes y agregaría conversión manual de fechas.
 
@@ -193,6 +195,7 @@ backend/src/modules/appointments/core/
   domain/appointment-policy.ts      política pura (decisión 2)
   database/typeorm-transaction-boundary.ts
   database/appointment-conflicts.ts findBlockingConflicts(manager, period, excludeId?)
+  database/appointment-writer.ts    inserta turno y eventos (inyectable: la prueba de atomicidad lo reemplaza)
   clock.ts
   *.spec.ts
 backend/src/modules/appointments/creation/
@@ -271,6 +274,7 @@ Fuera de la superficie (pedido a Pablo): `backend/src/database/data-source.ts` (
 - **[CR-05-01 no se integra]** → en el contenedor (`TZ=UTC`) todo es correcto. En una PC con zona Argentina, los instantes se guardarían en hora local, aunque se leerían de forma consistente. La prueba con `TZ` lo detecta y queda bloqueada en lugar de ocultarse.
 - **[El núcleo en `core` se vuelve contrato de C-06/C-07]** → interfaz mínima (entidades, estados, política, conflictos, boundary, reloj), documentada y con pruebas.
 - **[Import de UI de C-02 desde otra feature]** → solo lectura; si C-08 la promueve a `shared`, cambia el import y no el comportamiento.
+- **[Agotamiento del pool de conexiones]** → la transacción retiene una conexión con el lock y `evaluar()` de C-03 usa otra; si llegan más altas simultáneas que conexiones del pool (mysql2: 10), las que esperan el lock retienen todas y la que lo tiene no obtiene la segunda hasta el timeout del lock. Con un único odontólogo es improbable; mitigación futura: que C-03 acepte el `EntityManager` de la transacción.
 - **[Reloj del servidor desfasado]** → afecta solo la regla de inicio no pasado; se usa el reloj del backend, nunca el del navegador.
 
 ## Migration Plan
