@@ -44,4 +44,15 @@ Revisar sin Playwright `/acceso` (vacío, error genérico, envío en curso) y el
 
 - `openspec validate c-04-authentication-and-app-shell --strict`: válido.
 - `node scripts/change-scope/check.mjs --branch change/c-04-authentication-and-app-shell --diff-file <cambios locales sin lockfiles>`: 0 violaciones (45 paths). Repetir sin `--diff-file` (`--base main`) después del commit.
+
+## Reconciliación posterior a integración — 2026-11-23
+
+- CR-C04-01 y CR-C04-02 quedaron integrados por el correctivo de C-01 (`05edd12`) y están presentes en `main`.
+- `npm run test:integration` contra MariaDB real `12.3.3-MariaDB`: PASS, 5/5 suites y 71/71 pruebas; Auth aportó 12/12.
+- Migración `C04CreateUsers2026112504000`: `down` eliminó `users` y `up` la restauró correctamente en `turnos_odontologia_test`.
+- Se creó `turnos_odontologia` con `IF NOT EXISTS`, se aplicaron las 4 migraciones y `npm run provision:admin` creó una cuenta ficticia sin imprimir credenciales.
+- La idempotencia del aprovisionamiento también quedó cubierta por la suite Auth contra MariaDB real.
+- `node scripts/change-scope/check.mjs --branch change/c-04-authentication-and-app-shell --base main`: PASS.
+- `openspec validate c-04-authentication-and-app-shell --strict --json`: PASS.
+- Revisión visual manual 6.1 confirmada por Pablo el 2026-11-23: acceso inválido/válido, navegación protegida, recarga con sesión, cierre de sesión, `/acceso` y shell revisados en 390×844 y 1440×900; foco y overflow sin observaciones bloqueantes. No se usó Playwright.
 - Archivos de otros owners modificados: ninguno. `package.json` y lockfiles sin cambios de contenido.

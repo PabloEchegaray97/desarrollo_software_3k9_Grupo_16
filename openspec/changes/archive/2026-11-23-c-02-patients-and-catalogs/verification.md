@@ -77,3 +77,11 @@ Registro de evidencia por grupo de tareas. Datos usados: exclusivamente ficticio
 ## Pendiente
 
 - Tareas 0.1, 0.2, 4.4, 6.1 y 6.2. (`tasks.md`). Las suites `*.integration-spec.ts` de C-02 dependen de CR-02 para ejecutarse con `npm run test:integration`.
+
+## Reconciliación posterior a integración — 2026-11-23
+
+- CR-01 y CR-02 quedaron integrados por el correctivo de C-01 (`05edd12`) y están presentes en `main`.
+- `npm run test:integration` contra MariaDB real `12.3.3-MariaDB`: PASS, 5/5 suites y 71/71 pruebas; C-02 aportó Catálogos 18/18 y Pacientes 18/18.
+- `node scripts/change-scope/check.mjs --branch change/c-02-patients-and-catalogs --base main`: PASS.
+- `openspec validate c-02-patients-and-catalogs --strict --json`: PASS.
+- Revisión visual manual 6.1 confirmada por Pablo el 2026-11-23: altas de prestación, sillón y paciente, advertencia de duplicado, `/pacientes`, `/prestaciones`, ambas secciones y modal abierto revisados en 390×844 y 1440×900; foco y overflow sin observaciones bloqueantes. No se usó Playwright.

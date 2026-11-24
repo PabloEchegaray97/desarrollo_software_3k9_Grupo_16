@@ -2,8 +2,8 @@
 
 ## 0. Coordinación previa (fuera del ownership de C-02)
 
-- [ ] 0.1 Enviar a Pablo los pedidos CR-01 (filtro global propaga `code`/`details` de `HttpException`) y CR-02 (`jest.integration.config.cjs` descubre `src/**/*.integration-spec.ts`); registrar en `verification.md` la respuesta y, si se aprueban, el commit de `main` que los integra. No editar esos archivos desde esta rama.
-- [ ] 0.2 Cuando CR-01/CR-02 estén en `main`, actualizar la rama desde `main` sin perder trabajo local y verificar con `git log` que ambos cambios están presentes antes de ejecutar los grupos 4.4 y 6.
+- [x] 0.1 Enviar a Pablo los pedidos CR-01 (filtro global propaga `code`/`details` de `HttpException`) y CR-02 (`jest.integration.config.cjs` descubre `src/**/*.integration-spec.ts`); registrar en `verification.md` la respuesta y, si se aprueban, el commit de `main` que los integra. No editar esos archivos desde esta rama.
+- [x] 0.2 Cuando CR-01/CR-02 estén en `main`, actualizar la rama desde `main` sin perder trabajo local y verificar con `git log` que ambos cambios están presentes antes de ejecutar los grupos 4.4 y 6.
 
 ## 1. Persistencia
 
@@ -30,7 +30,7 @@
 - [x] 4.1 Crear fixtures ficticios compartidos por los tests de C-02 ("Paciente Ficticio N", `11 5555-00NN`, DNI `3000000N`, `@example.test`); verificar por revisión que no hay datos reales.
 - [x] 4.2 Escribir `catalogs.integration-spec.ts` con Supertest sobre `AppModule` y MariaDB real: límites de duración/intervalo, nombre repetido activo e inactivo, listado solo activos, desactivar/reactivar y catálogo vacío.
 - [x] 4.3 Escribir `patients.integration-spec.ts`: alta mínima, DNI repetido con formato distinto, varios DNI `NULL`, edición que repite DNI, dos altas concurrentes con el mismo DNI (exactamente una 201), advertencia y confirmación de duplicado, búsqueda por nombre/teléfono/DNI, paginación inválida, inactivos ocultos y `DELETE` inexistente.
-- [ ] 4.4 Con CR-01 y CR-02 integrados, ejecutar `npm run test:integration` contra MariaDB real y registrar en `verification.md` versión de MariaDB, comando y resultado; si falta alguno, registrar la tarea como bloqueada sin usar otro motor.
+- [x] 4.4 Con CR-01 y CR-02 integrados, ejecutar `npm run test:integration` contra MariaDB real y registrar en `verification.md` versión de MariaDB, comando y resultado; si falta alguno, registrar la tarea como bloqueada sin usar otro motor.
 
 ## 5. Frontend
 
@@ -42,8 +42,8 @@
 
 ## 6. Verificación integral
 
-- [ ] 6.1 Con backend y MariaDB de desarrollo en ejecución, recorrer manualmente alta de prestación, sillón y paciente (incluida la advertencia de duplicado) desde la interfaz, y revisar `/pacientes` y `/prestaciones` (ambas secciones, modal abierto) en 390×844 y 1440×900 sin Playwright; registrar pantallas, viewports, foco, overflow y resultado en `verification.md`.
-- [ ] 6.2 Ejecutar `node scripts/change-scope/check.mjs` contra `main` desde `change/c-02-patients-and-catalogs` y verificar que no hay paths fuera del ownership; ejecutar `npx @fission-ai/openspec@2.1.1 validate c-02-patients-and-catalogs --strict` sin errores.
+- [x] 6.1 Con backend y MariaDB de desarrollo en ejecución, recorrer manualmente alta de prestación, sillón y paciente (incluida la advertencia de duplicado) desde la interfaz, y revisar `/pacientes` y `/prestaciones` (ambas secciones, modal abierto) en 390×844 y 1440×900 sin Playwright; registrar pantallas, viewports, foco, overflow y resultado en `verification.md`.
+- [x] 6.2 Ejecutar `node scripts/change-scope/check.mjs` contra `main` desde `change/c-02-patients-and-catalogs` y verificar que no hay paths fuera del ownership; ejecutar `npx @fission-ai/openspec@2.1.1 validate c-02-patients-and-catalogs --strict` sin errores.
 
 ## Workflow follow-up
 
