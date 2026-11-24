@@ -7,10 +7,10 @@
 
 ## 1. Persistencia y núcleo (`appointments/core`)
 
-- [ ] 1.1 Agregar `2026112600000-C05-CreateAppointments.ts` con `appointments` y `appointment_events`, FKs `RESTRICT`, `CHECK` de rangos, estados, tipos, motivo condicional y orden de instantes, más los índices de conflicto; verificar con `npm run build` y `up`/`down` contra MariaDB real.
-- [ ] 1.2 Crear `AppointmentEntity` y `AppointmentEventEntity` declarando los mismos índices y `CHECK` que la migración; verificar con el schema builder de TypeORM que no hay diferencias, y que `architecture-boundaries.spec.ts` y `npm run lint` pasan.
-- [ ] 1.3 Implementar `domain/appointment-status.ts` y `domain/appointment-policy.ts` (tiempos efectivos, período bloqueado, conflicto semiabierto, clasificación `SILLON`/`ODONTOLOGO`); verificar con tests unitarios de precedencias, límites, contigüidad exacta, inicio dentro del intervalo posterior y estados bloqueantes frente a `CANCELADO`.
-- [ ] 1.4 Implementar `TypeOrmTransactionBoundary` (lock `FOR UPDATE` sobre `configuracion_agenda`), `findBlockingConflicts(manager, period, excludeId?)` y el reloj inyectable; exportarlos desde `AppointmentCoreModule` y verificar con tests unitarios y `npm run build`.
+- [x] 1.1 Agregar `2026112600000-C05-CreateAppointments.ts` con `appointments` y `appointment_events`, FKs `RESTRICT`, `CHECK` de rangos, estados, tipos, motivo condicional y orden de instantes, más los índices de conflicto; verificar con `npm run build` y `up`/`down` contra MariaDB real.
+- [x] 1.2 Crear `AppointmentEntity` y `AppointmentEventEntity` declarando los mismos índices y `CHECK` que la migración; verificar con el schema builder de TypeORM que no hay diferencias, y que `architecture-boundaries.spec.ts` y `npm run lint` pasan.
+- [x] 1.3 Implementar `domain/appointment-status.ts` y `domain/appointment-policy.ts` (tiempos efectivos, período bloqueado, conflicto semiabierto, clasificación `SILLON`/`ODONTOLOGO`); verificar con tests unitarios de precedencias, límites, contigüidad exacta, inicio dentro del intervalo posterior y estados bloqueantes frente a `CANCELADO`.
+- [x] 1.4 Implementar `TypeOrmTransactionBoundary` (lock `FOR UPDATE` sobre `configuracion_agenda`), `findBlockingConflicts(manager, period, excludeId?)` y el reloj inyectable; exportarlos desde `AppointmentCoreModule` y verificar con tests unitarios y `npm run build`.
 
 ## 2. Alta de turnos (`appointments/creation`)
 
