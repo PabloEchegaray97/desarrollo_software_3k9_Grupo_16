@@ -2,8 +2,8 @@
 
 ## 0. Coordinación previa (fuera del ownership de C-05)
 
-- [ ] 0.1 Enviar a Pablo CR-05-01 (`timezone: 'Z'` en `data-source.ts`) y la observación sobre `architecture-boundaries.spec.ts`, y registrar su respuesta en `verification.md`. No editar esos archivos desde esta rama.
-- [ ] 0.2 Cuando CR-05-01 esté en `main`, actualizar la rama sin perder trabajo y verificar con `git log` que el cambio está presente antes de la tarea 3.6.
+- [x] 0.1 Enviar a Pablo CR-05-01 (`timezone: 'Z'` en `data-source.ts`) y la observación sobre `architecture-boundaries.spec.ts`, y registrar su respuesta en `verification.md`. No editar esos archivos desde esta rama.
+- [x] 0.2 Cuando CR-05-01 esté en `main`, actualizar la rama sin perder trabajo y verificar con `git log` que el cambio está presente antes de la tarea 3.6.
 
 ## 1. Persistencia y núcleo (`appointments/core`)
 
@@ -25,7 +25,7 @@
 - [x] 3.3 Escribir pruebas de integración de disponibilidad: fuera de horario sin y con motivo (eventos `CREADO` + `EXCEPCION`), override sin motivo, override que no salva un conflicto, día con `FERIADO` rechazado aun con override, override innecesario, referencias inactivas, inicio pasado y hora inválida.
 - [x] 3.4 Escribir pruebas de concurrencia: dos y cinco altas simultáneas incompatibles, en el mismo sillón y en sillones distintos, con exactamente una 201 y las demás 409 `APPOINTMENT_CONFLICT`.
 - [x] 3.5 Escribir la prueba de atomicidad: con el escritor de eventos reemplazado por uno que falla, la solicitud no deja turno ni eventos.
-- [ ] 3.6 Ejecutar `npm run test:integration` (runner de C-01) contra MariaDB real y registrar en `verification.md` versión, comando y resultado; con CR-05-01 integrado, ejecutar además la suite con `TZ=America/Argentina/Buenos_Aires` y verificar los valores UTC literales. Sin CR-05-01, registrar esa parte como bloqueada.
+- [x] 3.6 Ejecutar `npm run test:integration` (runner de C-01) contra MariaDB real y registrar en `verification.md` versión, comando y resultado; con CR-05-01 integrado, ejecutar además la suite con `TZ=America/Argentina/Buenos_Aires` y verificar los valores UTC literales. Sin CR-05-01, registrar esa parte como bloqueada.
 
 ## 4. Frontend (`features/appointments/create`)
 
@@ -38,7 +38,7 @@
 ## 5. Verificación integral
 
 - [ ] 5.1 Con backend y MariaDB de desarrollo en ejecución, recorrer manualmente el alta ordinaria, la excepción con motivo, un conflicto y un día bloqueado en `/turnos/nuevo`, y revisar formulario, modal, avisos y resumen en 390×844 y 1440×900 sin Playwright; registrar pantallas, viewports, foco, overflow y resultado en `verification.md`.
-- [ ] 5.2 Ejecutar `node scripts/change-scope/check.mjs --branch change/c-05-appointment-creation-engine --base main` sin violaciones y `npx @fission-ai/openspec@2.1.1 validate c-05-appointment-creation-engine --strict` sin errores.
+- [x] 5.2 Ejecutar `node scripts/change-scope/check.mjs --branch change/c-05-appointment-creation-engine --base main` sin violaciones y `npx @fission-ai/openspec@2.1.1 validate c-05-appointment-creation-engine --strict` sin errores.
 
 ## Workflow follow-up
 

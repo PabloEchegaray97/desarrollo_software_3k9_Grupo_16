@@ -13,7 +13,7 @@ Evidencia por grupo de tareas. Datos usados: exclusivamente ficticios.
 
 | Pedido | Estado |
 |---|---|
-| CR-05-01 — `timezone: 'Z'` en `data-source.ts` | **Enviado a Pablo el 2026-11-24** como issue PabloEchegaray97/desarrollo_software_3k9_Grupo_16#6; respuesta pendiente. **Reproducido**: con `TZ=America/Argentina/Buenos_Aires` los instantes se guardan 3 h corridos (ver grupo 3). |
+| CR-05-01 — `timezone: 'Z'` en `data-source.ts` | **Enviado a Pablo el 2026-11-24** como issue PabloEchegaray97/desarrollo_software_3k9_Grupo_16#6. **Resuelto por Pablo** en `main` con PR PabloEchegaray97/desarrollo_software_3k9_Grupo_16#7 (`d4f0107 fix(database): normalize MariaDB dates as UTC`, merge `8c4da6a`): `timezone: 'Z'` en `applicationDataSourceOptions` y `testDataSourceOptions`, con `data-source.spec.ts`. Incorporado a esta rama con `git merge origin/main` (`0287dd3`, sin conflictos). **Reproducido**: con `TZ=America/Argentina/Buenos_Aires` los instantes se guardan 3 h corridos (ver grupo 3). |
 | Observación — `architecture-boundaries.spec.ts` prohíbe `class Turno`/`solapamiento`/`overlap` en todo `src` | Enviada en el issue #6. C-05 lo respeta (nombres en inglés, vocabulario "conflicto"); el test sigue pasando. |
 | Observación nueva — deriva de entidades de C-03 | El schema builder de TypeORM detecta 4 diferencias **preexistentes** en entidades de C-03 frente a su migración: índices `UQ_configuracion_agenda_single` e `IDX_excepcion_disponibilidad_fecha_activo` no declarados, y `intervalo_global_minutos`/`zona_horaria` con definición distinta. No afecta a C-05; enviada en el issue #6. |
 
@@ -97,6 +97,16 @@ Evidencia por grupo de tareas. Datos usados: exclusivamente ficticios.
 - Corrección durante el grupo: el modal de excepción quedaba anidado dentro del formulario del turno (HTML inválido); ahora se renderiza fuera.
 - **Revisión visual manual: pendiente (tarea 5.1).** Sin Playwright por regla del proyecto; debe hacerse en una máquina del equipo.
 
+## Cierre de coordinación y verificación final (tareas 0.2, 3.6 y 5.2)
+
+- `git status` limpio → `git fetch origin` → `git switch change/c-05-appointment-creation-engine` → `git merge origin/main` (incorpora `8c4da6a`: `data-source.ts`, `data-source.spec.ts` y `scope-map.json`; sin conflictos).
+- **Integración con `TZ=America/Argentina/Buenos_Aires npm run test:integration`:** **6 suites, 97/97** — appointments 26, auth 12, availability 21, catalogs 18, patients 18, database 2; código 0. La prueba "guarda el instante UTC literal (zona del proceso: America/Buenos_Aires)" **pasa**: desaparecieron los dos errores de tres horas (`starts_at` y `occurred_at`). La variable `TZ` se aplicó solo a ese comando.
+- **Integración con `TZ=UTC`:** 97/97.
+- **Backend:** `npm run build` y `npm run lint` sin hallazgos; `npm test` **284/284** (incluye los 2 tests nuevos de `data-source.spec.ts`).
+- **Frontend:** `npx tsc -b`, `npm run lint` y `npm run build` sin errores; `npm test` **91/91**.
+- **Scope guard:** `node scripts/change-scope/check.mjs --branch change/c-05-appointment-creation-engine --base origin/main` → `Scope check passed`, código 0.
+- **OpenSpec:** `openspec validate c-05-appointment-creation-engine --strict` → válido.
+
 ## Pendiente
 
-- Tareas 0.1, 0.2, la parte TZ de 3.6, 5.1 y 5.2.
+- **5.1 — Revisión visual manual de `/turnos/nuevo`** (formulario, modal de excepción, aviso de conflicto, día bloqueado y resumen) en 390×844 y 1440×900, sin Playwright. No puede hacerse en el entorno de desarrollo de esta rama; debe realizarla y registrarla Paula en su máquina.
