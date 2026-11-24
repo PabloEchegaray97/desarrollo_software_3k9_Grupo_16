@@ -95,7 +95,7 @@ Evidencia por grupo de tareas. Datos usados: exclusivamente ficticios.
   - inicio pasado junto a la hora.
 - `npx tsc -b`, `npm run lint`, `npm run build` sin errores; `npm test` **91/91** (19 nuevos; los 72 previos siguen pasando). Sin `any`.
 - Corrección durante el grupo: el modal de excepción quedaba anidado dentro del formulario del turno (HTML inválido); ahora se renderiza fuera.
-- **Revisión visual manual: pendiente (tarea 5.1).** Sin Playwright por regla del proyecto; debe hacerse en una máquina del equipo.
+- **Revisión visual manual aprobada (tarea 5.1).** Pablo confirmó el 2026-11-23 que recorrió el alta ordinaria, la excepción con motivo, un conflicto y un día bloqueado en `/turnos/nuevo`, y revisó formulario, modal, avisos y resumen en 390×844 y 1440×900. No observó problemas bloqueantes de foco ni overflow. La revisión se realizó sin Playwright y sin capturas; las capturas no eran un criterio obligatorio.
 
 ## Cierre de coordinación y verificación final (tareas 0.2, 3.6 y 5.2)
 
@@ -107,6 +107,6 @@ Evidencia por grupo de tareas. Datos usados: exclusivamente ficticios.
 - **Scope guard:** `node scripts/change-scope/check.mjs --branch change/c-05-appointment-creation-engine --base origin/main` → `Scope check passed`, código 0.
 - **OpenSpec:** `openspec validate c-05-appointment-creation-engine --strict` → válido.
 
-## Pendiente
+## Cierre
 
-- **5.1 — Revisión visual manual de `/turnos/nuevo`** (formulario, modal de excepción, aviso de conflicto, día bloqueado y resumen) en 390×844 y 1440×900, sin Playwright. No puede hacerse en el entorno de desarrollo de esta rama; debe realizarla y registrarla Paula en su máquina.
+- **5.1 completada:** revisión visual manual de `/turnos/nuevo` confirmada por Pablo en 390×844 y 1440×900, sin Playwright y sin capturas. Formulario, modal de excepción, aviso de conflicto, día bloqueado, resumen, foco y overflow quedaron aprobados sin observaciones bloqueantes.

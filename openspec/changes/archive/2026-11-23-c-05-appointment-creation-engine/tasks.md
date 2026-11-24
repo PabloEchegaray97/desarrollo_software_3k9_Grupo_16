@@ -37,7 +37,7 @@
 
 ## 5. Verificación integral
 
-- [ ] 5.1 Con backend y MariaDB de desarrollo en ejecución, recorrer manualmente el alta ordinaria, la excepción con motivo, un conflicto y un día bloqueado en `/turnos/nuevo`, y revisar formulario, modal, avisos y resumen en 390×844 y 1440×900 sin Playwright; registrar pantallas, viewports, foco, overflow y resultado en `verification.md`.
+- [x] 5.1 Con backend y MariaDB de desarrollo en ejecución, recorrer manualmente el alta ordinaria, la excepción con motivo, un conflicto y un día bloqueado en `/turnos/nuevo`, y revisar formulario, modal, avisos y resumen en 390×844 y 1440×900 sin Playwright; registrar pantallas, viewports, foco, overflow y resultado en `verification.md`.
 - [x] 5.2 Ejecutar `node scripts/change-scope/check.mjs --branch change/c-05-appointment-creation-engine --base main` sin violaciones y `npx @fission-ai/openspec@2.1.1 validate c-05-appointment-creation-engine --strict` sin errores.
 
 ## Workflow follow-up
