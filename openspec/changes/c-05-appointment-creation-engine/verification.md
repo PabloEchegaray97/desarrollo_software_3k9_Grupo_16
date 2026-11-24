@@ -13,9 +13,9 @@ Evidencia por grupo de tareas. Datos usados: exclusivamente ficticios.
 
 | Pedido | Estado |
 |---|---|
-| CR-05-01 — `timezone: 'Z'` en `data-source.ts` | Pendiente de envío a Pablo. **Reproducido**: con `TZ=America/Argentina/Buenos_Aires` los instantes se guardan 3 h corridos (ver grupo 3). |
-| Observación — `architecture-boundaries.spec.ts` prohíbe `class Turno`/`solapamiento`/`overlap` en todo `src` | Pendiente de envío. C-05 lo respeta (nombres en inglés, vocabulario "conflicto"); el test sigue pasando. |
-| Observación nueva — deriva de entidades de C-03 | El schema builder de TypeORM detecta 4 diferencias **preexistentes** en entidades de C-03 frente a su migración: índices `UQ_configuracion_agenda_single` e `IDX_excepcion_disponibilidad_fecha_activo` no declarados, y `intervalo_global_minutos`/`zona_horaria` con definición distinta. No afecta a C-05; informar a Milagros/Pablo. |
+| CR-05-01 — `timezone: 'Z'` en `data-source.ts` | **Enviado a Pablo el 2026-11-24** como issue PabloEchegaray97/desarrollo_software_3k9_Grupo_16#6; respuesta pendiente. **Reproducido**: con `TZ=America/Argentina/Buenos_Aires` los instantes se guardan 3 h corridos (ver grupo 3). |
+| Observación — `architecture-boundaries.spec.ts` prohíbe `class Turno`/`solapamiento`/`overlap` en todo `src` | Enviada en el issue #6. C-05 lo respeta (nombres en inglés, vocabulario "conflicto"); el test sigue pasando. |
+| Observación nueva — deriva de entidades de C-03 | El schema builder de TypeORM detecta 4 diferencias **preexistentes** en entidades de C-03 frente a su migración: índices `UQ_configuracion_agenda_single` e `IDX_excepcion_disponibilidad_fecha_activo` no declarados, y `intervalo_global_minutos`/`zona_horaria` con definición distinta. No afecta a C-05; enviada en el issue #6. |
 
 ## Grupo 1 — Persistencia y núcleo
 
