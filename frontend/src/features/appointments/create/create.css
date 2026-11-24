@@ -1,0 +1,41 @@
+/* Alta de turno (C-05). Complementa features/catalog/ui/admin-ui.css; solo tokens del design system. */
+
+.apt-form {
+  display: grid; gap: var(--space-5); padding: var(--space-6);
+  border: 1px solid var(--color-border); border-radius: var(--radius-lg);
+  background: var(--color-surface); box-shadow: var(--shadow-sm);
+}
+.apt-section { display: grid; gap: var(--space-4); margin: 0; padding: 0; border: 0; }
+.apt-section + .apt-section { padding-top: var(--space-5); border-top: 1px solid var(--color-border); }
+.apt-section__title { margin: 0; padding: 0; color: var(--color-primary); font-size: var(--font-size-16); font-weight: 800; }
+.apt-grid { display: grid; gap: var(--space-4); grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.apt-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--space-2); }
+
+.apt-textarea { min-height: 6rem; padding: var(--space-2) var(--space-3); resize: vertical; }
+
+/* Selector de paciente: lista seleccionable con indicador explícito (contrato de listas). */
+.apt-picker { display: grid; gap: var(--space-2); }
+.apt-picker__results { display: grid; gap: var(--space-1); margin: 0; padding: var(--space-1); border-radius: var(--radius-sm); background: var(--color-surface-subtle); list-style: none; }
+.apt-picker__option { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); width: 100%; min-height: 2.5rem; padding: var(--space-2) var(--space-3); border: 1px solid transparent; border-radius: var(--radius-sm); color: var(--color-text); background: transparent; text-align: left; cursor: pointer; }
+.apt-picker__option:hover { background: var(--color-surface); }
+.apt-picker__option:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.apt-picker__meta { color: var(--color-text-muted); font-size: var(--font-size-14); }
+.apt-picker__selected { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2); padding: var(--space-3); border: 1px solid var(--color-primary); border-radius: var(--radius-sm); background: var(--color-primary-soft); }
+.apt-picker__empty { margin: 0; padding: var(--space-2) var(--space-3); color: var(--color-text-muted); font-size: var(--font-size-14); }
+
+/* Resumen del turno creado: pares rótulo/valor con separadores, sin tarjetas internas. */
+.apt-summary { display: grid; gap: var(--space-5); padding: var(--space-6); border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface); box-shadow: var(--shadow-sm); }
+.apt-summary__title { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin: 0; color: var(--color-primary); font-size: var(--font-size-20); }
+.apt-summary__list { display: grid; margin: 0; }
+.apt-summary__row { display: grid; grid-template-columns: minmax(8rem, 12rem) 1fr; gap: var(--space-3); padding: var(--space-3) 0; border-top: 1px solid var(--color-border); }
+.apt-summary__row dt { color: var(--color-text-muted); font-size: var(--font-size-14); }
+.apt-summary__row dd { margin: 0; font-weight: 700; overflow-wrap: anywhere; }
+.apt-badge { display: inline-flex; padding: 0.125rem var(--space-2); border: 1px solid var(--color-warning); border-radius: var(--radius-pill); color: var(--color-warning); background: var(--color-warning-soft); font-size: var(--font-size-12); font-weight: 800; }
+.apt-badge--ok { border-color: var(--color-success); color: var(--color-on-secondary); background: var(--color-success-soft); }
+
+@media (max-width: 40rem) {
+  .apt-form, .apt-summary { padding: var(--space-4); }
+  .apt-grid { grid-template-columns: 1fr; }
+  .apt-actions .adm-button { flex: 1 1 auto; }
+  .apt-summary__row { grid-template-columns: 1fr; gap: var(--space-1); }
+}

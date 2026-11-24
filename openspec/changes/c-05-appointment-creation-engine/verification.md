@@ -74,6 +74,29 @@ Evidencia por grupo de tareas. Datos usados: exclusivamente ficticios.
   - una primera versión de la prueba UTC cambiaba `process.env.TZ` dentro de Jest y daba un resultado falso; se reemplazó por la ejecución con `TZ` al arrancar.
 - Backend `npm run lint` y `npm run build` sin hallazgos; `npm test` 282/282.
 
+## Grupo 4 — Frontend (`features/appointments/create`)
+
+- `helpers.test.ts` (9 casos):
+  - formato en `America/Argentina/Buenos_Aires`: 13:00Z → 10:00, 02:30Z → 23:30 del día local anterior, rango `10:00–10:40`, fecha con día de semana;
+  - mapeo de `APPOINTMENT_OUTSIDE_AVAILABILITY`, `APPOINTMENT_CONFLICT` (alcance, descarte de entradas mal formadas), `APPOINTMENT_BLOCKED_BY_EXCEPTION`, `APPOINTMENT_REFERENCE_INVALID`, `APPOINTMENT_IN_PAST`, `APPOINTMENT_INVALID_TIME` y `VALIDATION_ERROR` por campo;
+  - mensaje genérico para errores de red y 500.
+- `appointment-create.test.tsx` (10 casos):
+  - solo opciones activas (ninguna solicitud con `incluirInactivos`);
+  - ayudas de referencia: duración de la prestación, intervalo global 10 o el propio de la prestación (5);
+  - obligatorios marcados con `aria-invalid` sin enviar;
+  - error de carga con reintento;
+  - envío al backend sin consultar `/disponibilidad/evaluacion` y resumen en hora local (`10:00 a 10:30 (30 min)`, fin de bloqueo `10:40`, miércoles 10 de marzo de 2027, sillón);
+  - "crear otro turno" vuelve a un formulario vacío;
+  - fuera de disponibilidad: modal con el horario local, motivo obligatorio sin reenviar, reenvío con `fueraDisponibilidad: true` y motivo recortado, y badge "Fuera de disponibilidad";
+  - cancelar el modal conserva los datos sin crear;
+  - conflicto `ODONTOLOGO` con `10:00–10:40 · Sillón B`;
+  - día bloqueado sin ofrecer excepción;
+  - referencia inactiva junto a "Sillón";
+  - inicio pasado junto a la hora.
+- `npx tsc -b`, `npm run lint`, `npm run build` sin errores; `npm test` **91/91** (19 nuevos; los 72 previos siguen pasando). Sin `any`.
+- Corrección durante el grupo: el modal de excepción quedaba anidado dentro del formulario del turno (HTML inválido); ahora se renderiza fuera.
+- **Revisión visual manual: pendiente (tarea 5.1).** Sin Playwright por regla del proyecto; debe hacerse en una máquina del equipo.
+
 ## Pendiente
 
-- Tareas 0.1, 0.2, la parte TZ de 3.6, grupos 4 y 5.
+- Tareas 0.1, 0.2, la parte TZ de 3.6, 5.1 y 5.2.

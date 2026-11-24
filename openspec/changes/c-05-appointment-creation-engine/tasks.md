@@ -29,11 +29,11 @@
 
 ## 4. Frontend (`features/appointments/create`)
 
-- [ ] 4.1 Implementar `api.ts`, `types.ts`, `time.ts` (formato local con `Intl`) y `errors.ts` (mapeo de códigos y `details` a mensajes y campos); verificar con tests unitarios de formato y de mapeo.
-- [ ] 4.2 Implementar `AppointmentForm` y `PatientPicker` con opciones activas, valores de referencia de duración e intervalo, obligatorios locales y estados de carga/error con reintento; verificar con tests de componentes.
-- [ ] 4.3 Implementar `ExceptionModal` (motivo obligatorio, reenvío con override, cancelar conservando datos) y los avisos de conflicto y día bloqueado; verificar con tests de componentes de cada flujo.
-- [ ] 4.4 Implementar `AppointmentSummary` (horas locales, valores efectivos, excepción, "crear otro") y reemplazar el placeholder de `AppointmentCreationPage`; verificar con tests de componentes.
-- [ ] 4.5 Ejecutar `npx tsc -b`, `npm test`, `npm run lint` y `npm run build` en `frontend/` sin errores ni `any`.
+- [x] 4.1 Implementar `api.ts`, `types.ts`, `time.ts` (formato local con `Intl`) y `errors.ts` (mapeo de códigos y `details` a mensajes y campos); verificar con tests unitarios de formato y de mapeo.
+- [x] 4.2 Implementar `AppointmentForm` y `PatientPicker` con opciones activas, valores de referencia de duración e intervalo, obligatorios locales y estados de carga/error con reintento; verificar con tests de componentes.
+- [x] 4.3 Implementar `ExceptionModal` (motivo obligatorio, reenvío con override, cancelar conservando datos) y los avisos de conflicto y día bloqueado; verificar con tests de componentes de cada flujo.
+- [x] 4.4 Implementar `AppointmentSummary` (horas locales, valores efectivos, excepción, "crear otro") y reemplazar el placeholder de `AppointmentCreationPage`; verificar con tests de componentes.
+- [x] 4.5 Ejecutar `npx tsc -b`, `npm test`, `npm run lint` y `npm run build` en `frontend/` sin errores ni `any`.
 
 ## 5. Verificación integral
 

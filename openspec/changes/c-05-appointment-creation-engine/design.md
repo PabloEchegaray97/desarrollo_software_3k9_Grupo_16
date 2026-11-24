@@ -212,7 +212,7 @@ backend/src/modules/appointments/creation/
 
 ### 10. Frontend (`features/appointments/create/`)
 
-- `index.tsx` (`AppointmentCreationPage`), `api.ts`, `types.ts`, `AppointmentForm.tsx`, `PatientPicker.tsx`, `ExceptionModal.tsx`, `AppointmentSummary.tsx`, `errors.ts`, `time.ts` y `*.test.tsx`.
+- `index.tsx` (`AppointmentCreationPage`), `api.ts`, `types.ts`, `AppointmentForm.tsx`, `PatientPicker.tsx`, `ExceptionModal.tsx`, `AppointmentSummary.tsx`, `errors.ts`, `time.ts`, `fields.tsx` (`SelectField`, `TextAreaField`), `create.css` (prefijo `apt-`, solo tokens) y `*.test.ts(x)`.
 - **Opciones:**
   - prestaciones y sillones activos vía `proceduresApi` y `chairsApi`;
   - pacientes por búsqueda con `patientsApi.list({ q })`;
@@ -224,6 +224,10 @@ backend/src/modules/appointments/creation/
   - `APPOINTMENT_OUTSIDE_AVAILABILITY` abre `ExceptionModal`, con motivo obligatorio, y reenvía con override;
   - `APPOINTMENT_CONFLICT` y `APPOINTMENT_BLOCKED_BY_EXCEPTION` se explican en un aviso sobre el formulario, con la hora local del conflicto;
   - `APPOINTMENT_REFERENCE_INVALID` marca el campo indicado.
+- **Detalles de implementación:**
+  - el modal de excepción se renderiza **fuera** del `<form>` del turno, porque tiene su propio formulario y HTML no admite formularios anidados;
+  - sin prestaciones o sillones activos se muestra un estado vacío que remite al catálogo, en lugar de un formulario inutilizable;
+  - tras crear, el foco pasa al título del resumen.
 - **Formato de horas:** con `Intl.DateTimeFormat('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' })`. El cliente solo presenta instantes; no calcula disponibilidad ni conflictos (regla dura 3).
 
 ### 11. Estrategia de pruebas
