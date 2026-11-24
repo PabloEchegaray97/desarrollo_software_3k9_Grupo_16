@@ -22,6 +22,7 @@ export function applicationDataSourceOptions(environment: AppEnvironment): DataS
     entities: [path.join(currentDirectory, '..', '**', '*.entity.{js,ts}')],
     migrations: [path.join(currentDirectory, 'migrations', '*.{js,ts}')],
     migrationsTableName: 'app_migrations',
+    timezone: 'Z',
     synchronize: false,
     logging: false,
   };
@@ -37,6 +38,7 @@ export function testDataSourceOptions(environment: TestDatabaseEnvironment): Dat
     password: environment.TEST_DATABASE_PASSWORD,
     migrations: [path.join(currentDirectory, 'migrations', '*.{js,ts}')],
     migrationsTableName: 'app_migrations',
+    timezone: 'Z',
     synchronize: false,
     logging: false,
   };

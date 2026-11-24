@@ -9,6 +9,14 @@
     "knowledge-base/"
   ],
   "policies": {
+    "coordination/cr-05-01-datasource-utc": {
+      "id": "CR05",
+      "allow": [
+        "backend/src/database/data-source.ts",
+        "backend/src/database/data-source.spec.ts",
+        "scripts/change-scope/scope-map.json"
+      ]
+    },
     "change/c-01-foundation-and-contracts": {
       "id": "C01",
       "allow": [".env.example", ".gitignore", ".github/workflows/change-scope.yml", "README.md", "CONTRIBUTING.md", "backend/", "frontend/", "scripts/change-scope/", "openspec/changes/c-01-foundation-and-contracts/"]
