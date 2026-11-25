@@ -27,7 +27,12 @@
 | `frontend`: `npx tsc -b` / `npm run build` | no errors; vite build OK |
 | Manual visual review at 390×844 and 1440×900 (empty state, date navigation, filters, refresh) | OK; title capitalization fixed |
 
-Not visually reviewed with real data: badge shapes, detail panel and Esc/focus return (no appointments seeded in the dev DB). Covered by `agenda.test.tsx`.
+## Final manual visual confirmation
+
+- **Date:** 2026-11-24 (`America/Argentina/Buenos_Aires`).
+- **Confirmation:** Pablo explicitly confirmed: "C-07 revisado en ambos tamaños, sin diferencias".
+- **Coverage closed:** populated agenda states, badges, appointment detail, `Esc` close/focus return, blocking and exception indicators, focus and overflow at **390x844** and **1440x900**.
+- **Result:** no visual differences reported. No Playwright or automated screenshots were used.
 
 ## Notes
 - Local finding for Pablo: the backend does not load `backend/.env` on startup (only the integration runner does); the dev DB also needs `npm run migration:run`.
