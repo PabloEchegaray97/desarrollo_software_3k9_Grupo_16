@@ -1,7 +1,7 @@
 # Sistema visual de OdoSoft
 
 Mode: system-only
-Revision: 4
+Revision: 5
 Approval: pending (manual visual review not run)
 Created: 2026-11-22
 Revised: 2026-11-25
@@ -12,6 +12,7 @@ Esta carpeta define la base visual portátil de OdoSoft, la agenda web de un odo
 
 La revisión 2 incorpora las decisiones de C-08: nombre definitivo OdoSoft, tema claro/oscuro, sidebar contraíble, dashboard compacto, alta de turno en modal e iconografía Phosphor. La revisión 3 fija los modales centrados en escritorio y como bottom sheets en móvil, según pedido explícito del usuario.
 La revisión 4 aplana tarjetas, paneles y modales sin bordes perimetrales ni sombras; unifica labels e inputs y rediseña Pacientes como un directorio con lista y detalle.
+La revisión 5 alinea el sidebar con la superficie de cada tema: blanco en claro y del color de las tarjetas en oscuro, con texto semántico legible.
 
 ## Brief
 
@@ -85,7 +86,7 @@ No se copiaron interfaces ni componentes propietarios.
 - **Logo:** reemplazar `assets/logo.svg` conservando ruta y `viewBox`, luego revisar claro/oscuro.
 - **Tokens:** modificar variables semánticas, incrementar `Revision`, volver `Approval` a `pending` y repetir la revisión manual.
 
-## Cómo previsualizar la revisión 4
+## Cómo previsualizar la revisión 5
 
 1. Abrir `design-system/components.html` en un navegador moderno; no requiere servidor ni internet.
 2. Revisar los botones **Claro** y **Oscuro**.
@@ -97,5 +98,5 @@ No se copiaron interfaces ni componentes propietarios.
    - foco, contraste y ausencia de overflow.
 4. Informar diferencias o confirmar ambos temas y tamaños.
 
-Preview revisión 3: manual (2026-11-24; confirmado por el usuario en 390×844 y 1440×900, en claro y oscuro). Revisión 4: pendiente; no se hizo inspección visual por la instrucción del usuario. No se usó Playwright ni se declara ninguna captura automatizada.
+Preview revisión 3: manual (2026-11-24; confirmado por el usuario en 390×844 y 1440×900, en claro y oscuro). Revisiones 4 y 5: pendientes; no se hizo inspección visual por la instrucción del usuario. No se usó Playwright ni se declara ninguna captura automatizada.
 

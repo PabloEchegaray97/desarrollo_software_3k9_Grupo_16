@@ -126,7 +126,7 @@ function AppointmentRow({ turno, highlighted }: { turno: AgendaTurno; highlighte
       >
         <span className="dashboard-appointment__rail">
           {highlighted ? <span>Próximo</span> : null}
-          <strong>{formatLocalTime(turno.inicio)}</strong>
+          <strong>{formatLocalTime(turno.inicio)} - {formatLocalTime(turno.finAtencion)}</strong>
           <small>Hs</small>
         </span>
 

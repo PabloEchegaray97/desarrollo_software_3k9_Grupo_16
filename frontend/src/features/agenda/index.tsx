@@ -7,7 +7,6 @@ import { AgendaFilters } from './AgendaFilters'
 import { AgendaToolbar, readAgendaViewPreference, writeAgendaViewPreference, type AgendaView } from './AgendaToolbar'
 import { AppointmentDetail } from './AppointmentDetail'
 import { AppointmentRow } from './AppointmentRow'
-import { DayOverview } from './DayOverview'
 import { isDefaultFilters, readViewState, toAgendaQuery, writeViewState, type AgendaViewState } from './agenda-params'
 import { listChairs } from './api'
 import type { AppointmentAgendaPageProps } from './contracts'
@@ -128,7 +127,6 @@ export function AppointmentAgendaPage({ renderActions }: AppointmentAgendaPagePr
   const clearFilters = () => {
     setSearchDraft('')
     setAppliedSearch('')
-    setFiltersOpen(false)
     update({ sillonId: undefined, estados: readViewState(new URLSearchParams(), today).estados })
   }
 
@@ -181,6 +179,7 @@ export function AppointmentAgendaPage({ renderActions }: AppointmentAgendaPagePr
             fecha={view.fecha}
             today={today}
             countsByDate={countsByDate}
+            dia={dia}
             onDateChange={(fecha) => update({ fecha })}
           />
         ) : null}
@@ -200,24 +199,6 @@ export function AppointmentAgendaPage({ renderActions }: AppointmentAgendaPagePr
             onRefresh={() => { setNotice(null); void refresh() }}
           />
 
-          <div
-            id="agenda-filters-panel"
-            className="agenda-filters-panel"
-            hidden={!filtersOpen}
-          >
-            <AgendaFilters
-              chairs={chairs}
-              chairsError={chairsError}
-              onRetryChairs={() => setChairsAttempt((attempt) => attempt + 1)}
-              sillonId={view.sillonId}
-              estados={view.estados}
-              canClear={filtersApplied}
-              onSillonChange={(sillonId) => update({ sillonId })}
-              onEstadosChange={(estados) => update({ estados })}
-              onClear={clearFilters}
-            />
-          </div>
-
           {notice ? <p className="agenda-notice" role="status">{notice}</p> : null}
           {load.status === 'ready' && load.refreshError ? (
             <p className="agenda-notice" data-tone="error" role="alert">
@@ -226,17 +207,19 @@ export function AppointmentAgendaPage({ renderActions }: AppointmentAgendaPagePr
             </p>
           ) : null}
 
-          <header className="agenda-main-panel__heading">
-            <div>
-              <h2>{agendaView === 'grid' ? formatCivilDate(view.fecha) : 'Todos los turnos del mes'}</h2>
-              <p>
-                {load.status === 'ready'
-                  ? `${visibleTurnos.length} ${visibleTurnos.length === 1 ? 'turno' : 'turnos'}${agendaView === 'grid' ? ' para esta fecha' : ' en el período'}`
-                  : 'Consultá la agenda por fecha y estado.'}
-              </p>
-            </div>
-            {agendaView === 'grid' ? <CalendarCheck size={20} aria-hidden="true" /> : null}
-          </header>
+          {agendaView === 'grid' ? (
+            <header className="agenda-main-panel__heading">
+              <div>
+                <h2>{formatCivilDate(view.fecha)}</h2>
+                <p>
+                  {load.status === 'ready'
+                    ? `${visibleTurnos.length} ${visibleTurnos.length === 1 ? 'turno' : 'turnos'} para esta fecha`
+                    : 'Consultá la agenda por fecha y estado.'}
+                </p>
+              </div>
+              <CalendarCheck size={20} aria-hidden="true" />
+            </header>
+          ) : null}
 
           {load.status === 'idle' ? (
             <StatePanel state="empty" title="Sin estados elegidos" description="Elegí al menos un estado para ver turnos." />
@@ -255,7 +238,6 @@ export function AppointmentAgendaPage({ renderActions }: AppointmentAgendaPagePr
           ) : null}
           {load.status === 'ready' ? (
             <>
-              {agendaView === 'grid' ? <DayOverview dia={dia} /> : null}
               {visibleTurnos.length === 0 ? (
                 <StatePanel state="empty" title={emptyTitle} description={emptyDescription} />
               ) : (
@@ -291,6 +273,20 @@ export function AppointmentAgendaPage({ renderActions }: AppointmentAgendaPagePr
           ) : null}
         </section>
       </div>
+
+      <AgendaFilters
+        open={filtersOpen}
+        chairs={chairs}
+        chairsError={chairsError}
+        onRetryChairs={() => setChairsAttempt((attempt) => attempt + 1)}
+        sillonId={view.sillonId}
+        estados={view.estados}
+        onSillonChange={(sillonId) => update({ sillonId })}
+        onEstadosChange={(estados) => update({ estados })}
+        onClose={() => setFiltersOpen(false)}
+        onClear={clearFilters}
+        onApply={() => setFiltersOpen(false)}
+      />
     </section>
   )
 }

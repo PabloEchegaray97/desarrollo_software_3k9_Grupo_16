@@ -1,11 +1,10 @@
 import {
-  ArrowClockwise,
   CalendarBlank,
   FunnelSimple,
   ListBullets,
-  MagnifyingGlass,
 } from '@phosphor-icons/react'
-import { formatLocalTime } from './time'
+import { AppButton } from '../../shared/components/Button'
+import { SearchInput } from '../../shared/components/SearchInput'
 
 export const AGENDA_VIEW_STORAGE_KEY = 'odosoft.agenda-view'
 export type AgendaView = 'list' | 'grid'
@@ -61,44 +60,25 @@ export function AgendaToolbar({
 }: Props) {
   return (
     <div className="agenda-toolbar">
-      <form
-        className="agenda-toolbar__search"
-        aria-label="Buscar turnos del mes visible"
-        onSubmit={(event) => {
-          event.preventDefault()
-          onSearch()
-        }}
-      >
-        <label className="agenda-toolbar__search-field">
-          <MagnifyingGlass size={18} aria-hidden="true" />
-          <span className="agenda-visually-hidden">Buscar por paciente, prestación o sillón</span>
-          <input
-            className="agenda-toolbar__search-input"
-            type="search"
-            maxLength={80}
-            value={searchDraft}
-            onChange={(event) => onSearchDraftChange(event.target.value)}
-            placeholder="Buscar paciente, prestación o sillón"
-          />
-        </label>
-        <button type="submit" className="agenda-action-button agenda-action-button--primary">
-          <MagnifyingGlass size={16} aria-hidden="true" />
-          <span>Buscar</span>
-        </button>
-      </form>
+      <SearchInput
+        value={searchDraft}
+        onChange={onSearchDraftChange}
+        onSearch={onSearch}
+        maxLength={80}
+        placeholder="Buscar paciente, prestación o sillón"
+        aria-label="Buscar por paciente, prestación o sillón"
+      />
 
       <div className="agenda-toolbar__controls">
-        <button
-          type="button"
-          className="agenda-action-button"
+        <AppButton
+          variant="secondary"
+          leftIcon={<FunnelSimple />}
+          rightIcon={hasActiveFilters ? <i className="agenda-toolbar__filter-dot" aria-hidden="true" /> : undefined}
           aria-expanded={filtersOpen}
-          aria-controls="agenda-filters-panel"
           onClick={onToggleFilters}
         >
-          <FunnelSimple size={16} aria-hidden="true" />
-          <span>Filtros</span>
-          {hasActiveFilters ? <i className="agenda-toolbar__filter-dot" aria-hidden="true" /> : null}
-        </button>
+          Filtros
+        </AppButton>
 
         <div className="agenda-toolbar__view" role="group" aria-label="Vista de turnos">
           <button type="button" aria-pressed={view === 'list'} onClick={() => onViewChange('list')}>
@@ -110,14 +90,7 @@ export function AgendaToolbar({
             <span>Calendario</span>
           </button>
         </div>
-
-        <button type="button" className="agenda-action-button agenda-action-button--refresh" onClick={onRefresh} disabled={refreshing}>
-          <ArrowClockwise size={16} aria-hidden="true" />
-          <span>{refreshing ? 'Actualizando…' : 'Actualizar'}</span>
-        </button>
       </div>
-
-      {generadoEn ? <p className="agenda-toolbar__stamp">Actualizado a las {formatLocalTime(generadoEn)}</p> : null}
     </div>
   )
 }

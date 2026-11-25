@@ -26,8 +26,8 @@
 .app-button--lg.app-button--icon-only { width: 3rem; }
 .app-button--primary { color: var(--color-on-primary); background: var(--color-primary); }
 .app-button--primary:hover:not(:disabled) { background: var(--color-primary-hover); }
-.app-button--secondary { color: var(--color-text); background: var(--color-surface); box-shadow: var(--shadow-sm); }
-.app-button--secondary:hover:not(:disabled) { background: var(--color-surface-subtle); }
+.app-button--secondary { color: var(--color-text); background: var(--color-canvas); }
+.app-button--secondary:hover:not(:disabled) { background: var(--color-surface-strong); }
 .app-button--ghost { color: var(--color-text-muted); background: transparent; }
 .app-button--ghost:hover:not(:disabled) { color: var(--color-text); background: var(--color-surface-subtle); }
 .app-button--danger { color: var(--color-surface); background: var(--color-danger); }

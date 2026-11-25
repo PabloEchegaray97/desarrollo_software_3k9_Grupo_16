@@ -5,7 +5,6 @@ import {
   DownloadSimple,
   FunnelSimple,
   ListBullets,
-  MagnifyingGlass,
   PencilSimple,
   Plus,
   Table,
@@ -13,6 +12,8 @@ import {
   UserMinus,
   Users,
 } from '@phosphor-icons/react'
+import { FilterModal } from '../../shared/components/FilterModal'
+import { SearchInput } from '../../shared/components/SearchInput'
 import { StatePanel } from '../../shared/components/StatePanel'
 import { Button } from '../catalog/ui/Button'
 import { useDebouncedValue, useRemoteList } from '../catalog/ui/hooks'
@@ -41,6 +42,7 @@ function escapeCsv(value: string): string {
 export function PatientsPage() {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
+  const [filtersOpen, setFiltersOpen] = useState(false)
   const [viewMode, setViewMode] = useState<ViewMode>('detail')
   const [page, setPage] = useState(1)
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -146,26 +148,28 @@ export function PatientsPage() {
       <div className={`clients-workspace${viewMode === 'table' ? ' clients-workspace--table' : ''}`}>
         <section className="clients-panel clients-panel--list">
           <header className="clients-panel__toolbar">
-            <span className="clients-panel__filter-label"><FunnelSimple size={15} /> Filtros</span>
-            <div className="clients-view-switch" aria-label="Vista de pacientes">
-              <button type="button" aria-pressed={viewMode === 'detail'} onClick={() => setViewMode('detail')}><ListBullets size={15} /> Detalle</button>
-              <button type="button" aria-pressed={viewMode === 'table'} onClick={() => setViewMode('table')}><Table size={15} /> Tabla</button>
+            <SearchInput
+              value={search}
+              onChange={(value) => { setSearch(value); setPage(1) }}
+              onSearch={() => setPage(1)}
+              placeholder="Nombre, teléfono o DNI"
+              aria-label="Buscar cliente"
+            />
+            <div className="clients-panel__toolbar-controls">
+              <Button
+                variant="secondary"
+                leftIcon={<FunnelSimple />}
+                aria-expanded={filtersOpen}
+                onClick={() => setFiltersOpen(true)}
+              >
+                Filtros{statusFilter !== 'all' ? ' (1)' : ''}
+              </Button>
+              <div className="clients-view-switch" aria-label="Vista de pacientes">
+                <button type="button" aria-pressed={viewMode === 'detail'} onClick={() => setViewMode('detail')}><ListBullets size={15} /> Detalle</button>
+                <button type="button" aria-pressed={viewMode === 'table'} onClick={() => setViewMode('table')}><Table size={15} /> Tabla</button>
+              </div>
             </div>
           </header>
-
-          <div className="clients-search-row">
-            <label className="clients-search">
-              <span>Buscar cliente</span>
-              <span className="clients-search__control"><MagnifyingGlass size={17} aria-hidden="true" /><input type="search" value={search} onChange={(event) => { setSearch(event.target.value); setPage(1) }} placeholder="Nombre, teléfono o DNI" /></span>
-            </label>
-            <div className="clients-filter" aria-label="Estado del paciente">
-              {(['all', 'active', 'inactive'] as const).map((value) => (
-                <button key={value} type="button" aria-pressed={statusFilter === value} onClick={() => { setStatusFilter(value); setPage(1) }}>
-                  {value === 'all' ? 'Todos' : value === 'active' ? 'Activos' : 'Inactivos'}
-                </button>
-              ))}
-            </div>
-          </div>
 
           <p className="clients-status" role="status">{status}</p>
 
@@ -198,6 +202,33 @@ export function PatientsPage() {
 
       <button type="button" className="clients-fab" aria-label="Crear paciente" onClick={() => setEditing({ patient: null })}><Plus size={20} /></button>
       {editing ? <PatientForm patient={editing.patient} onClose={() => setEditing(null)} onSaved={saved} /> : null}
+      <FilterModal
+        open={filtersOpen}
+        title="Filtros"
+        description="Filtrá los pacientes por estado."
+        onClose={() => setFiltersOpen(false)}
+        onClear={() => {
+          setStatusFilter('all')
+          setPage(1)
+        }}
+        onApply={() => setFiltersOpen(false)}
+      >
+        <div className="filter-modal__field">
+          <label htmlFor="patients-filter-status">Estado</label>
+          <select
+            id="patients-filter-status"
+            value={statusFilter}
+            onChange={(event) => {
+              setStatusFilter(event.target.value as StatusFilter)
+              setPage(1)
+            }}
+          >
+            <option value="all">Todos</option>
+            <option value="active">Activos</option>
+            <option value="inactive">Inactivos</option>
+          </select>
+        </div>
+      </FilterModal>
     </section>
   )
 }

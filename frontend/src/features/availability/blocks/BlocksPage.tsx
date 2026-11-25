@@ -68,8 +68,9 @@ function formatLongDate(value: string): string {
   return new Intl.DateTimeFormat('es-AR', { day: 'numeric', month: 'long', year: 'numeric' }).format(parseLocalDate(value))
 }
 
-function formatShortDate(value: string): string {
-  return new Intl.DateTimeFormat('es-AR', { day: 'numeric', month: 'short', year: 'numeric' }).format(parseLocalDate(value))
+function formatNumericDate(value: string): string {
+  const [year, month, day] = value.split('-')
+  return `${day}/${month}/${year}`
 }
 
 function sortBlocks(records: ExceptionRecord[]): ExceptionRecord[] {
@@ -333,10 +334,19 @@ function BlockCard({ block, onDelete }: { block: ExceptionRecord; onDelete: () =
   const partial = Boolean(block.horaInicio && block.horaFin)
   return (
     <li className="blocks-record">
-      <div>
-        <span className={`blocks-record__badge${partial ? ' blocks-record__badge--partial' : ''}`}>{partial ? 'Horario parcial' : 'Día completo'}</span>
-        <strong>{formatShortDate(block.fecha)}</strong>
-        <p>{partial ? `${block.horaInicio}–${block.horaFin} · ` : ''}{block.motivo}</p>
+      <div className="blocks-record__main">
+        <span className="blocks-record__rail">
+          <strong>{formatNumericDate(block.fecha)}</strong>
+        </span>
+        <span className="blocks-record__body">
+          <strong>{block.motivo}</strong>
+          {partial ? <span className="blocks-record__time">{block.horaInicio} - {block.horaFin} Hs</span> : null}
+          <span className="blocks-record__meta">
+            <span className={`blocks-record__badge${partial ? ' blocks-record__badge--partial' : ''}`}>
+              {partial ? 'Horario parcial' : 'Día completo'}
+            </span>
+          </span>
+        </span>
       </div>
       <AppButton size="sm" variant="danger" leftIcon={<Trash />} onClick={onDelete}>Eliminar</AppButton>
     </li>

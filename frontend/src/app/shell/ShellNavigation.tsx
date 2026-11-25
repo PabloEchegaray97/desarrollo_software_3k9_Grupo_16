@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react'
-import { NavLink } from 'react-router-dom'
+import { NavLink, Link } from 'react-router-dom'
 import {
   CalendarBlank,
   CalendarX,
@@ -7,6 +7,7 @@ import {
   House,
   List,
   Moon,
+  Plus,
   SidebarSimple,
   SignOut,
   Stethoscope,
@@ -248,6 +249,16 @@ export function ShellNavigation({ collapsed, onToggleCollapsed }: ShellNavigatio
           <ShellBrand collapsed={collapsed} />
         </div>
 
+        <Link
+          to="/agenda/nuevo"
+          className="shell-new-appointment"
+          aria-label="Nuevo turno"
+          title="Nuevo turno"
+        >
+          <Plus size={20} weight="bold" aria-hidden="true" />
+          {!collapsed ? <span>Nuevo turno</span> : null}
+        </Link>
+
         <NavigationLinks collapsed={collapsed} onNavigate={close} />
         <SidebarFooter
           collapsed={collapsed}
@@ -274,6 +285,15 @@ export function ShellNavigation({ collapsed, onToggleCollapsed }: ShellNavigatio
           />
         }
       >
+        <Link
+          to="/agenda/nuevo"
+          className="shell-new-appointment shell-new-appointment--drawer"
+          onClick={close}
+          aria-label="Nuevo turno"
+        >
+          <Plus size={20} weight="bold" aria-hidden="true" />
+          <span>Nuevo turno</span>
+        </Link>
         <NavigationLinks collapsed={false} onNavigate={close} />
       </AppModal>
     </>

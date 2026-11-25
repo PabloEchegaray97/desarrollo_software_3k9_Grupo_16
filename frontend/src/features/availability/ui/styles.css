@@ -1,5 +1,5 @@
 /* Estilos de disponibilidad: tokens compartidos y estados visibles. */
-.avail-page { display: grid; gap: 1rem; }
+.avail-page { display: grid; gap: .875rem; }
 
 .avail-page__header {
   display: flex;
@@ -9,7 +9,7 @@
 }
 
 .avail-page__header .page-heading { margin-bottom: var(--space-1); color: var(--color-text); font-size: var(--font-size-20); font-weight: 600; }
-.avail-page__header .page-lead { margin-bottom: 0; }
+.avail-page__header .page-lead { margin: 0; color: var(--color-text-muted); font-size: var(--font-size-14); }
 
 .avail-save {
   display: inline-flex;
@@ -106,8 +106,8 @@
 
 .avail-day__content { display: grid; min-width: 0; }
 .avail-day__heading { display: grid; gap: 0.125rem; }
-.avail-day__heading strong { color: var(--color-text); font-size: var(--font-size-14); }
-.avail-day__heading > span { color: var(--color-text-muted); font-size: var(--font-size-12); }
+.avail-day__heading strong { color: var(--color-text); font-size: 1rem; font-weight: 650; }
+.avail-day__heading > span { color: var(--color-text-muted); font-size: .78rem; }
 .avail-day__slots-shell { display: grid; grid-template-rows: 0fr; margin-top: 0; opacity: 0; transition: grid-template-rows var(--duration-normal) var(--ease-out), opacity var(--duration-normal) var(--ease-out), margin-top var(--duration-normal) var(--ease-out); }
 .avail-day__slots-shell[data-open="true"] { grid-template-rows: 1fr; margin-top: .75rem; opacity: 1; }
 .avail-day__slots-clip { min-height: 0; overflow: hidden; }

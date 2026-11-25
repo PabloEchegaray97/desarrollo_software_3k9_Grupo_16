@@ -41,6 +41,27 @@ export function CatalogPage() {
   const loadProcedures = useCallback((params: CatalogListParams, signal: AbortSignal) => proceduresApi.list(params, signal), [])
   const loadChairs = useCallback((params: CatalogListParams, signal: AbortSignal) => chairsApi.list(params, signal), [])
 
+  const sectionTabs = (
+    <div className="catalog-tabs" role="tablist" aria-label="Secciones del catálogo">
+      {SECTIONS.map((item) => (
+        <button
+          key={item.id}
+          id={`catalog-tab-${item.id}`}
+          type="button"
+          role="tab"
+          className="catalog-tab"
+          aria-selected={section === item.id}
+          aria-controls={`catalog-panel-${item.id}`}
+          tabIndex={section === item.id ? 0 : -1}
+          onClick={() => selectSection(item.id)}
+          onKeyDown={onTabKeyDown}
+        >
+          {item.label}
+        </button>
+      ))}
+    </div>
+  )
+
   return (
     <section className="catalog-page">
       <header className="catalog-page__header">
@@ -57,31 +78,13 @@ export function CatalogPage() {
         </Button>
       </header>
 
-      <div className="catalog-tabs" role="tablist" aria-label="Secciones del catálogo">
-        {SECTIONS.map((item) => (
-          <button
-            key={item.id}
-            id={`catalog-tab-${item.id}`}
-            type="button"
-            role="tab"
-            className="catalog-tab"
-            aria-selected={section === item.id}
-            aria-controls={`catalog-panel-${item.id}`}
-            tabIndex={section === item.id ? 0 : -1}
-            onClick={() => selectSection(item.id)}
-            onKeyDown={onTabKeyDown}
-          >
-            {item.label}
-          </button>
-        ))}
-      </div>
-
       <div role="tabpanel" id={`catalog-panel-${section}`} aria-labelledby={`catalog-tab-${section}`}>
         {section === 'prestaciones' ? (
           <CatalogPanel<Procedure>
             key="prestaciones"
             noun={{ singular: 'servicio', plural: 'servicios', article: 'el' }}
             Icon={Tooth}
+            tabs={sectionTabs}
             load={loadProcedures}
             setActive={proceduresApi.setActive}
             describe={describeProcedure}
@@ -94,6 +97,7 @@ export function CatalogPage() {
             key="sillones"
             noun={{ singular: 'sillón', plural: 'sillones', article: 'el' }}
             Icon={Armchair}
+            tabs={sectionTabs}
             load={loadChairs}
             setActive={chairsApi.setActive}
             describe={(chair) => (chair.activo ? 'Disponible para turnos nuevos' : 'No se ofrece para turnos nuevos')}

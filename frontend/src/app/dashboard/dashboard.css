@@ -90,9 +90,9 @@
 
 .dashboard-appointment:hover { background: var(--color-canvas); }
 .dashboard-appointment:focus-within { box-shadow: var(--focus-ring); }
-.dashboard-appointment__open { display: grid; min-width: 0; grid-template-columns: 6.25rem minmax(0, 1fr); align-items: center; gap: 1rem; padding: 0; border: 0; color: inherit; background: transparent; text-align: left; cursor: pointer; }
+.dashboard-appointment__open { display: grid; min-width: 0; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 1rem; padding: 0; border: 0; color: inherit; background: transparent; text-align: left; cursor: pointer; }
 .dashboard-appointment__open:focus-visible { outline: none; }
-.dashboard-appointment__rail { display: grid; grid-template-columns: auto auto; align-items: baseline; justify-content: start; column-gap: .25rem; font-variant-numeric: tabular-nums; }
+.dashboard-appointment__rail { display: grid; grid-template-columns: auto auto; align-items: baseline; justify-content: start; column-gap: .25rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .dashboard-appointment__rail span { grid-column: 1 / -1; justify-self: center; margin-bottom: .1rem; color: var(--color-primary); font-size: .65rem; font-weight: 650; }
 .dashboard-appointment__rail strong { font-size: 1.85rem; font-weight: 650; line-height: 1; letter-spacing: -.035em; }
 .dashboard-appointment[data-highlighted='true'] .dashboard-appointment__rail strong { color: var(--color-primary); }
