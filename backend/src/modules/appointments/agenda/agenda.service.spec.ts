@@ -85,6 +85,17 @@ async function failure(promise: Promise<unknown>): Promise<AgendaError> {
 }
 
 describe('AgendaService — ventana, filtros y orden', () => {
+  it('consulta todos los próximos turnos operativos desde el inicio del día local', async () => {
+    const { service, queries } = setup({ rows: [row(), row({ id: 'confirmado', status: 'CONFIRMADO' })] });
+    const result = await service.consultarProximos({ desde: '2027-03-10' });
+    const sent = appointmentsQuery(queries);
+
+    expect(sent?.params).toEqual([new Date('2027-03-10T03:00:00.000Z')]);
+    expect(sent?.sql).toContain("a.status IN ('PROGRAMADO', 'CONFIRMADO')");
+    expect(sent?.sql).not.toContain('a.starts_at < ?');
+    expect(result.turnos.map((turno) => turno.id)).toEqual(['turno-1', 'confirmado']);
+  });
+
   it('convierte el día local a una ventana UTC semiabierta y la envía ordenada de forma estable', async () => {
     const { service, queries } = setup();
     await service.consultar(query());

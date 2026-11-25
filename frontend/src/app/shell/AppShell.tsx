@@ -30,7 +30,7 @@ function ShellFrame({ children }: PropsWithChildren) {
   }, [sidebarCollapsed])
 
   if (pathname === authRoute.path) {
-    return <div className="app-shell shell--public"><main className="shell-public-main">{children}</main></div>
+    return <div className="app-shell app-shell--public"><main className="shell-public-main">{children}</main></div>
   }
 
   return (

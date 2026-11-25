@@ -1,5 +1,5 @@
 import { apiRequest } from '../../shared/api/client'
-import type { AgendaQuery, AgendaResponse, ChairOption } from './types'
+import type { AgendaQuery, AgendaResponse, ChairOption, UpcomingAgendaResponse } from './types'
 
 /** Serializa la consulta tal como la define `GET /api/agenda` (estados separados por comas). */
 export function toAgendaQueryString(query: AgendaQuery): string {
@@ -13,6 +13,8 @@ export function toAgendaQueryString(query: AgendaQuery): string {
 export const agendaApi = {
   get: (query: AgendaQuery, signal?: AbortSignal) =>
     apiRequest<AgendaResponse>(`/agenda?${toAgendaQueryString(query)}`, { signal }),
+  getUpcoming: (desde: string, signal?: AbortSignal) =>
+    apiRequest<UpcomingAgendaResponse>(`/agenda/proximos?${new URLSearchParams({ desde })}`, { signal }),
 }
 
 interface ChairPage {

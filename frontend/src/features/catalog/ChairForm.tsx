@@ -42,15 +42,17 @@ export function ChairForm({ chair, onClose, onSaved }: ChairFormProps) {
     <AdminModal
       open
       title={chair ? 'Editar sillón' : 'Nuevo sillón'}
+      description="Completá los datos principales del sillón."
       onClose={onClose}
       footer={(
         <>
-          <Button variant="ghost" leftIcon={<X size={16} />} onClick={onClose}>Cancelar</Button>
-          <Button variant="primary" leftIcon={<FloppyDisk size={16} />} type="submit" form="chair-form" loading={saving}>Guardar</Button>
+          <Button variant="secondary" leftIcon={<X size={16} />} onClick={onClose} disabled={saving}>Cancelar</Button>
+          <Button className="clients-modal__save" variant="primary" leftIcon={<FloppyDisk size={16} />} type="submit" form="chair-form" loading={saving} loadingText="Guardando…">Guardar sillón</Button>
         </>
       )}
+      className="clients-patient-modal"
     >
-      <form id="chair-form" className="adm-page" noValidate onSubmit={(event) => void submit(event)}>
+      <form id="chair-form" className="clients-modal-form clients-modal-form--catalog" noValidate onSubmit={(event) => void submit(event)}>
         {errors.form ? <div className="adm-alert" data-tone="danger" role="alert"><p>{errors.form}</p></div> : null}
         <TextField label="Nombre" value={nombre} onValueChange={setNombre} error={errors.fields.nombre} hint="Por ejemplo: Sillón 1." maxLength={60} autoComplete="off" required />
       </form>

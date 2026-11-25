@@ -56,6 +56,13 @@ export interface AgendaResponse {
   dias: AgendaDia[]
 }
 
+export interface UpcomingAgendaResponse {
+  zonaHoraria: string
+  desde: string
+  generadoEn: string
+  turnos: AgendaTurno[]
+}
+
 /** Parámetros de `GET /api/agenda`. */
 export interface AgendaQuery {
   desde: string

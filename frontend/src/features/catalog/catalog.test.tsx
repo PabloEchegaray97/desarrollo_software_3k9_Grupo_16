@@ -88,7 +88,7 @@ describe('CatalogPage', () => {
     mockApi([['GET /prestaciones', () => (++calls === 1 ? apiError(500, 'INTERNAL_ERROR', 'Unexpected server error') : { status: 200, body: page([procedure()]) })]])
     renderPage()
 
-    expect(await screen.findByText('No se pudieron cargar los servicios')).toBeInTheDocument()
+    expect(await screen.findByText('No se pudieron cargar las prestaciones')).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Reintentar' }))
     expect((await screen.findAllByText('Control ficticio')).length).toBeGreaterThan(0)
   })
@@ -99,12 +99,12 @@ describe('CatalogPage', () => {
       ['POST /prestaciones', () => apiError(400, 'VALIDATION_ERROR', 'Request validation failed', ['duracionPredeterminadaMinutos must not be greater than 240'])],
     ])
     renderPage()
-    await userEvent.click(await screen.findByRole('button', { name: 'Nuevo servicio' }))
-    const dialog = screen.getByRole('dialog', { name: 'Nuevo servicio' })
+    await userEvent.click(await screen.findByRole('button', { name: 'Nueva prestación' }))
+    const dialog = screen.getByRole('dialog', { name: 'Nueva prestación' })
 
     await userEvent.type(within(dialog).getByLabelText(/Nombre/), 'Cirugía ficticia')
     await userEvent.type(within(dialog).getByLabelText(/Duración predeterminada/), '241')
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Guardar' }))
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Guardar prestación' }))
 
     const duration = within(dialog).getByLabelText(/Duración predeterminada/)
     expect(await within(dialog).findByText('La duración debe ser un número entero entre 1 y 240 minutos.')).toBeInTheDocument()
@@ -121,13 +121,13 @@ describe('CatalogPage', () => {
   it('valida presencia y tipo en el cliente sin llamar al backend', async () => {
     const { requests } = mockApi([['GET /prestaciones', () => ({ status: 200, body: page([]) })]])
     renderPage()
-    await userEvent.click(await screen.findByRole('button', { name: 'Nuevo servicio' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Nueva prestación' }))
     const dialog = screen.getByRole('dialog')
 
     await userEvent.type(within(dialog).getByLabelText(/Duración predeterminada/), 'treinta')
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Guardar' }))
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Guardar prestación' }))
 
-    expect(within(dialog).getByText('Ingresá el nombre del servicio.')).toBeInTheDocument()
+    expect(within(dialog).getByText('Ingresá el nombre de la prestación.')).toBeInTheDocument()
     expect(within(dialog).getByText('Ingresá la duración en minutos enteros.')).toBeInTheDocument()
     expect(requests.some((request) => request.method === 'POST')).toBe(false)
   })
@@ -142,7 +142,7 @@ describe('CatalogPage', () => {
     const dialog = screen.getByRole('dialog')
 
     await userEvent.type(within(dialog).getByLabelText(/Nombre/), 'sillón 1')
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Guardar' }))
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Guardar sillón' }))
 
     expect(await within(dialog).findByText(/Ya existe un sillón con ese nombre/)).toBeInTheDocument()
   })
@@ -155,7 +155,9 @@ describe('CatalogPage', () => {
     ])
     renderPage('/prestaciones?seccion=sillones')
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Desactivar Sillón 1' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Eliminar Sillón 1' }))
+    const dialog = screen.getByRole('dialog', { name: 'Eliminar sillón' })
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Eliminar sillón' }))
 
     expect(await screen.findByText('Sillón «Sillón 1» desactivado.')).toBeInTheDocument()
     expect(await screen.findByRole('button', { name: 'Reactivar Sillón 1' })).toBeInTheDocument()

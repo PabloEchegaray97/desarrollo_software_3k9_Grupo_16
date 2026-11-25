@@ -120,6 +120,43 @@
   border-top: 1px solid var(--color-border);
 }
 
+.app-modal.app-modal--compact-sheet .app-modal__header {
+  position: relative;
+  align-items: center;
+  justify-content: center;
+  padding: .75rem 1rem .6rem;
+}
+
+.app-modal.app-modal--compact-sheet .app-modal__header > div {
+  min-width: 0;
+  padding-inline: 2.5rem;
+  text-align: center;
+}
+
+.app-modal.app-modal--compact-sheet .app-modal__title {
+  overflow: hidden;
+  color: var(--color-text);
+  font-size: 1.05rem;
+  font-weight: 650;
+  letter-spacing: -.018em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-modal.app-modal--compact-sheet .app-modal__description {
+  overflow: hidden;
+  margin-top: .2rem;
+  font-size: .78rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-modal.app-modal--compact-sheet .app-modal__close {
+  position: absolute;
+  top: .65rem;
+  right: .75rem;
+}
+
 /* Variante de Pacientes: réplica estructural del modal Nuevo cliente de TengoTurno. */
 .app-modal.clients-patient-modal {
   width: min(42rem, calc(100vw - 32px));
@@ -199,18 +236,6 @@
     border-bottom: 0;
     border-radius: 1.5rem 1.5rem 0 0;
     transition: transform 180ms var(--ease-out);
-  }
-
-  .app-modal.clients-patient-modal {
-    width: 100%;
-    height: 100dvh;
-    max-height: 100dvh;
-    padding-bottom: env(safe-area-inset-bottom);
-    border-radius: 0;
-  }
-
-  .clients-patient-modal .app-modal__handle-zone {
-    display: none;
   }
 
   .clients-patient-modal .app-modal__header {

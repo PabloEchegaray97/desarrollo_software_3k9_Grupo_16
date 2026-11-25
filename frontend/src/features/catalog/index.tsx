@@ -10,7 +10,7 @@ import type { CatalogListParams, CatalogSection, Chair, Procedure } from './type
 import './ui/admin-ui.css'
 
 const SECTIONS: ReadonlyArray<{ id: CatalogSection; label: string }> = [
-  { id: 'prestaciones', label: 'Servicios' },
+  { id: 'prestaciones', label: 'Prestaciones' },
   { id: 'sillones', label: 'Sillones' },
 ]
 
@@ -63,18 +63,19 @@ export function CatalogPage() {
   )
 
   return (
-    <section className="catalog-page">
+    <section className={`catalog-page${section === 'prestaciones' ? ' catalog-page--procedures' : ' catalog-page--chairs'}`}>
       <header className="catalog-page__header">
         <div>
-          <h1 className="page-heading">Servicios</h1>
-          <p className="page-lead">Gestioná los servicios y sillones disponibles para tus turnos.</p>
+          <h1 className="page-heading">Prestaciones</h1>
+          <p className="page-lead">Gestioná las prestaciones y sillones disponibles para tus turnos.</p>
         </div>
         <Button
+          className="catalog-page__create"
           variant="primary"
           leftIcon={<Plus size={16} />}
           onClick={() => setCreateRequest((current) => ({ section, key: (current?.key ?? 0) + 1 }))}
         >
-          {section === 'prestaciones' ? 'Nuevo servicio' : 'Nuevo sillón'}
+          {section === 'prestaciones' ? 'Nueva prestación' : 'Nuevo sillón'}
         </Button>
       </header>
 
@@ -82,9 +83,11 @@ export function CatalogPage() {
         {section === 'prestaciones' ? (
           <CatalogPanel<Procedure>
             key="prestaciones"
-            noun={{ singular: 'servicio', plural: 'servicios', article: 'el' }}
+            noun={{ singular: 'prestación', plural: 'prestaciones', article: 'la' }}
             Icon={Tooth}
             tabs={sectionTabs}
+            mobileDetailSheets
+            mobileDirectActions
             load={loadProcedures}
             setActive={proceduresApi.setActive}
             describe={describeProcedure}
@@ -98,6 +101,8 @@ export function CatalogPage() {
             noun={{ singular: 'sillón', plural: 'sillones', article: 'el' }}
             Icon={Armchair}
             tabs={sectionTabs}
+            mobileDetailSheets
+            mobileDirectActions
             load={loadChairs}
             setActive={chairsApi.setActive}
             describe={(chair) => (chair.activo ? 'Disponible para turnos nuevos' : 'No se ofrece para turnos nuevos')}

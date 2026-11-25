@@ -54,9 +54,6 @@ export function AgendaToolbar({
   filtersOpen,
   hasActiveFilters,
   onToggleFilters,
-  refreshing,
-  generadoEn,
-  onRefresh,
 }: Props) {
   return (
     <div className="agenda-toolbar">

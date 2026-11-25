@@ -1,0 +1,104 @@
+.appointment-action-sheet .app-modal__title {
+  color: var(--color-text);
+}
+
+.appointment-action-sheet__summary {
+  display: grid;
+  gap: .35rem;
+  padding: 0 .15rem .35rem;
+}
+
+.appointment-action-sheet__summary > div {
+  display: grid;
+  min-width: 0;
+  min-height: 2.5rem;
+  grid-template-columns: 1.5rem 4.5rem minmax(0, 1fr);
+  align-items: center;
+  gap: .5rem;
+  padding: .35rem .65rem;
+  border-radius: var(--radius-lg);
+  background: var(--color-canvas);
+}
+
+.appointment-action-sheet__summary svg {
+  color: var(--color-primary);
+}
+
+.appointment-action-sheet__summary span {
+  color: var(--color-text-muted);
+  font-size: .78rem;
+  font-weight: 500;
+}
+
+.appointment-action-sheet__summary strong {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--color-text);
+  font-size: .82rem;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.appointment-action-sheet__actions {
+  display: grid;
+  gap: .6rem;
+}
+
+.appointment-action-sheet__actions button {
+  display: flex;
+  width: 100%;
+  min-height: 3rem;
+  align-items: center;
+  gap: .75rem;
+  padding: .65rem 1rem;
+  border: 0;
+  border-radius: var(--radius-pill);
+  font: inherit;
+  font-size: .9rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: filter var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out);
+}
+
+.appointment-action-sheet__actions button:hover:not(:disabled),
+.appointment-action-sheet__actions button:focus-visible {
+  outline: none;
+  filter: brightness(.96);
+}
+
+.appointment-action-sheet__actions button:disabled {
+  cursor: not-allowed;
+  opacity: .45;
+}
+
+.appointment-action-sheet__actions button svg {
+  flex: none;
+  color: currentColor;
+}
+
+.appointment-action-sheet__detail {
+  color: var(--color-on-primary);
+  background: var(--color-primary);
+}
+
+.appointment-action-sheet__reschedule {
+  color: var(--color-warning);
+  background: var(--color-warning-soft);
+}
+
+.appointment-action-sheet__danger {
+  color: var(--color-danger);
+  background: var(--color-danger-soft);
+}
+
+@media (max-width: 48rem) {
+  .app-modal.appointment-action-sheet .app-modal__body {
+    padding-top: .25rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .appointment-action-sheet__actions button { transition: none; }
+}

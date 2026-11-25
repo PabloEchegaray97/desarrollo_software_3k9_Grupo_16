@@ -10,9 +10,10 @@ import {
   toAgendaTurno,
   type AgendaResponse,
   type AgendaRow,
+  type UpcomingAgendaResponse,
 } from './agenda-response.js';
 import { addDaysToLocalDate, resolveAgendaRange } from './domain/agenda-range.js';
-import type { AgendaQueryDto } from './dto/agenda-query.dto.js';
+import type { AgendaQueryDto, UpcomingAgendaQueryDto } from './dto/agenda-query.dto.js';
 
 /** Columnas explícitas: teléfono, DNI, email y motivo de cancelación nunca se leen. */
 const AGENDA_SELECT = `
@@ -77,6 +78,24 @@ export class AgendaService {
       generadoEn,
       turnos: rows.map(toAgendaTurno),
       dias: buildAgendaDays(range.dias, semanales.tramos, excepciones),
+    };
+  }
+
+  async consultarProximos(query: UpcomingAgendaQueryDto): Promise<UpcomingAgendaResponse> {
+    const from = horaLocalAUtc(query.desde, '00:00', ZONA_IANA);
+    if (from === null) throw rangeInvalid();
+
+    const sql = `${AGENDA_SELECT}
+  WHERE a.starts_at >= ?
+    AND a.status IN ('PROGRAMADO', 'CONFIRMADO')
+  ORDER BY a.starts_at ASC, a.created_at ASC, a.id ASC`;
+    const rows = (await this.dataSource.query(sql, [new Date(from)])) as AgendaRow[];
+
+    return {
+      zonaHoraria: ZONA_IANA,
+      desde: query.desde,
+      generadoEn: this.clock.now().toISOString(),
+      turnos: rows.map(toAgendaTurno),
     };
   }
 

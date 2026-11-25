@@ -62,6 +62,11 @@ export class CreateAppointmentDto {
   @IsBoolean()
   fueraDisponibilidad?: boolean;
 
+  /** Sobreturno: anula restricciones de horario pasado, disponibilidad y superposición solo para hoy. */
+  @IsOptional()
+  @IsBoolean()
+  sobreturno?: boolean;
+
   /** Obligatorio (1–500 caracteres tras recortar) solo cuando `fueraDisponibilidad` es `true`; si no, se ignora. */
   @ValidateIf((input: CreateAppointmentDto) => input.fueraDisponibilidad === true)
   @Transform(trimmed)

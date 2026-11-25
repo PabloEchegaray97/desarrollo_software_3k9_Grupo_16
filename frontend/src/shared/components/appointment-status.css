@@ -1,0 +1,36 @@
+.appointment-status-badge {
+  display: inline-flex;
+  min-height: 1.5rem;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-pill);
+  font-size: var(--font-size-12);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.appointment-status-badge[data-status='PROGRAMADO'] {
+  color: var(--color-text-muted);
+  background: color-mix(in srgb, var(--color-text-muted) 18%, var(--color-surface));
+}
+
+.appointment-status-badge[data-status='CONFIRMADO'] {
+  color: var(--color-info);
+  background: var(--color-info-soft);
+}
+
+.appointment-status-badge[data-status='ATENDIDO'] {
+  color: var(--color-success);
+  background: var(--color-success-soft);
+}
+
+.appointment-status-badge[data-status='AUSENTE'] {
+  color: var(--color-warning);
+  background: var(--color-warning-soft);
+}
+
+.appointment-status-badge[data-status='CANCELADO'] {
+  color: var(--color-danger);
+  background: var(--color-danger-soft);
+}

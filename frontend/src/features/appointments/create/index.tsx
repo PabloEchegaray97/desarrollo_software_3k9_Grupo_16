@@ -3,6 +3,7 @@ import { StatePanel } from '../../../shared/components/StatePanel'
 import { chairsApi, proceduresApi } from '../../catalog/api'
 import '../../catalog/ui/admin-ui.css'
 import type { Patient } from '../../patients/types'
+import { notifyAppointmentsChanged } from '../events'
 import { getAgendaConfiguration } from './api'
 import { AppointmentForm, type BookingOptions } from './AppointmentForm'
 import { AppointmentSummary } from './AppointmentSummary'
@@ -21,13 +22,13 @@ interface Created {
 interface AppointmentCreationPageProps {
   onClose?: () => void
   onStepChange?: (step: number) => void
+  onCompletionChange?: (completed: boolean) => void
 }
 
-export function AppointmentCreationPage({ onClose, onStepChange }: AppointmentCreationPageProps) {
+export function AppointmentCreationPage({ onClose, onStepChange, onCompletionChange }: AppointmentCreationPageProps) {
   const [load, setLoad] = useState<LoadState>({ status: 'loading' })
   const [attempt, setAttempt] = useState(0)
   const [created, setCreated] = useState<Created | null>(null)
-  const [formKey, setFormKey] = useState(0)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -52,12 +53,12 @@ export function AppointmentCreationPage({ onClose, onStepChange }: AppointmentCr
     if (created) document.getElementById('apt-summary-title')?.focus()
   }, [created])
 
-  const onCreated = useCallback((appointment: Appointment, patient: Patient) => setCreated({ appointment, patient }), [])
+  useEffect(() => onCompletionChange?.(created !== null), [created, onCompletionChange])
 
-  const createAnother = () => {
-    setCreated(null)
-    setFormKey((key) => key + 1)
-  }
+  const onCreated = useCallback((appointment: Appointment, patient: Patient) => {
+    setCreated({ appointment, patient })
+    notifyAppointmentsChanged()
+  }, [])
 
   return (
     <section className={`adm-page${onClose ? ' apt-create--modal' : ''}`}>
@@ -78,7 +79,7 @@ export function AppointmentCreationPage({ onClose, onStepChange }: AppointmentCr
         <StatePanel
           state="empty"
           title="Faltan prestaciones o sillones activos"
-          description="Registrá al menos un servicio y un sillón en Servicios para poder dar turnos."
+          description="Registrá al menos una prestación y un sillón en Prestaciones para poder dar turnos."
         />
       ) : created ? (
         <AppointmentSummary
@@ -86,11 +87,10 @@ export function AppointmentCreationPage({ onClose, onStepChange }: AppointmentCr
           patientName={created.patient.nombre}
           procedureName={load.options.procedures.find((item) => item.id === created.appointment.prestacionId)?.nombre ?? '—'}
           chairName={load.options.chairs.find((item) => item.id === created.appointment.sillonId)?.nombre ?? '—'}
-          onCreateAnother={createAnother}
-          onClose={onClose}
+          onClose={onClose ?? (() => undefined)}
         />
       ) : (
-        <AppointmentForm key={formKey} options={load.options} onCreated={onCreated} onStepChange={onStepChange} />
+        <AppointmentForm options={load.options} onCreated={onCreated} onStepChange={onStepChange} />
       )}
     </section>
   )

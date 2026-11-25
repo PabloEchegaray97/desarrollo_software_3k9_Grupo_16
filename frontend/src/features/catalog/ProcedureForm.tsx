@@ -34,7 +34,7 @@ export function ProcedureForm({ procedure, onClose, onSaved }: ProcedureFormProp
     event.preventDefault()
     // Solo presencia y tipo: los rangos los valida el backend, que es la autoridad.
     const fields: FormErrors<Field>['fields'] = {}
-    if (nombre.trim() === '') fields.nombre = 'Ingresá el nombre del servicio.'
+    if (nombre.trim() === '') fields.nombre = 'Ingresá el nombre de la prestación.'
     if (!WHOLE_NUMBER.test(duracion.trim())) fields.duracionPredeterminadaMinutos = 'Ingresá la duración en minutos enteros.'
     if (intervalo.trim() !== '' && !WHOLE_NUMBER.test(intervalo.trim())) fields.intervaloPosteriorMinutos = 'Ingresá minutos enteros o dejalo vacío.'
     if (Object.keys(fields).length > 0) {
@@ -61,17 +61,18 @@ export function ProcedureForm({ procedure, onClose, onSaved }: ProcedureFormProp
   return (
     <AdminModal
       open
-      title={procedure ? 'Editar servicio' : 'Nuevo servicio'}
-      description="Los cambios aplican a turnos futuros; los turnos ya creados conservan su duración."
+      title={procedure ? 'Editar prestación' : 'Nueva prestación'}
+      description="Completá los datos principales de la prestación."
       onClose={onClose}
       footer={(
         <>
-          <Button variant="ghost" leftIcon={<X size={16} />} onClick={onClose}>Cancelar</Button>
-          <Button variant="primary" leftIcon={<FloppyDisk size={16} />} type="submit" form="procedure-form" loading={saving}>Guardar</Button>
+          <Button variant="secondary" leftIcon={<X size={16} />} onClick={onClose} disabled={saving}>Cancelar</Button>
+          <Button className="clients-modal__save" variant="primary" leftIcon={<FloppyDisk size={16} />} type="submit" form="procedure-form" loading={saving} loadingText="Guardando…">Guardar prestación</Button>
         </>
       )}
+      className="clients-patient-modal"
     >
-      <form id="procedure-form" className="adm-page" noValidate onSubmit={(event) => void submit(event)}>
+      <form id="procedure-form" className="clients-modal-form clients-modal-form--catalog" noValidate onSubmit={(event) => void submit(event)}>
         {errors.form ? <div className="adm-alert" data-tone="danger" role="alert"><p>{errors.form}</p></div> : null}
         <TextField label="Nombre" value={nombre} onValueChange={setNombre} error={errors.fields.nombre} maxLength={120} autoComplete="off" required />
         <TextField

@@ -14,6 +14,7 @@ import { appointmentNotFound, invalidTransition, scheduleConflict, tooEarly } fr
 import { AppointmentsLifecycleController } from './appointments-lifecycle.controller.js';
 import { CancelAppointmentService } from './cancel-appointment.service.js';
 import { ChangeAppointmentStatusService } from './change-appointment-status.service.js';
+import { GetAppointmentService } from './get-appointment.service.js';
 import { RescheduleAppointmentService } from './reschedule-appointment.service.js';
 
 const ID = 'e1b2c3d4-5e6f-4a8b-9c0d-1e2f3a4b5c6d';
@@ -58,6 +59,7 @@ function response(estado: AppointmentStatus = 'PROGRAMADO'): AppointmentLifecycl
 
 describe('AppointmentsLifecycleController (sin base de datos)', () => {
   let app: INestApplication<App>;
+  const getAppointment = { getById: jest.fn(async () => response()) };
   const reschedule = { reschedule: jest.fn(async () => response()) };
   const cancel = { cancel: jest.fn(async () => response('CANCELADO')) };
   const status = { changeStatus: jest.fn(async () => response('CONFIRMADO')) };
@@ -67,6 +69,7 @@ describe('AppointmentsLifecycleController (sin base de datos)', () => {
     const moduleRef = await Test.createTestingModule({
       controllers: [AppointmentsLifecycleController],
       providers: [
+        { provide: GetAppointmentService, useValue: getAppointment },
         { provide: RescheduleAppointmentService, useValue: reschedule },
         { provide: CancelAppointmentService, useValue: cancel },
         { provide: ChangeAppointmentStatusService, useValue: status },
@@ -91,6 +94,13 @@ describe('AppointmentsLifecycleController (sin base de datos)', () => {
     horaInicio: '10:00',
     motivo: 'Motivo ficticio',
   };
+
+  it('consulta un turno con 200 usando el contrato de ciclo de vida', async () => {
+    const result = await request(app.getHttpServer()).get(`/api/turnos/${ID}`).expect(200);
+
+    expect(getAppointment.getById).toHaveBeenCalledWith(ID);
+    expect(result.body).toEqual(response());
+  });
 
   it('reprograma con 200 y entrega el motivo normalizado al servicio', async () => {
     const result = await request(app.getHttpServer())
@@ -203,7 +213,7 @@ describe('AppointmentsLifecycleController (sin base de datos)', () => {
 });
 
 describe('AppointmentLifecycleModule (composición)', () => {
-  it('importa el núcleo, disponibilidad y catálogos, y registra el controlador y los tres servicios', () => {
+  it('importa el núcleo, disponibilidad y catálogos, y registra el controlador y los cuatro servicios', () => {
     const imports = Reflect.getMetadata('imports', AppointmentLifecycleModule) as readonly unknown[];
     const controllers = Reflect.getMetadata('controllers', AppointmentLifecycleModule) as readonly unknown[];
     const providers = Reflect.getMetadata('providers', AppointmentLifecycleModule) as readonly unknown[];
@@ -211,7 +221,12 @@ describe('AppointmentLifecycleModule (composición)', () => {
     expect(imports).toEqual(expect.arrayContaining([AppointmentCoreModule, AvailabilityModule, CatalogsModule]));
     expect(controllers).toContain(AppointmentsLifecycleController);
     expect(providers).toEqual(
-      expect.arrayContaining([RescheduleAppointmentService, CancelAppointmentService, ChangeAppointmentStatusService]),
+      expect.arrayContaining([
+        GetAppointmentService,
+        RescheduleAppointmentService,
+        CancelAppointmentService,
+        ChangeAppointmentStatusService,
+      ]),
     );
   });
 });

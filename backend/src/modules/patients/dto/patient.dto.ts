@@ -11,6 +11,7 @@ import {
   MaxLength,
   Min,
 } from 'class-validator';
+import type { AppointmentStatus } from '../../appointments/core/domain/appointment-status.js';
 import {
   normalizeDni,
   normalizeEmail,
@@ -100,6 +101,29 @@ export interface PatientResponse {
   activo: boolean;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface PatientAppointmentResponse {
+  id: string;
+  prestacion: { id: string; nombre: string };
+  sillon: { id: string; nombre: string };
+  estado: AppointmentStatus;
+  inicio: Date;
+  finAtencion: Date;
+  duracionMinutos: number;
+}
+
+export interface PatientDetailResponse extends PatientResponse {
+  resumen: {
+    totalTurnos: number;
+    confirmados: number;
+    atendidos: number;
+    cancelados: number;
+    tasaCancelacion: number;
+    ultimaAtencion: Date | null;
+    prestacionMasFrecuente: string | null;
+  };
+  turnos: PatientAppointmentResponse[];
 }
 
 /** Datos mínimos de una coincidencia: sin teléfono, DNI ni email. */

@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { cleanup, render, screen, waitFor, within } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -59,6 +59,10 @@ describe('AppointmentAgendaPage', () => {
     expect(screen.getByRole('list', { name: 'Turnos del miércoles, 10 de marzo de 2027' })).toBeInTheDocument()
     expect(requests.filter((request) => request.path.startsWith('/agenda'))).toHaveLength(1)
 
+    await userEvent.click(screen.getByRole('button', { name: /^10:00.*Paciente Ficticio/ }))
+    expect(screen.getByRole('complementary', { name: 'Detalle del turno' })).toBeInTheDocument()
+    expect(screen.queryByRole('dialog', { name: 'Paciente Ficticio' })).not.toBeInTheDocument()
+
     cleanup()
     renderAgenda()
     expect(await screen.findByRole('list', { name: 'Turnos del miércoles, 10 de marzo de 2027' })).toBeInTheDocument()
@@ -98,7 +102,87 @@ describe('AppointmentAgendaPage', () => {
     expect(screen.getByRole('button', { name: 'Calendario' })).toHaveAttribute('aria-pressed', 'true')
   })
 
-  it('preserves backend appointment order and selected detail in calendar view', async () => {
+  it('fuerza la vista calendario desde el acceso Hoy aunque la preferencia guardada sea lista', async () => {
+    localStorage.setItem(AGENDA_VIEW_STORAGE_KEY, 'list')
+    mockApi([['GET /sillones', () => ({ status: 200, body: chairs })], ['GET /agenda', () => ({ status: 200, body: response([turno()]) })]])
+    renderAgenda('/agenda?fecha=2027-03-10&vista=calendario')
+
+    expect(await screen.findByText('Paciente Ficticio')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Calendario' })).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  it('abre las acciones de cada turno con clic secundario y con los tres puntos', async () => {
+    mockApi([['GET /sillones', () => ({ status: 200, body: chairs })], ['GET /agenda', () => ({ status: 200, body: response([turno()]) })]])
+    renderAgenda()
+
+    await screen.findByText('Paciente Ficticio')
+    const appointment = screen.getByRole('button', { name: /^10:00.*Paciente Ficticio/ })
+    fireEvent.contextMenu(appointment, { clientX: 320, clientY: 240 })
+    expect(screen.getByRole('menu', { name: /Acciones del turno de Paciente Ficticio/ })).toBeInTheDocument()
+    expect(screen.getByRole('menuitem', { name: 'Ver detalle' })).toBeInTheDocument()
+    expect(screen.getByRole('menuitem', { name: 'Reprogramar' })).toBeEnabled()
+    expect(screen.getByRole('menuitem', { name: 'Cancelar' })).toBeEnabled()
+
+    await userEvent.keyboard('{Escape}')
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Abrir acciones de Paciente Ficticio' }))
+    expect(screen.getByRole('menu', { name: /Acciones del turno de Paciente Ficticio/ })).toBeInTheDocument()
+  })
+
+  it('abre el mismo bottom sheet de acciones al tocar un turno en móvil y no restaura el foco al cerrarlo', async () => {
+    vi.stubGlobal('matchMedia', vi.fn().mockImplementation((query: string) => ({
+      matches: query === '(max-width: 48rem)',
+      media: query,
+      onchange: null,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    })))
+    mockApi([['GET /sillones', () => ({ status: 200, body: chairs })], ['GET /agenda', () => ({ status: 200, body: response([turno()]) })]])
+    renderAgenda()
+
+    const appointment = await screen.findByRole('button', { name: /^10:00.*Paciente Ficticio/ })
+    await userEvent.click(appointment)
+
+    const sheet = screen.getByRole('dialog', { name: 'Acciones del turno' })
+    expect(within(sheet).getByText('Paciente Ficticio')).toBeInTheDocument()
+    expect(within(sheet).getByText('Horario')).toBeInTheDocument()
+    expect(within(sheet).getByText('Turno')).toBeInTheDocument()
+    expect(within(sheet).getByRole('menuitem', { name: 'Ver detalle' })).toBeInTheDocument()
+    expect(screen.queryByRole('complementary', { name: 'Detalle del turno' })).not.toBeInTheDocument()
+
+    await userEvent.click(within(sheet).getByRole('button', { name: 'Cerrar acciones del turno' }))
+    expect(appointment).not.toHaveFocus()
+  })
+
+  it('abre los turnos del día en un bottom sheet al elegir una fecha del calendario móvil', async () => {
+    vi.stubGlobal('matchMedia', vi.fn().mockImplementation((query: string) => ({
+      matches: query === '(max-width: 48rem)',
+      media: query,
+      onchange: null,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    })))
+    mockApi([['GET /sillones', () => ({ status: 200, body: chairs })], ['GET /agenda', () => ({ status: 200, body: response([turno()]) })]])
+    renderAgenda()
+
+    await screen.findByText('Paciente Ficticio')
+    await userEvent.click(screen.getByRole('button', { name: 'Seleccionar día 10' }))
+
+    const daySheet = screen.getByRole('dialog', { name: /miércoles, 10 de marzo de 2027/i })
+    const appointment = within(daySheet).getByRole('button', { name: /^10:00.*Paciente Ficticio/ })
+    expect(appointment).toBeInTheDocument()
+
+    await userEvent.click(appointment)
+    expect(screen.getByRole('dialog', { name: 'Acciones del turno' })).toBeInTheDocument()
+  })
+
+  it('preserves backend appointment order and opens selected detail in a calendar modal', async () => {
     const orderedTurnos = [
       turno({ id: 'later-from-backend', estado: 'CONFIRMADO', fueraDisponibilidad: true, inicio: '2027-03-10T14:00:00.000Z', finAtencion: '2027-03-10T14:40:00.000Z', finBloqueo: '2027-03-10T14:50:00.000Z' }),
       turno({ id: 'earlier-from-backend', estado: 'CANCELADO', inicio: '2027-03-10T12:00:00.000Z', finAtencion: '2027-03-10T12:40:00.000Z', finBloqueo: '2027-03-10T12:50:00.000Z' }),
@@ -120,7 +204,8 @@ describe('AppointmentAgendaPage', () => {
     expect(within(grid).getByText('Fuera de disponibilidad')).toBeInTheDocument()
     expect(screen.getByText('Feriado')).toBeInTheDocument()
     await userEvent.click(within(grid).getAllByRole('button')[0])
-    expect(screen.getByRole('complementary', { name: 'Detalle del turno' })).toBeInTheDocument()
+    expect(screen.getByRole('dialog', { name: 'Paciente Ficticio' })).toBeInTheDocument()
+    expect(screen.queryByRole('complementary', { name: 'Detalle del turno' })).not.toBeInTheDocument()
     expect(within(grid).getAllByRole('button')[0]).toHaveAttribute('aria-pressed', 'true')
   })
 
@@ -139,21 +224,22 @@ describe('AppointmentAgendaPage', () => {
       })],
     ])
     renderAgenda()
-    await screen.findByText('No hay turnos para esta fecha')
+    await screen.findByText('La agenda está libre este día.')
 
     expect(screen.getByText('Disponibilidad: 09:00–13:00')).toBeInTheDocument()
     expect(screen.getByText('Feriado ficticio')).toBeInTheDocument()
     expect(screen.queryByRole('list', { name: 'Turnos del día' })).not.toBeInTheDocument()
-    expect(screen.getByText('No hay turnos para esta fecha')).toBeInTheDocument()
+    expect(screen.getByText('La agenda está libre este día.')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Crear turno' })).toHaveAttribute('href', '/turnos/nuevo')
   })
 
   it('muestra vacío sin filtros y vacío con filtros', async () => {
     mockApi([['GET /sillones', () => ({ status: 200, body: chairs })], ['GET /agenda', () => ({ status: 200, body: response([]) })]])
     renderAgenda()
-    expect(await screen.findByText('No hay turnos para esta fecha')).toBeTruthy()
+    expect(await screen.findByText('La agenda está libre este día.')).toBeTruthy()
     cleanup()
     renderAgenda('/agenda?fecha=2027-03-10&estado=AUSENTE')
-    expect(await screen.findByText('Ningún turno coincide con los filtros')).toBeTruthy()
+    expect(await screen.findByText('La agenda está libre este día.')).toBeTruthy()
   })
 
   it('no consulta si no hay estados marcados', async () => {
@@ -185,16 +271,19 @@ describe('AppointmentAgendaPage', () => {
       .toEqual(['/agenda?desde=2027-03-01&hasta=2027-03-31', '/agenda?desde=2027-03-01&hasta=2027-03-31'])
   })
 
-  it('abre el detalle sin pedir más datos y lo cierra con Esc', async () => {
+  it('abre el detalle de calendario en un modal sin pedir más datos y lo cierra con Esc', async () => {
     const { requests } = mockApi([['GET /sillones', () => ({ status: 200, body: chairs })], ['GET /agenda', () => ({ status: 200, body: response([turno({ fueraDisponibilidad: true, motivoExcepcion: 'Urgencia' })]) })]])
     renderAgenda()
-    await userEvent.click(await screen.findByRole('button', { name: /Paciente Ficticio/ }))
-    const detail = screen.getByRole('complementary', { name: 'Detalle del turno' })
+    await screen.findByText('Paciente Ficticio')
+    await userEvent.click(screen.getByRole('button', { name: /^10:00.*Paciente Ficticio/ }))
+    const detail = screen.getByRole('dialog', { name: 'Paciente Ficticio' })
     expect(within(detail).getByText('Urgencia')).toBeTruthy()
-    expect(within(detail).getByRole('link', { name: 'Gestionar turno' }).getAttribute('href')).toBe('/turnos/t1')
+    expect(within(detail).getByRole('link', { name: 'Ver detalle' }).getAttribute('href')).toBe('/turnos/t1')
+    expect(within(detail).getByRole('link', { name: 'Reprogramar' }).getAttribute('href')).toBe('/turnos/t1')
+    expect(within(detail).getByRole('link', { name: 'Cancelar' }).getAttribute('href')).toBe('/turnos/t1')
     const before = requests.length
     await userEvent.keyboard('{Escape}')
-    await waitFor(() => expect(screen.queryByRole('complementary', { name: 'Detalle del turno' })).toBeNull())
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Paciente Ficticio' })).toBeNull())
     expect(requests.length).toBe(before)
   })
 
@@ -208,7 +297,7 @@ describe('AppointmentAgendaPage', () => {
   it('envía sillón y estados al backend', async () => {
     const { requests } = mockApi([['GET /sillones', () => ({ status: 200, body: chairs })], ['GET /agenda', () => ({ status: 200, body: response([]) })]])
     renderAgenda('/agenda?fecha=2027-03-10&sillon=s1&estado=CONFIRMADO,AUSENTE')
-    await screen.findByText('Ningún turno coincide con los filtros')
+    await screen.findByText('La agenda está libre este día.')
     const agendaRequest = requests.find((r) => r.path.startsWith('/agenda'))
     expect(agendaRequest?.path).toContain('sillonId=s1')
     expect(decodeURIComponent(agendaRequest?.path ?? '')).toContain('estado=CONFIRMADO,AUSENTE')
@@ -225,5 +314,7 @@ describe('estilos locales de agenda', () => {
     expect(agendaCss).not.toMatch(/rgba?\(/)
     expect(agendaCss).toContain('var(--color-surface)')
     expect(agendaCss).toContain('var(--color-text)')
+    expect(agendaCss).toContain('.agenda-detail--modal .agenda-detail__footer')
+    expect(agendaCss).toContain('grid-template-columns: minmax(0, 1fr)')
   })
 })

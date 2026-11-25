@@ -35,6 +35,20 @@ function ModalHarness({ onClose }: { onClose: () => void }) {
   )
 }
 
+function FormModalHarness() {
+  const [open, setOpen] = useState(false)
+  return (
+    <>
+      <button type="button" onClick={() => setOpen(true)}>Abrir formulario</button>
+      <AppModal open={open} title="Nuevo paciente" onClose={() => setOpen(false)}>
+        <label>Nombre<input aria-label="Nombre" /></label>
+        <label>DNI<input aria-label="DNI" /></label>
+        <label>Correo<input aria-label="Correo" /></label>
+      </AppModal>
+    </>
+  )
+}
+
 describe.each(['light', 'dark'] as const)('AppModal en tema %s', (theme) => {
   afterEach(() => {
     cleanup()
@@ -70,6 +84,22 @@ describe.each(['light', 'dark'] as const)('AppModal en tema %s', (theme) => {
 
     await user.tab()
     expect(screen.getByRole('button', { name: 'Cerrar modal' })).toHaveFocus()
+  })
+
+  it('en formularios enfoca el primer campo y permite recorrer los inputs con Tab', async () => {
+    document.documentElement.dataset.theme = theme
+    const user = userEvent.setup()
+    render(<FormModalHarness />)
+
+    await user.click(screen.getByRole('button', { name: 'Abrir formulario' }))
+    expect(screen.getByRole('textbox', { name: 'Nombre' })).toHaveFocus()
+
+    await user.tab()
+    expect(screen.getByRole('textbox', { name: 'DNI' })).toHaveFocus()
+    await user.tab()
+    expect(screen.getByRole('textbox', { name: 'Correo' })).toHaveFocus()
+    await user.tab({ shift: true })
+    expect(screen.getByRole('textbox', { name: 'DNI' })).toHaveFocus()
   })
 
   it('cierra con Escape y restaura el scroll y el foco al disparador', async () => {
@@ -141,7 +171,7 @@ describe('layout responsive de AppModal', () => {
     expect(appModalCss).toContain('.app-modal-backdrop {\n    align-items: end;')
     expect(appModalCss).toContain('.app-modal:not(.shell-drawer-panel) {')
     expect(appModalCss).toContain('width: 100%;')
-    expect(appModalCss).toContain('border-radius: var(--radius-lg) var(--radius-lg) 0 0;')
+    expect(appModalCss).toContain('border-radius: 1.5rem 1.5rem 0 0;')
     expect(appModalCss).toContain('env(safe-area-inset-bottom)')
   })
 })

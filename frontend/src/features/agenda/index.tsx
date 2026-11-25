@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useSearchParams } from 'react-router-dom'
 import { CalendarBlank, CalendarCheck, Clock, Plus, XCircle } from '@phosphor-icons/react'
+import { AppModal } from '../../shared/components/AppModal'
 import { StatePanel } from '../../shared/components/StatePanel'
+import { subscribeToAppointmentChanges } from '../appointments/events'
 import { AgendaCalendar } from './AgendaCalendar'
 import { AgendaFilters } from './AgendaFilters'
 import { AgendaToolbar, readAgendaViewPreference, writeAgendaViewPreference, type AgendaView } from './AgendaToolbar'
@@ -50,13 +52,18 @@ export function AppointmentAgendaPage({ renderActions }: AppointmentAgendaPagePr
   const [params, setParams] = useSearchParams()
   const today = useMemo(() => todayLocal(), [])
   const view = useMemo(() => readViewState(params, today), [params, today])
-  const [agendaView, setAgendaView] = useState<AgendaView>(() => readAgendaViewPreference())
+  const [agendaView, setAgendaView] = useState<AgendaView>(() => (
+    params.get('vista') === 'calendario' ? 'grid' : readAgendaViewPreference()
+  ))
   const [searchDraft, setSearchDraft] = useState('')
   const [appliedSearch, setAppliedSearch] = useState('')
   const [filtersOpen, setFiltersOpen] = useState(false)
+  const [daySheetOpen, setDaySheetOpen] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
   const query = useMemo(() => toAgendaQuery(view), [view])
   const { load, refresh, retry } = useAgenda(query)
+
+  useEffect(() => subscribeToAppointmentChanges(() => { void refresh() }), [refresh])
 
   const [chairs, setChairs] = useState<ChairOption[]>([])
   const [chairsError, setChairsError] = useState(false)
@@ -94,6 +101,7 @@ export function AppointmentAgendaPage({ renderActions }: AppointmentAgendaPagePr
   const visibleTurnos = agendaView === 'grid' ? selectedDayTurnos : filteredTurnos
   const groupedTurnos = useMemo(() => groupByLocalDate(filteredTurnos), [filteredTurnos])
   const selected = visibleTurnos.find((turno) => turno.id === view.turnoId)
+  const showSideDetail = agendaView === 'list' && Boolean(selected)
   const dia = load.status === 'ready' ? load.data.dias.find((item) => item.fecha === view.fecha) : undefined
   const statusCounts = getStatusCounts(filteredTurnos)
   const filtersApplied = !isDefaultFilters(view) || Boolean(appliedSearch.trim())
@@ -117,8 +125,15 @@ export function AppointmentAgendaPage({ renderActions }: AppointmentAgendaPagePr
   }
   const select = (turno: AgendaTurno) => update({ turnoId: turno.id }, { keepTurno: true })
   const changeAgendaView = (nextView: AgendaView) => {
+    setDaySheetOpen(false)
     setAgendaView(nextView)
     writeAgendaViewPreference(nextView)
+  }
+  const selectCalendarDate = (fecha: string) => {
+    update({ fecha })
+    if (typeof window.matchMedia === 'function' && window.matchMedia('(max-width: 48rem)').matches) {
+      setDaySheetOpen(true)
+    }
   }
   const applySearch = () => {
     setAppliedSearch(searchDraft.trim())
@@ -130,22 +145,14 @@ export function AppointmentAgendaPage({ renderActions }: AppointmentAgendaPagePr
     update({ sillonId: undefined, estados: readViewState(new URLSearchParams(), today).estados })
   }
 
-  const emptyTitle = filtersApplied
-    ? 'Ningún turno coincide con los filtros'
-    : agendaView === 'grid'
-      ? 'No hay turnos para esta fecha'
-      : 'No hay turnos para este mes'
-  const emptyDescription = filtersApplied
-    ? 'Probá ajustar la búsqueda o limpiar los filtros.'
-    : agendaView === 'grid'
-      ? 'La agenda de este día está libre.'
-      : 'No hay turnos registrados en el mes visible.'
+  const emptyTitle = filtersApplied ? 'Ningún turno coincide con los filtros' : 'No hay turnos para este mes'
+  const emptyDescription = filtersApplied ? 'Probá ajustar la búsqueda o limpiar los filtros.' : 'No hay turnos registrados en el mes visible.'
 
   return (
     <section className="agenda agenda-page">
       <header className="agenda-page-header">
         <div>
-          <h1 className="page-heading">Turnos</h1>
+          <h1 className="page-heading">Agenda</h1>
           <p className="page-lead">Supervisá la operación diaria de tus reservas.</p>
         </div>
         <Link
@@ -157,6 +164,16 @@ export function AppointmentAgendaPage({ renderActions }: AppointmentAgendaPagePr
           <span>Nuevo turno</span>
         </Link>
       </header>
+
+      <Link
+        className="agenda-mobile-fab"
+        to="/turnos/nuevo"
+        state={{ backgroundLocation: location }}
+        aria-label="Nuevo turno"
+        title="Nuevo turno"
+      >
+        <Plus size={24} weight="bold" aria-hidden="true" />
+      </Link>
 
       <section className="agenda-summary" aria-label="Resumen del mes visible">
         <article className="agenda-summary__item">
@@ -180,7 +197,7 @@ export function AppointmentAgendaPage({ renderActions }: AppointmentAgendaPagePr
             today={today}
             countsByDate={countsByDate}
             dia={dia}
-            onDateChange={(fecha) => update({ fecha })}
+            onDateChange={selectCalendarDate}
           />
         ) : null}
 
@@ -239,9 +256,20 @@ export function AppointmentAgendaPage({ renderActions }: AppointmentAgendaPagePr
           {load.status === 'ready' ? (
             <>
               {visibleTurnos.length === 0 ? (
-                <StatePanel state="empty" title={emptyTitle} description={emptyDescription} />
+                agendaView === 'grid' ? (
+                  <div className="agenda-empty" role="status">
+                    <CalendarBlank size={34} weight="fill" aria-hidden="true" />
+                    <p>La agenda está libre este día.</p>
+                    <Link className="agenda-empty__action" to="/turnos/nuevo" state={{ backgroundLocation: location }}>
+                      <Plus size={15} weight="bold" aria-hidden="true" />
+                      Crear turno
+                    </Link>
+                  </div>
+                ) : (
+                  <StatePanel state="empty" title={emptyTitle} description={emptyDescription} />
+                )
               ) : (
-                <div className={`agenda-results${selected ? ' agenda-results--detail' : ''}`}>
+                <div className={`agenda-results${showSideDetail ? ' agenda-results--detail' : ''}`}>
                   <div className="agenda-results__list">
                     {agendaView === 'grid' ? (
                       <ul className="agenda-list__items" aria-label="Turnos del día">
@@ -264,7 +292,7 @@ export function AppointmentAgendaPage({ renderActions }: AppointmentAgendaPagePr
                       </div>
                     )}
                   </div>
-                  {selected ? (
+                  {agendaView === 'list' && selected ? (
                     <AppointmentDetail turno={selected} onClose={closeDetail} onChanged={() => void refresh()} renderActions={renderActions} />
                   ) : null}
                 </div>
@@ -287,6 +315,49 @@ export function AppointmentAgendaPage({ renderActions }: AppointmentAgendaPagePr
         onClear={clearFilters}
         onApply={() => setFiltersOpen(false)}
       />
+
+      {selected && agendaView === 'grid' ? (
+        <AppModal
+          open
+          className="agenda-appointment-modal"
+          title={selected.paciente.nombre}
+          description={selected.prestacion.nombre}
+          closeLabel="Cerrar detalle del turno"
+          onClose={closeDetail}
+        >
+          <AppointmentDetail
+            turno={selected}
+            displayMode="modal"
+            onClose={closeDetail}
+            onChanged={() => void refresh()}
+            renderActions={renderActions}
+          />
+        </AppModal>
+      ) : null}
+
+      <AppModal
+        open={daySheetOpen && agendaView === 'grid'}
+        className="agenda-day-sheet app-modal--compact-sheet"
+        title={formatCivilDate(view.fecha)}
+        description={`${selectedDayTurnos.length} ${selectedDayTurnos.length === 1 ? 'turno' : 'turnos'}`}
+        closeLabel="Cerrar turnos del día"
+        restoreFocus={false}
+        onClose={() => setDaySheetOpen(false)}
+      >
+        {selectedDayTurnos.length > 0 ? (
+          <ul className="agenda-list__items" aria-label={`Turnos del ${formatCivilDate(view.fecha)}`}>
+            {selectedDayTurnos.map((turno) => (
+              <AppointmentRow key={turno.id} turno={turno} selected={false} onSelect={select} />
+            ))}
+          </ul>
+        ) : (
+          <div className="agenda-day-sheet__empty">
+            <CalendarBlank size={28} aria-hidden="true" />
+            <strong>Sin turnos para este día</strong>
+            <span>La agenda está libre.</span>
+          </div>
+        )}
+      </AppModal>
     </section>
   )
 }

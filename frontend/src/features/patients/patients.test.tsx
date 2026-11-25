@@ -37,14 +37,12 @@ afterEach(() => {
 })
 
 describe('PatientsPage', () => {
-  it('lista pacientes con teléfono, DNI y email', async () => {
+  it('usa el documento como dato secundario en la lista de pacientes', async () => {
     mockApi([['GET /pacientes', () => ({ status: 200, body: page([patient(), patient({ id: 'pa-2', nombre: 'Persona Ficticia Sin Dni', dni: null, email: null, activo: false })]) })]])
     renderPage()
 
-    expect(await screen.findByText('Paciente Ficticio Uno')).toBeInTheDocument()
-    expect(screen.getByText('11 5555-0001 · DNI 30000001 · uno@example.test')).toBeInTheDocument()
-    expect(screen.getByText('Persona Ficticia Sin Dni')).toBeInTheDocument()
-    expect(screen.getByText('Inactivo')).toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: /Paciente Ficticio Uno.*30000001/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Persona Ficticia Sin Dni.*DNI no registrado/i })).toBeInTheDocument()
   })
 
   it('muestra el estado vacío', async () => {
@@ -179,5 +177,22 @@ describe('PatientsPage', () => {
       dni: '30000001',
       email: 'nuevo@example.test',
     }))
+  })
+
+  it('confirma antes de eliminar un cliente', async () => {
+    const { requests } = mockApi([
+      ['GET /pacientes', () => ({ status: 200, body: page([patient()]) })],
+      ['PATCH /pacientes/pa-1/estado', () => ({ status: 200, body: patient({ activo: false }) })],
+    ])
+    renderPage()
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Eliminar Paciente Ficticio Uno' }))
+    expect(requests.some((request) => request.method === 'PATCH')).toBe(false)
+
+    const dialog = screen.getByRole('dialog', { name: 'Eliminar cliente' })
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Eliminar cliente' }))
+
+    expect(await screen.findByText('Paciente «Paciente Ficticio Uno» desactivado.')).toBeInTheDocument()
+    expect(requests.find((request) => request.method === 'PATCH')?.body).toEqual({ activo: false })
   })
 })

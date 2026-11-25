@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom'
 import { Toaster } from 'sileo'
 import './styles/index.css'
 import './shared/components/form-controls.css'
+import './shared/components/appointment-status.css'
 import App from './app/App.tsx'
 import { ThemeProvider, useTheme } from './app/theme/ThemeProvider.tsx'
 import { applyInitialTheme } from './app/theme/theme.ts'
@@ -12,7 +13,15 @@ applyInitialTheme()
 
 function AppToaster() {
   const { resolvedTheme } = useTheme()
-  return <Toaster position="top-center" theme={resolvedTheme} />
+  return (
+    <Toaster
+      position="top-center"
+      theme={resolvedTheme}
+      options={{
+        fill: resolvedTheme === 'light' ? '#ffffff' : '#000814',
+      }}
+    />
+  )
 }
 
 createRoot(document.getElementById('root')!).render(

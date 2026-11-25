@@ -70,7 +70,7 @@ describe('AppRoutes', () => {
 
     await user.click(action)
 
-    const dialog = await screen.findByRole('dialog', { name: 'Nueva reserva' })
+    const dialog = await screen.findByRole('dialog', { name: 'Nuevo turno' })
     expect(screen.getByLabelText('Ruta actual')).toHaveTextContent('/turnos/nuevo')
     expect(within(dialog).getByRole('button', { name: 'Cerrar alta de turno' })).toBeInTheDocument()
     await user.click(within(dialog).getByRole('button', { name: 'Cerrar alta de turno' }))
@@ -91,7 +91,7 @@ describe('AppRoutes', () => {
     const user = userEvent.setup()
     const action = await screen.findByRole('link', { name: 'Crear turno' })
     await user.click(action)
-    expect(await screen.findByRole('dialog', { name: 'Nueva reserva' })).toBeInTheDocument()
+    expect(await screen.findByRole('dialog', { name: 'Nuevo turno' })).toBeInTheDocument()
 
     await user.keyboard('{Escape}')
 
@@ -110,7 +110,7 @@ describe('AppRoutes', () => {
     )
 
     const user = userEvent.setup()
-    const dialog = await screen.findByRole('dialog', { name: 'Nueva reserva' })
+    const dialog = await screen.findByRole('dialog', { name: 'Nuevo turno' })
     expect(dialog).toBeInTheDocument()
     expect(screen.getByLabelText('Ruta actual')).toHaveTextContent('/turnos/nuevo')
     expect(document.querySelector('.practice-dashboard')).toBeInTheDocument()

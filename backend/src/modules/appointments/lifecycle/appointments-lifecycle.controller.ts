@@ -1,20 +1,27 @@
-import { Body, Controller, Param, Patch } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch } from '@nestjs/common';
 import { CancelAppointmentService } from './cancel-appointment.service.js';
 import { ChangeAppointmentStatusService } from './change-appointment-status.service.js';
 import type { AppointmentLifecycleResponse } from './dto/appointment-lifecycle-response.js';
 import { CancelAppointmentDto } from './dto/cancel-appointment.dto.js';
 import { ChangeAppointmentStatusDto } from './dto/change-appointment-status.dto.js';
 import { RescheduleAppointmentDto } from './dto/reschedule-appointment.dto.js';
+import { GetAppointmentService } from './get-appointment.service.js';
 import { RescheduleAppointmentService } from './reschedule-appointment.service.js';
 
 /** Protegido por el `SessionGuard` global de C-04 (no es `@Public()`). */
 @Controller('turnos')
 export class AppointmentsLifecycleController {
   constructor(
+    private readonly getAppointmentService: GetAppointmentService,
     private readonly rescheduleService: RescheduleAppointmentService,
     private readonly cancelService: CancelAppointmentService,
     private readonly statusService: ChangeAppointmentStatusService,
   ) {}
+
+  @Get(':id')
+  getById(@Param('id') id: string): Promise<AppointmentLifecycleResponse> {
+    return this.getAppointmentService.getById(id);
+  }
 
   @Patch(':id/reprogramar')
   reschedule(

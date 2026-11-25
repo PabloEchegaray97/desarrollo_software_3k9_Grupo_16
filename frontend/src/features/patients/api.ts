@@ -2,13 +2,15 @@ import { ApiClientError, apiRequest } from '../../shared/api/client'
 import { toQueryString } from '../catalog/api'
 import type { CatalogListParams } from '../catalog/types'
 import type { Paginated } from '../catalog/ui/list'
-import type { DuplicateCandidate, Patient, PatientInput } from './types'
+import type { DuplicateCandidate, Patient, PatientInput, PatientProfile } from './types'
 
 const json = (body: unknown): RequestInit => ({ body: JSON.stringify(body) })
 
 export const patientsApi = {
   list: (params: CatalogListParams, signal?: AbortSignal) =>
     apiRequest<Paginated<Patient>>(`/pacientes${toQueryString(params)}`, { signal }),
+  detail: (id: string, signal?: AbortSignal) =>
+    apiRequest<PatientProfile>(`/pacientes/${encodeURIComponent(id)}/detalle`, { signal }),
   create: (input: PatientInput) => apiRequest<Patient>('/pacientes', { method: 'POST', ...json(input) }),
   replace: (id: string, input: PatientInput) =>
     apiRequest<Patient>(`/pacientes/${encodeURIComponent(id)}`, { method: 'PUT', ...json(input) }),

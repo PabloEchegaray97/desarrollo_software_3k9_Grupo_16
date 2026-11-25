@@ -56,6 +56,13 @@ export interface AgendaResponse {
   dias: AgendaDia[];
 }
 
+export interface UpcomingAgendaResponse {
+  zonaHoraria: string;
+  desde: string;
+  generadoEn: string;
+  turnos: AgendaTurnoResponse[];
+}
+
 /** Fila de la consulta de agenda: solo las columnas que la respuesta necesita. */
 export interface AgendaRow {
   id: string;

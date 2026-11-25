@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type MouseEvent } from 'react'
+import { Fragment, useEffect, useMemo, useRef, useState, type KeyboardEvent, type MouseEvent } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import {
   ArrowClockwise,
@@ -14,25 +14,25 @@ import {
   XCircle,
 } from '@phosphor-icons/react'
 import { agendaApi } from '../../features/agenda/api'
-import { formatCivilDate, formatLocalTime, todayLocal } from '../../features/agenda/time'
-import type { AppointmentStatus, AgendaTurno } from '../../features/agenda/types'
+import { subscribeToAppointmentChanges } from '../../features/appointments/events'
+import { AppointmentDetail } from '../../features/agenda/AppointmentDetail'
+import { StatusBadge } from '../../features/agenda/StatusBadge'
+import { formatCivilDate, formatLocalTime, localDateFromInstant, todayLocal } from '../../features/agenda/time'
+import type { AgendaTurno } from '../../features/agenda/types'
+import { AppointmentActionSheet } from '../../shared/components/AppointmentActionSheet'
 import { StatePanel } from '../../shared/components/StatePanel'
+import '../../features/agenda/agenda.css'
 import './dashboard.css'
 
-const PAGE_SIZE = 10
-
-const statusLabels: Record<AppointmentStatus, string> = {
-  PROGRAMADO: 'Programado',
-  CONFIRMADO: 'Confirmado',
-  ATENDIDO: 'Atendido',
-  AUSENTE: 'Ausente',
-  CANCELADO: 'Cancelado',
-}
+const DEFAULT_PAGE_SIZE = 10
+const PAGE_SIZE_OPTIONS = [5, 10, 20] as const
 
 type DashboardLoad =
   | { status: 'loading' }
   | { status: 'error' }
-  | { status: 'ready'; turnos: AgendaTurno[] }
+  | { status: 'ready'; today: AgendaTurno[]; upcoming: AgendaTurno[] }
+
+type DashboardScope = 'today' | 'upcoming'
 
 function formatDashboardDate(date: string): string {
   return formatCivilDate(date).replace(/^\p{Ll}/u, (letter) => letter.toUpperCase())
@@ -58,10 +58,21 @@ interface MenuPosition {
   top: number
 }
 
-function AppointmentRow({ turno, highlighted }: { turno: AgendaTurno; highlighted: boolean }) {
+function AppointmentRow({
+  turno,
+  highlighted,
+  selected,
+  onSelect,
+}: {
+  turno: AgendaTurno
+  highlighted: boolean
+  selected: boolean
+  onSelect: (turno: AgendaTurno) => void
+}) {
   const navigate = useNavigate()
   const menuRef = useRef<HTMLDivElement>(null)
   const [menuPosition, setMenuPosition] = useState<MenuPosition | null>(null)
+  const [sheetOpen, setSheetOpen] = useState(false)
   const terminal = turno.estado === 'CANCELADO' || turno.estado === 'ATENDIDO' || turno.estado === 'AUSENTE'
 
   useEffect(() => {
@@ -84,6 +95,12 @@ function AppointmentRow({ turno, highlighted }: { turno: AgendaTurno; highlighte
   }, [menuPosition])
 
   function openMenu(clientX: number, clientY: number) {
+    if (typeof window.matchMedia === 'function' && window.matchMedia('(max-width: 48rem)').matches) {
+      setMenuPosition(null)
+      setSheetOpen(true)
+      return
+    }
+
     const menuWidth = 224
     const menuHeight = 164
     setMenuPosition({
@@ -106,23 +123,39 @@ function AppointmentRow({ turno, highlighted }: { turno: AgendaTurno; highlighte
 
   function runAction(action: DashboardAppointmentAction) {
     setMenuPosition(null)
+    setSheetOpen(false)
+    if (action === 'detail' && !(typeof window.matchMedia === 'function' && window.matchMedia('(max-width: 48rem)').matches)) {
+      onSelect(turno)
+      return
+    }
     navigate(`/turnos/${turno.id}`, {
       state: action === 'detail' ? undefined : { dashboardAction: action },
     })
+  }
+
+  function handlePrimaryAction() {
+    if (typeof window.matchMedia === 'function' && window.matchMedia('(max-width: 48rem)').matches) {
+      setSheetOpen(true)
+      return
+    }
+
+    onSelect(turno)
   }
 
   return (
     <article
       className="dashboard-appointment"
       data-highlighted={highlighted}
+      data-selected={selected}
       onContextMenu={handleContextMenu}
       onKeyDown={handleMenuKeyDown}
     >
       <button
         type="button"
         className="dashboard-appointment__open"
+        aria-pressed={selected}
         aria-label={`Ver turno de ${turno.paciente.nombre} a las ${formatLocalTime(turno.inicio)}`}
-        onClick={() => runAction('detail')}
+        onClick={handlePrimaryAction}
       >
         <span className="dashboard-appointment__rail">
           {highlighted ? <span>Próximo</span> : null}
@@ -146,7 +179,7 @@ function AppointmentRow({ turno, highlighted }: { turno: AgendaTurno; highlighte
           className="dashboard-appointment__menu-trigger"
           aria-label={`Abrir acciones de ${turno.paciente.nombre}`}
           aria-haspopup="menu"
-          aria-expanded={menuPosition !== null}
+          aria-expanded={menuPosition !== null || sheetOpen}
           onClick={(event) => {
             event.stopPropagation()
             if (menuPosition) {
@@ -159,8 +192,8 @@ function AppointmentRow({ turno, highlighted }: { turno: AgendaTurno; highlighte
         >
           <DotsThreeVertical size={18} weight="bold" aria-hidden="true" />
         </button>
-        <span className="dashboard-appointment__status" data-status={turno.estado}>
-          {statusLabels[turno.estado]}
+        <span className="dashboard-appointment__status">
+          <StatusBadge estado={turno.estado} />
         </span>
       </div>
 
@@ -186,6 +219,18 @@ function AppointmentRow({ turno, highlighted }: { turno: AgendaTurno; highlighte
           </button>
         </div>
       ) : null}
+
+      <AppointmentActionSheet
+        open={sheetOpen}
+        patientName={turno.paciente.nombre}
+        timeRange={`${formatLocalTime(turno.inicio)} - ${formatLocalTime(turno.finAtencion)}`}
+        serviceName={turno.prestacion.nombre}
+        terminal={terminal}
+        onClose={() => setSheetOpen(false)}
+        onDetail={() => runAction('detail')}
+        onReschedule={() => runAction('reschedule')}
+        onCancel={() => runAction('cancel')}
+      />
     </article>
   )
 }
@@ -194,8 +239,11 @@ export function PracticeDashboard() {
   const location = useLocation()
   const today = useMemo(() => todayLocal(), [])
   const [attempt, setAttempt] = useState(0)
+  const [scope, setScope] = useState<DashboardScope>('today')
   const [now, setNow] = useState(() => Date.now())
   const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
+  const [selectedId, setSelectedId] = useState<string | null>(null)
   const [load, setLoad] = useState<DashboardLoad>({ status: 'loading' })
 
   useEffect(() => {
@@ -203,14 +251,18 @@ export function PracticeDashboard() {
     return () => window.clearInterval(timer)
   }, [])
 
+  useEffect(() => subscribeToAppointmentChanges(() => setAttempt((value) => value + 1)), [])
+
   useEffect(() => {
     const controller = new AbortController()
     setLoad({ status: 'loading' })
 
-    agendaApi
-      .get({ desde: today, hasta: today }, controller.signal)
-      .then(({ turnos }) => {
-        if (!controller.signal.aborted) setLoad({ status: 'ready', turnos })
+    Promise.all([
+      agendaApi.get({ desde: today, hasta: today }, controller.signal),
+      agendaApi.getUpcoming(today, controller.signal),
+    ])
+      .then(([daily, upcoming]) => {
+        if (!controller.signal.aborted) setLoad({ status: 'ready', today: daily.turnos, upcoming: upcoming.turnos })
       })
       .catch(() => {
         if (!controller.signal.aborted) setLoad({ status: 'error' })
@@ -221,16 +273,32 @@ export function PracticeDashboard() {
 
   const appointments = useMemo(
     () => load.status === 'ready'
-      ? [...load.turnos].sort((first, second) => first.inicio.localeCompare(second.inicio))
+      ? [...(scope === 'today' ? load.today : load.upcoming)].sort((first, second) => first.inicio.localeCompare(second.inicio))
       : [],
-    [load],
+    [load, scope],
   )
-  const nextAppointment = appointments.find((turno) => isOperative(turno) && Date.parse(turno.inicio) >= now)
-  const pendingCount = appointments.filter(({ estado }) => estado === 'PROGRAMADO').length
-  const confirmedCount = appointments.filter(({ estado }) => estado === 'CONFIRMADO').length
-  const totalPages = Math.max(1, Math.ceil(appointments.length / PAGE_SIZE))
+  const todayAppointments = load.status === 'ready' ? load.today : []
+  const upcomingAppointments = load.status === 'ready' ? load.upcoming : []
+  const nextAppointment = upcomingAppointments.find((turno) => isOperative(turno) && Date.parse(turno.inicio) >= now)
+  const pendingCount = todayAppointments.filter(({ estado }) => estado === 'PROGRAMADO').length
+  const confirmedCount = todayAppointments.filter(({ estado }) => estado === 'CONFIRMADO').length
+  const totalPages = Math.max(1, Math.ceil(appointments.length / pageSize))
   const currentPage = Math.min(page, totalPages)
-  const visibleAppointments = appointments.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
+  const visibleAppointments = appointments.slice((currentPage - 1) * pageSize, currentPage * pageSize)
+  const selectedAppointment = appointments.find(({ id }) => id === selectedId)
+
+  useEffect(() => {
+    if (!nextAppointment) return
+    const nextIndex = appointments.findIndex(({ id }) => id === nextAppointment.id)
+    if (nextIndex < 0) return
+    setPage(Math.floor(nextIndex / pageSize) + 1)
+  }, [appointments, nextAppointment, pageSize])
+
+  function changeScope(nextScope: DashboardScope) {
+    setScope(nextScope)
+    setSelectedId(null)
+    setPage(1)
+  }
 
   return (
     <section className="practice-dashboard">
@@ -241,17 +309,29 @@ export function PracticeDashboard() {
         </div>
 
         {nextAppointment ? (
-          <Link className="dashboard-next" to={`/turnos/${nextAppointment.id}`}>
+          <button
+            type="button"
+            className="dashboard-next"
+            onClick={() => {
+              if (localDateFromInstant(nextAppointment.inicio) !== today) setScope('upcoming')
+              setSelectedId(nextAppointment.id)
+            }}
+          >
             <span className="dashboard-next__countdown">
               <Clock size={16} weight="bold" aria-hidden="true" />
               {formatCountdown(nextAppointment.inicio, now)}
             </span>
             <span className="dashboard-next__copy">
               <small>Próximo turno con {nextAppointment.paciente.nombre}</small>
-              <strong>Hoy · {formatLocalTime(nextAppointment.inicio)} Hs</strong>
+              <strong>
+                {localDateFromInstant(nextAppointment.inicio) === today
+                  ? 'Hoy'
+                  : formatDashboardDate(localDateFromInstant(nextAppointment.inicio))}
+                {' · '}{formatLocalTime(nextAppointment.inicio)} Hs
+              </strong>
             </span>
             <CaretDown size={15} aria-hidden="true" />
-          </Link>
+          </button>
         ) : null}
       </header>
 
@@ -273,8 +353,8 @@ export function PracticeDashboard() {
       {load.status === 'ready' ? (
         <>
           <section className="dashboard-summary" aria-label="Resumen de hoy">
-            <article aria-label={`Turnos hoy: ${appointments.length}`}>
-              <div><small>Turnos hoy</small><strong>{appointments.length}</strong></div>
+            <article aria-label={`Turnos hoy: ${todayAppointments.length}`}>
+              <div><small>Turnos hoy</small><strong>{todayAppointments.length}</strong></div>
               <CalendarBlank size={20} aria-hidden="true" />
             </article>
             <article aria-label={`Pendientes: ${pendingCount}`}>
@@ -289,55 +369,101 @@ export function PracticeDashboard() {
 
           <section className="dashboard-agenda" aria-labelledby="dashboard-agenda-title">
             <header className="dashboard-agenda__header">
-              <h2 id="dashboard-agenda-title">Hoy <span aria-hidden="true">•</span> {formatDashboardDate(today).replace(/^[^,]+,\s*/u, '')}</h2>
-              <Link className="dashboard-agenda__scope" to="/agenda">
+              <h2 id="dashboard-agenda-title">
+                {scope === 'today'
+                  ? <>Hoy <span aria-hidden="true">•</span> {formatDashboardDate(today).replace(/^[^,]+,\s*/u, '')}</>
+                  : 'Próximos turnos'}
+              </h2>
+              <label className="dashboard-agenda__scope">
                 <CalendarCheck size={15} aria-hidden="true" />
-                Hoy ({appointments.length})
+                <select
+                  aria-label="Período de turnos"
+                  value={scope}
+                  onChange={(event) => changeScope(event.target.value as DashboardScope)}
+                >
+                  <option value="today">Hoy ({todayAppointments.length})</option>
+                  <option value="upcoming">Próximos turnos ({upcomingAppointments.length})</option>
+                </select>
                 <CaretDown size={14} aria-hidden="true" />
-              </Link>
+              </label>
             </header>
 
-            <div className="dashboard-agenda__body">
-              {appointments.length === 0 ? (
-                <div className="dashboard-empty" role="status">
-                  <span><CalendarBlank size={25} aria-hidden="true" /></span>
-                  <strong>Nada por acá</strong>
-                  <p>No hay turnos agendados para hoy.</p>
-                  <Link to="/turnos/nuevo" state={{ backgroundLocation: location }}>
-                    <Plus size={15} weight="bold" aria-hidden="true" />
-                    Crear turno
-                  </Link>
+            <div className={`dashboard-agenda__content${selectedAppointment ? ' dashboard-agenda__content--detail' : ''}`}>
+              <div className="dashboard-agenda__list">
+                <div className="dashboard-agenda__body">
+                  {appointments.length === 0 ? (
+                    <div className="dashboard-empty" role="status">
+                      <CalendarBlank size={34} weight="fill" aria-hidden="true" />
+                      <p>{scope === 'today' ? 'La agenda está libre este día.' : 'No hay próximos turnos programados.'}</p>
+                      <Link className="dashboard-empty__action" to="/turnos/nuevo" state={{ backgroundLocation: location }}>
+                        <Plus size={15} weight="bold" aria-hidden="true" />
+                        Crear turno
+                      </Link>
+                    </div>
+                  ) : (
+                    visibleAppointments.map((turno, index) => {
+                      const appointmentDate = localDateFromInstant(turno.inicio)
+                      const previousDate = index === 0 ? null : localDateFromInstant(visibleAppointments[index - 1]!.inicio)
+                      return (
+                        <Fragment key={turno.id}>
+                          {scope === 'upcoming' && appointmentDate !== previousDate ? (
+                            <h3 className="dashboard-agenda__day">{formatDashboardDate(appointmentDate)}</h3>
+                          ) : null}
+                          <AppointmentRow
+                            turno={turno}
+                            highlighted={turno.id === nextAppointment?.id}
+                            selected={turno.id === selectedId}
+                            onSelect={(appointment) => setSelectedId(appointment.id)}
+                          />
+                        </Fragment>
+                      )
+                    })
+                  )}
                 </div>
-              ) : (
-                visibleAppointments.map((turno) => (
-                  <AppointmentRow
-                    key={turno.id}
-                    turno={turno}
-                    highlighted={turno.id === nextAppointment?.id}
-                  />
-                ))
-              )}
-            </div>
 
-            {appointments.length > 0 ? (
-              <footer className="dashboard-pagination">
-                <button
-                  type="button"
-                  disabled={currentPage === 1}
-                  onClick={() => setPage((value) => Math.max(1, value - 1))}
-                >
-                  Anterior
-                </button>
-                <span>Página {currentPage} de {totalPages} · {appointments.length} turnos · {PAGE_SIZE} por página</span>
-                <button
-                  type="button"
-                  disabled={currentPage === totalPages}
-                  onClick={() => setPage((value) => Math.min(totalPages, value + 1))}
-                >
-                  Siguiente
-                </button>
-              </footer>
-            ) : null}
+                <footer className="dashboard-pagination">
+                  <button
+                    type="button"
+                    disabled={currentPage === 1}
+                    onClick={() => { setSelectedId(null); setPage((value) => Math.max(1, value - 1)) }}
+                  >
+                    Anterior
+                  </button>
+                  <div className="dashboard-pagination__center">
+                    <span>Página {currentPage} de {totalPages} · {appointments.length} turnos</span>
+                    <label>
+                      <span>Mostrar</span>
+                      <select
+                        aria-label="Turnos por página"
+                        value={pageSize}
+                        onChange={(event) => {
+                          setSelectedId(null)
+                          setPage(1)
+                          setPageSize(Number(event.target.value))
+                        }}
+                      >
+                        {PAGE_SIZE_OPTIONS.map((option) => <option key={option} value={option}>{option}</option>)}
+                      </select>
+                    </label>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={currentPage === totalPages}
+                    onClick={() => { setSelectedId(null); setPage((value) => Math.min(totalPages, value + 1)) }}
+                  >
+                    Siguiente
+                  </button>
+                </footer>
+              </div>
+
+              {selectedAppointment ? (
+                <AppointmentDetail
+                  turno={selectedAppointment}
+                  onClose={() => setSelectedId(null)}
+                  onChanged={() => setAttempt((value) => value + 1)}
+                />
+              ) : null}
+            </div>
           </section>
         </>
       ) : null}
