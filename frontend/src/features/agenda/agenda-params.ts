@@ -1,5 +1,5 @@
 import { APPOINTMENT_STATUSES, type AppointmentStatus } from './types'
-import { isValidLocalDate } from './time'
+import { isValidLocalDate, monthRange } from './time'
 
 /** Estado de la vista que vive en la URL para poder recargar o compartir la agenda. */
 export interface AgendaViewState {
@@ -50,7 +50,7 @@ export function writeViewState(state: AgendaViewState, today: string): URLSearch
 export function toAgendaQuery(state: AgendaViewState) {
   if (state.estados.length === 0) return null
   return {
-    desde: state.fecha,
+    ...monthRange(state.fecha),
     ...(state.sillonId ? { sillonId: state.sillonId } : {}),
     ...(state.estados.length < APPOINTMENT_STATUSES.length ? { estado: state.estados } : {}),
   }

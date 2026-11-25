@@ -5,11 +5,12 @@ import { toFeedback, type Feedback } from './feedback'
 import { FeedbackPanel } from './FeedbackPanel'
 
 type Coverage = 'completo' | 'parcial'
+type AvailabilityExceptionKind = Exclude<ExceptionKind, 'BLOQUEO'>
 type FormStatus = 'loading' | 'ready' | 'saving'
 
 interface FormState {
   fecha: string
-  tipo: ExceptionKind
+  tipo: AvailabilityExceptionKind
   motivo: string
   cobertura: Coverage
   horaInicio: string
@@ -18,10 +19,9 @@ interface FormState {
 
 const INITIAL: FormState = { fecha: '', tipo: 'FERIADO', motivo: '', cobertura: 'completo', horaInicio: '', horaFin: '' }
 
-const TIPOS: Array<[ExceptionKind, string]> = [
+const TIPOS: Array<[AvailabilityExceptionKind, string]> = [
   ['FERIADO', 'Feriado'],
   ['VACACIONES', 'Vacaciones'],
-  ['BLOQUEO', 'Bloqueo'],
 ]
 
 export function ExceptionsForm() {
@@ -42,7 +42,7 @@ export function ExceptionsForm() {
     void getExceptions()
       .then((response) => {
         if (!active) return
-        setRecords(response.filter((record) => record.activo))
+        setRecords(response.filter((record) => record.activo && record.tipo !== 'BLOQUEO'))
         setStatus('ready')
       })
       .catch((error: unknown) => {
@@ -137,7 +137,7 @@ export function ExceptionsForm() {
       aria-busy={status === 'loading' || status === 'saving'}
     >
       <h2 id="avail-exceptions-title">Excepciones</h2>
-      <p className="avail-card__lead">Registrá feriados, vacaciones y bloqueos con fecha local.</p>
+      <p className="avail-card__lead">Registrá feriados y vacaciones con fecha local.</p>
 
       <FeedbackPanel feedback={feedback} confirmation={confirmation} onRetry={retry} retryRef={retryButton} />
       {status === 'loading' || status === 'saving' ? (
@@ -159,27 +159,28 @@ export function ExceptionsForm() {
       <form onSubmit={submit}>
         <fieldset disabled={status === 'saving'}>
           <legend>Nueva excepción</legend>
-          <div className="avail-field">
-            <label htmlFor="exc-fecha">Fecha de la excepción</label>
-            <input id="exc-fecha" type="date" value={form.fecha} onChange={(event) => change('fecha', event.target.value)} />
+          <div className="app-field avail-field">
+            <label className="app-field__label" htmlFor="exc-fecha">Fecha de la excepción</label>
+            <input className="app-control" id="exc-fecha" type="date" value={form.fecha} onChange={(event) => change('fecha', event.target.value)} />
           </div>
-          <div className="avail-field">
-            <label htmlFor="exc-tipo">Tipo de excepción</label>
-            <select id="exc-tipo" value={form.tipo} onChange={(event) => change('tipo', event.target.value as ExceptionKind)}>
+          <div className="app-field avail-field">
+            <label className="app-field__label" htmlFor="exc-tipo">Tipo de excepción</label>
+            <select className="app-control" id="exc-tipo" value={form.tipo} onChange={(event) => change('tipo', event.target.value as AvailabilityExceptionKind)}>
               {TIPOS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
             </select>
           </div>
-          <div className="avail-field">
-            <label htmlFor="exc-motivo">Motivo de la excepción</label>
+          <div className="app-field avail-field">
+            <label className="app-field__label" htmlFor="exc-motivo">Motivo de la excepción</label>
             <input
               id="exc-motivo"
               ref={motivoField}
+              className="app-control"
               value={form.motivo}
               aria-invalid={motivoError ? true : undefined}
               aria-describedby={motivoError ? 'exc-motivo-error' : undefined}
               onChange={(event) => change('motivo', event.target.value)}
             />
-            {motivoError ? <p className="avail-field__error" id="exc-motivo-error">{motivoError}</p> : null}
+            {motivoError ? <p className="app-field__error" id="exc-motivo-error">{motivoError}</p> : null}
           </div>
           <fieldset className="avail-coverage">
             <legend>Cobertura</legend>
@@ -188,13 +189,13 @@ export function ExceptionsForm() {
           </fieldset>
           {form.cobertura === 'parcial' ? (
             <div className="avail-slot">
-              <div className="avail-field">
-                <label htmlFor="exc-inicio">Inicio del bloqueo</label>
-                <input id="exc-inicio" type="time" value={form.horaInicio} onChange={(event) => change('horaInicio', event.target.value)} />
+              <div className="app-field avail-field">
+                <label className="app-field__label" htmlFor="exc-inicio">Inicio del bloqueo</label>
+                <input className="app-control" id="exc-inicio" type="time" value={form.horaInicio} onChange={(event) => change('horaInicio', event.target.value)} />
               </div>
-              <div className="avail-field">
-                <label htmlFor="exc-fin">Fin del bloqueo</label>
-                <input id="exc-fin" type="time" value={form.horaFin} onChange={(event) => change('horaFin', event.target.value)} />
+              <div className="app-field avail-field">
+                <label className="app-field__label" htmlFor="exc-fin">Fin del bloqueo</label>
+                <input className="app-control" id="exc-fin" type="time" value={form.horaFin} onChange={(event) => change('horaFin', event.target.value)} />
               </div>
             </div>
           ) : null}

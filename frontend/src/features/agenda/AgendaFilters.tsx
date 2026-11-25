@@ -1,3 +1,4 @@
+import { ArrowClockwise, X } from '@phosphor-icons/react'
 import { STATUS_PRESENTATION } from './status'
 import { APPOINTMENT_STATUSES, type AppointmentStatus, type ChairOption } from './types'
 
@@ -22,9 +23,9 @@ export function AgendaFilters({ chairs, chairsError, onRetryChairs, sillonId, es
   }
   return (
     <form className="agenda-filters" aria-label="Filtros de la agenda" onSubmit={(event) => event.preventDefault()}>
-      <label className="agenda-filters__field">
-        <span>Sillón</span>
-        <select value={sillonId ?? ''} onChange={(event) => onSillonChange(event.target.value || undefined)}>
+      <label className="app-field agenda-filters__field">
+        <span className="app-field__label">Sillón</span>
+        <select className="app-control" value={sillonId ?? ''} onChange={(event) => onSillonChange(event.target.value || undefined)}>
           <option value="">Todos los sillones</option>
           {chairs.map((chair) => (
             <option key={chair.id} value={chair.id}>{chair.nombre}{chair.activo ? '' : ' (inactivo)'}</option>
@@ -33,7 +34,11 @@ export function AgendaFilters({ chairs, chairsError, onRetryChairs, sillonId, es
       </label>
       {chairsError ? (
         <p className="agenda-filters__error" role="alert">
-          No se pudieron cargar los sillones. <button type="button" onClick={onRetryChairs}>Reintentar</button>
+          No se pudieron cargar los sillones.
+          <button type="button" className="agenda-action-button" onClick={onRetryChairs}>
+            <ArrowClockwise size={16} aria-hidden="true" />
+            Reintentar
+          </button>
         </p>
       ) : null}
       <fieldset className="agenda-filters__states">
@@ -46,7 +51,10 @@ export function AgendaFilters({ chairs, chairsError, onRetryChairs, sillonId, es
         ))}
       </fieldset>
       {estados.length === 0 ? <p className="agenda-filters__hint" role="status">Elegí al menos un estado para ver turnos.</p> : null}
-      <button type="button" onClick={onClear} disabled={!canClear}>Limpiar filtros</button>
+      <button type="button" className="agenda-action-button" onClick={onClear} disabled={!canClear}>
+        <X size={16} aria-hidden="true" />
+        Limpiar filtros
+      </button>
     </form>
   )
 }

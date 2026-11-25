@@ -19,7 +19,7 @@ const turno = (over: Partial<AgendaTurno> = {}): AgendaTurno => ({
   ...over,
 })
 const response = (turnos: AgendaTurno[], over: Partial<AgendaResponse> = {}): AgendaResponse => ({
-  zonaHoraria: 'America/Argentina/Buenos_Aires', desde: '2027-03-10', hasta: '2027-03-10', generadoEn: '2027-03-10T12:30:00.000Z', turnos,
+  zonaHoraria: 'America/Argentina/Buenos_Aires', desde: '2027-03-01', hasta: '2027-03-31', generadoEn: '2027-03-10T12:30:00.000Z', turnos,
   dias: [{ fecha: '2027-03-10', tramos: [{ horaInicio: '09:00', horaFin: '13:00' }], bloqueos: [] }], ...over,
 })
 const chairs = page([{ id: 's1', nombre: 'Sillón 1', activo: true, createdAt: '', updatedAt: '' }])
@@ -29,51 +29,76 @@ const renderAgenda = (path = '/agenda?fecha=2027-03-10') =>
   render(<MemoryRouter initialEntries={[path]}><AppointmentAgendaPage /></MemoryRouter>)
 
 describe('AppointmentAgendaPage', () => {
-  it('lista los turnos con texto de estado y horario local', async () => {
-    mockApi([['GET /sillones', () => ({ status: 200, body: chairs })], ['GET /agenda', () => ({ status: 200, body: response([turno()]) })]])
+  it('muestra la agenda mensual con estado, horario local y consulta acotada al mes', async () => {
+    const { requests } = mockApi([['GET /sillones', () => ({ status: 200, body: chairs })], ['GET /agenda', () => ({ status: 200, body: response([turno()]) })]])
     renderAgenda()
     expect(await screen.findByText('Paciente Ficticio')).toBeTruthy()
     expect(screen.getByText('10:00–10:40')).toBeTruthy()
     expect(within(screen.getByRole('list', { name: 'Turnos del día' })).getByText('Programado')).toBeTruthy()
     expect(screen.getByText(/Actualizado a las 09:30/)).toBeTruthy()
     expect(screen.getByText(/Disponibilidad: 09:00–13:00/)).toBeTruthy()
-    expect(screen.getByRole('button', { name: 'Lista' })).toHaveAttribute('aria-pressed', 'true')
-    expect(screen.getByRole('button', { name: 'Grilla' })).toHaveAttribute('aria-pressed', 'false')
+    expect(screen.getByRole('button', { name: 'Lista' })).toHaveAttribute('aria-pressed', 'false')
+    expect(screen.getByRole('button', { name: 'Calendario' })).toHaveAttribute('aria-pressed', 'true')
+    expect(requests.filter((request) => request.path.startsWith('/agenda')).map((request) => request.path))
+      .toEqual(['/agenda?desde=2027-03-01&hasta=2027-03-31'])
   })
 
-  it('persists the selected grid by keyboard without changing the backend query', async () => {
+  it('persists the selected list by keyboard without changing the backend query', async () => {
     const { requests } = mockApi([
       ['GET /sillones', () => ({ status: 200, body: chairs })],
       ['GET /agenda', () => ({ status: 200, body: response([turno()]) })],
     ])
     renderAgenda()
     await screen.findByText('Paciente Ficticio')
-    const gridButton = screen.getByRole('button', { name: 'Grilla' })
-    gridButton.focus()
+    const listButton = screen.getByRole('button', { name: 'Lista' })
+    listButton.focus()
     await userEvent.keyboard('{Enter}')
 
-    expect(gridButton).toHaveAttribute('aria-pressed', 'true')
-    expect(localStorage.getItem(AGENDA_VIEW_STORAGE_KEY)).toBe('grid')
-    expect(screen.getByRole('list', { name: 'Turnos en grilla' })).toBeInTheDocument()
+    expect(listButton).toHaveAttribute('aria-pressed', 'true')
+    expect(localStorage.getItem(AGENDA_VIEW_STORAGE_KEY)).toBe('list')
+    expect(screen.getByRole('list', { name: 'Turnos del miércoles, 10 de marzo de 2027' })).toBeInTheDocument()
     expect(requests.filter((request) => request.path.startsWith('/agenda'))).toHaveLength(1)
 
     cleanup()
     renderAgenda()
-    expect(await screen.findByRole('list', { name: 'Turnos en grilla' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Grilla' })).toHaveAttribute('aria-pressed', 'true')
+    expect(await screen.findByRole('list', { name: 'Turnos del miércoles, 10 de marzo de 2027' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Lista' })).toHaveAttribute('aria-pressed', 'true')
   })
 
-  it('falls back to the list when the stored view preference is invalid', async () => {
+  it('filters the loaded month locally without requesting patient records', async () => {
+    const otherTurno = turno({
+      id: 't2',
+      paciente: { id: 'p2', nombre: 'Paciente Secundario' },
+      inicio: '2027-03-11T13:00:00.000Z',
+      finAtencion: '2027-03-11T13:40:00.000Z',
+      finBloqueo: '2027-03-11T13:50:00.000Z',
+    })
+    const { requests } = mockApi([
+      ['GET /sillones', () => ({ status: 200, body: chairs })],
+      ['GET /agenda', () => ({ status: 200, body: response([turno(), otherTurno]) })],
+    ])
+    renderAgenda()
+    await screen.findByText('Paciente Ficticio')
+    await userEvent.click(screen.getByRole('button', { name: 'Lista' }))
+
+    await userEvent.type(screen.getByRole('searchbox'), 'Paciente Ficticio{Enter}')
+
+    expect(screen.queryByText('Paciente Secundario')).not.toBeInTheDocument()
+    expect(requests.filter((request) => request.path.startsWith('/agenda'))).toHaveLength(1)
+    expect(requests.some((request) => request.path.startsWith('/pacientes'))).toBe(false)
+  })
+
+  it('defaults to calendar when the stored view preference is invalid', async () => {
     localStorage.setItem(AGENDA_VIEW_STORAGE_KEY, 'calendar')
     mockApi([['GET /sillones', () => ({ status: 200, body: chairs })], ['GET /agenda', () => ({ status: 200, body: response([turno()]) })]])
     renderAgenda()
 
     expect(await screen.findByRole('list', { name: 'Turnos del día' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Lista' })).toHaveAttribute('aria-pressed', 'true')
-    expect(screen.getByRole('button', { name: 'Grilla' })).toHaveAttribute('aria-pressed', 'false')
+    expect(screen.getByRole('button', { name: 'Lista' })).toHaveAttribute('aria-pressed', 'false')
+    expect(screen.getByRole('button', { name: 'Calendario' })).toHaveAttribute('aria-pressed', 'true')
   })
 
-  it('preserves appointment order and selected detail in grid view', async () => {
+  it('preserves backend appointment order and selected detail in calendar view', async () => {
     const orderedTurnos = [
       turno({ id: 'later-from-backend', estado: 'CONFIRMADO', fueraDisponibilidad: true, inicio: '2027-03-10T14:00:00.000Z', finAtencion: '2027-03-10T14:40:00.000Z', finBloqueo: '2027-03-10T14:50:00.000Z' }),
       turno({ id: 'earlier-from-backend', estado: 'CANCELADO', inicio: '2027-03-10T12:00:00.000Z', finAtencion: '2027-03-10T12:40:00.000Z', finBloqueo: '2027-03-10T12:50:00.000Z' }),
@@ -84,9 +109,8 @@ describe('AppointmentAgendaPage', () => {
     ])
     renderAgenda()
     await screen.findAllByText('Paciente Ficticio')
-    await userEvent.click(screen.getByRole('button', { name: 'Grilla' }))
 
-    const grid = screen.getByRole('list', { name: 'Turnos en grilla' })
+    const grid = screen.getByRole('list', { name: 'Turnos del día' })
     expect(Array.from(grid.querySelectorAll('[data-turno-id]')).map((row) => row.getAttribute('data-turno-id')))
       .toEqual(['later-from-backend', 'earlier-from-backend'])
     expect(within(grid).getByText('Intervalo 11:40–11:50')).toBeInTheDocument()
@@ -100,7 +124,7 @@ describe('AppointmentAgendaPage', () => {
     expect(within(grid).getAllByRole('button')[0]).toHaveAttribute('aria-pressed', 'true')
   })
 
-  it('keeps the backend schedule and blocks visible for an empty grid day', async () => {
+  it('keeps the backend schedule and blocks visible for an empty calendar day', async () => {
     mockApi([
       ['GET /sillones', () => ({ status: 200, body: chairs })],
       ['GET /agenda', () => ({
@@ -116,11 +140,10 @@ describe('AppointmentAgendaPage', () => {
     ])
     renderAgenda()
     await screen.findByText('No hay turnos para esta fecha')
-    await userEvent.click(screen.getByRole('button', { name: 'Grilla' }))
 
     expect(screen.getByText('Disponibilidad: 09:00–13:00')).toBeInTheDocument()
     expect(screen.getByText('Feriado ficticio')).toBeInTheDocument()
-    expect(screen.queryByRole('list', { name: 'Turnos en grilla' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('list', { name: 'Turnos del día' })).not.toBeInTheDocument()
     expect(screen.getByText('No hay turnos para esta fecha')).toBeInTheDocument()
   })
 
@@ -153,14 +176,13 @@ describe('AppointmentAgendaPage', () => {
     const { requests } = mockApi([['GET /sillones', () => ({ status: 200, body: chairs })], ['GET /agenda', () => (++calls === 1 ? { status: 200, body: response([turno()]) } : apiError(500, 'INTERNAL', 'x'))]])
     renderAgenda()
     await screen.findByText('Paciente Ficticio')
-    await userEvent.click(screen.getByRole('button', { name: 'Grilla' }))
-    expect(screen.getByRole('list', { name: 'Turnos en grilla' })).toBeInTheDocument()
+    expect(screen.getByRole('list', { name: 'Turnos del día' })).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Actualizar' }))
     expect(await screen.findByRole('alert')).toBeTruthy()
     expect(screen.getByText('Paciente Ficticio')).toBeTruthy()
-    expect(screen.getByRole('list', { name: 'Turnos en grilla' })).toBeInTheDocument()
+    expect(screen.getByRole('list', { name: 'Turnos del día' })).toBeInTheDocument()
     expect(requests.filter((request) => request.path.startsWith('/agenda')).map((request) => request.path))
-      .toEqual(['/agenda?desde=2027-03-10', '/agenda?desde=2027-03-10'])
+      .toEqual(['/agenda?desde=2027-03-01&hasta=2027-03-31', '/agenda?desde=2027-03-01&hasta=2027-03-31'])
   })
 
   it('abre el detalle sin pedir más datos y lo cierra con Esc', async () => {
@@ -172,7 +194,7 @@ describe('AppointmentAgendaPage', () => {
     expect(within(detail).getByRole('link', { name: 'Gestionar turno' }).getAttribute('href')).toBe('/turnos/t1')
     const before = requests.length
     await userEvent.keyboard('{Escape}')
-    await waitFor(() => expect(screen.queryByRole('complementary')).toBeNull())
+    await waitFor(() => expect(screen.queryByRole('complementary', { name: 'Detalle del turno' })).toBeNull())
     expect(requests.length).toBe(before)
   })
 
@@ -190,7 +212,7 @@ describe('AppointmentAgendaPage', () => {
     const agendaRequest = requests.find((r) => r.path.startsWith('/agenda'))
     expect(agendaRequest?.path).toContain('sillonId=s1')
     expect(decodeURIComponent(agendaRequest?.path ?? '')).toContain('estado=CONFIRMADO,AUSENTE')
-    await userEvent.click(screen.getByRole('button', { name: 'Grilla' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Lista' }))
     expect(requests.filter((request) => request.path.startsWith('/agenda'))).toHaveLength(1)
   })
 })

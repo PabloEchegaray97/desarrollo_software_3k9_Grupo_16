@@ -1,4 +1,5 @@
-import { Button } from '../../catalog/ui/Button'
+import { CalendarDots, Check, CheckCircle, UserMinus, X } from '@phosphor-icons/react'
+import { AppButton } from '../../../shared/components/Button'
 import { TERMINAL_STATUSES, type AppointmentStatus, type ChangeableStatus } from './types'
 
 interface StatusActionsProps {
@@ -22,11 +23,11 @@ export function StatusActions({ status, busy = false, onReschedule, onCancel, on
     <section className="lc-actions" aria-labelledby="lc-actions-title">
       <h2 className="lc-section-title" id="lc-actions-title">Acciones del turno</h2>
       <div className="lc-actions__buttons">
-        <Button variant="secondary" disabled={disabled} onClick={onReschedule}>Reprogramar turno</Button>
-        <Button variant="secondary" disabled={!canConfirm} onClick={() => onChangeStatus('CONFIRMADO')}>Confirmar turno</Button>
-        <Button variant="secondary" disabled={disabled} onClick={() => onChangeStatus('ATENDIDO')}>Marcar como atendido</Button>
-        <Button variant="secondary" disabled={disabled} onClick={() => onChangeStatus('AUSENTE')}>Registrar ausencia</Button>
-        <Button variant="danger" disabled={disabled} onClick={onCancel}>Cancelar turno</Button>
+        <AppButton variant="secondary" leftIcon={<CalendarDots />} disabled={disabled} onClick={onReschedule}>Reprogramar</AppButton>
+        <AppButton variant="secondary" leftIcon={<Check />} disabled={!canConfirm} onClick={() => onChangeStatus('CONFIRMADO')}>Confirmar</AppButton>
+        <AppButton variant="primary" leftIcon={<CheckCircle />} disabled={disabled} onClick={() => onChangeStatus('ATENDIDO')}>Marcar atendido</AppButton>
+        <AppButton variant="secondary" leftIcon={<UserMinus />} disabled={disabled} onClick={() => onChangeStatus('AUSENTE')}>Registrar ausencia</AppButton>
+        <AppButton variant="danger" leftIcon={<X />} disabled={disabled} onClick={onCancel}>Cancelar turno</AppButton>
       </div>
       {terminal ? (
         <p className="lc-actions__note" role="note">El turno está en un estado final y no admite nuevas acciones.</p>

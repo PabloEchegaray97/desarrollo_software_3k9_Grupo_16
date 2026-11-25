@@ -14,6 +14,11 @@ export interface WeeklySaveInput {
   version: string
 }
 
+export interface AvailabilityConfiguration {
+  intervaloGlobalMinutos: number
+  zonaHoraria: string
+}
+
 export type ExceptionKind = 'FERIADO' | 'VACACIONES' | 'BLOQUEO'
 
 export interface ExceptionRecord {

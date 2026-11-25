@@ -1,5 +1,6 @@
 import { createPortal } from 'react-dom'
-import { useId, useLayoutEffect, useRef, type KeyboardEvent, type ReactNode } from 'react'
+import { X } from '@phosphor-icons/react'
+import { useEffect, useId, useLayoutEffect, useRef, useState, type KeyboardEvent, type PointerEvent, type ReactNode } from 'react'
 import './app-modal.css'
 
 interface AppModalProps {
@@ -13,6 +14,11 @@ interface AppModalProps {
   id?: string
   className?: string
   closeLabel?: string
+  progress?: {
+    current: number
+    total: number
+    label?: string
+  }
 }
 
 function getFocusableElements(dialog: HTMLElement): HTMLElement[] {
@@ -43,12 +49,22 @@ export function AppModal({
   id,
   className,
   closeLabel = 'Cerrar modal',
+  progress,
 }: AppModalProps) {
   const backdropRef = useRef<HTMLDivElement>(null)
   const dialogRef = useRef<HTMLElement>(null)
   const titleRef = useRef<HTMLHeadingElement>(null)
+  const dragStateRef = useRef<{ pointerId: number; startY: number; lastY: number; startTime: number; lastTime: number } | null>(null)
+  const dismissTimerRef = useRef<number | null>(null)
+  const [dragY, setDragY] = useState(0)
+  const [isDragging, setIsDragging] = useState(false)
+  const [isDismissing, setIsDismissing] = useState(false)
   const titleId = useId()
   const descriptionId = useId()
+
+  useEffect(() => () => {
+    if (dismissTimerRef.current !== null) window.clearTimeout(dismissTimerRef.current)
+  }, [])
 
   useLayoutEffect(() => {
     const backdrop = backdropRef.current
@@ -67,6 +83,11 @@ export function AppModal({
     titleRef.current?.focus()
 
     return () => {
+      if (dismissTimerRef.current !== null) {
+        window.clearTimeout(dismissTimerRef.current)
+        dismissTimerRef.current = null
+      }
+      dragStateRef.current = null
       background.forEach(({ element, wasInert }) => {
         if (!wasInert) element.removeAttribute('inert')
       })
@@ -77,6 +98,70 @@ export function AppModal({
       }
     }
   }, [open])
+
+  function handleSheetPointerDown(event: PointerEvent<HTMLDivElement>) {
+    if (!open || isDismissing || dragStateRef.current || !event.isPrimary || !window.matchMedia('(max-width: 48rem)').matches) return
+    if (event.pointerType === 'mouse' && event.button !== 0) return
+
+    const now = performance.now()
+    dragStateRef.current = {
+      pointerId: event.pointerId,
+      startY: event.clientY,
+      lastY: event.clientY,
+      startTime: now,
+      lastTime: now,
+    }
+    event.currentTarget.setPointerCapture(event.pointerId)
+    event.preventDefault()
+    setIsDragging(true)
+    setDragY(0)
+  }
+
+  function handleSheetPointerMove(event: PointerEvent<HTMLDivElement>) {
+    const drag = dragStateRef.current
+    if (!drag || drag.pointerId !== event.pointerId) return
+
+    const now = performance.now()
+    dragStateRef.current = { ...drag, lastY: event.clientY, lastTime: now }
+    setDragY(Math.max(event.clientY - drag.startY, 0))
+  }
+
+  function endSheetDrag(event: PointerEvent<HTMLDivElement>, cancelled: boolean) {
+    const drag = dragStateRef.current
+    if (!drag || drag.pointerId !== event.pointerId) return
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId)
+    dragStateRef.current = null
+    setIsDragging(false)
+
+    if (cancelled) {
+      setDragY(0)
+      return
+    }
+
+    const now = performance.now()
+    const distance = Math.max(event.clientY - drag.startY, 0)
+    const segmentDistance = Math.max(event.clientY - drag.lastY, 0)
+    const velocity = Math.max(
+      segmentDistance / Math.max(now - drag.lastTime, 1),
+      distance / Math.max(now - drag.startTime, 1),
+    ) * 1000
+
+    if (distance < 96 && velocity < 900) {
+      setDragY(0)
+      return
+    }
+
+    const duration = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 1 : 180
+    setIsDismissing(true)
+    setDragY(Math.max(dialogRef.current?.getBoundingClientRect().height ?? 0, 240))
+    dismissTimerRef.current = window.setTimeout(() => {
+      dismissTimerRef.current = null
+      dragStateRef.current = null
+      setIsDismissing(false)
+      setDragY(0)
+      onClose()
+    }, duration)
+  }
 
   function handleKeyDown(event: KeyboardEvent<HTMLElement>) {
     if (event.key === 'Escape' && closeOnEscape) {
@@ -133,7 +218,35 @@ export function AppModal({
         aria-describedby={description ? descriptionId : undefined}
         tabIndex={-1}
         onKeyDown={handleKeyDown}
+        style={dragY > 0 || isDismissing
+          ? {
+              transform: `translate3d(0, ${dragY}px, 0)`,
+              transition: isDragging ? 'none' : undefined,
+            }
+          : undefined}
       >
+        {progress ? (
+          <div
+            className="app-modal__progress"
+            role="progressbar"
+            aria-label={progress.label ?? 'Progreso'}
+            aria-valuemin={1}
+            aria-valuemax={progress.total}
+            aria-valuenow={progress.current}
+          >
+            <span style={{ width: `${progress.total > 0 ? Math.min(100, Math.max(0, (progress.current / progress.total) * 100)) : 0}%` }} />
+          </div>
+        ) : null}
+        <div
+          className="app-modal__handle-zone"
+          aria-hidden="true"
+          onPointerDown={handleSheetPointerDown}
+          onPointerMove={handleSheetPointerMove}
+          onPointerUp={(event) => endSheetDrag(event, false)}
+          onPointerCancel={(event) => endSheetDrag(event, true)}
+        >
+          <span className="app-modal__handle" />
+        </div>
         <header className="app-modal__header">
           <div>
             <h2 ref={titleRef} id={titleId} className="app-modal__title" tabIndex={-1}>
@@ -146,7 +259,7 @@ export function AppModal({
             ) : null}
           </div>
           <button type="button" className="app-modal__close" aria-label={closeLabel} onClick={onClose}>
-            <span aria-hidden="true">×</span>
+            <X size={20} aria-hidden="true" />
           </button>
         </header>
         <div className="app-modal__body">{children}</div>

@@ -1,4 +1,5 @@
-import { useEffect, useId, useRef, type TextareaHTMLAttributes } from 'react'
+import { useEffect, useRef, type TextareaHTMLAttributes } from 'react'
+import { TextAreaField } from '../../../shared/components/FormField'
 import type { Chair } from '../../catalog/types'
 
 export const REASON_MAX_LENGTH = 500
@@ -30,8 +31,6 @@ interface ReasonFieldProps extends Omit<TextareaHTMLAttributes<HTMLTextAreaEleme
 }
 
 export function ReasonField({ label, value, error, onValueChange, hint, id, autoFocus, ...props }: ReasonFieldProps) {
-  const generatedId = useId()
-  const fieldId = id ?? generatedId
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
@@ -40,24 +39,19 @@ export function ReasonField({ label, value, error, onValueChange, hint, id, auto
     const frame = requestAnimationFrame(() => inputRef.current?.focus())
     return () => cancelAnimationFrame(frame)
   }, [autoFocus])
-  const errorId = error ? `${fieldId}-error` : undefined
-  const hintId = hint ? `${fieldId}-hint` : undefined
-  const describedBy = [errorId, hintId].filter(Boolean).join(' ') || undefined
+
   return (
-    <div className="adm-field">
-      <label className="adm-field__label" htmlFor={fieldId}>{label}</label>
-      <textarea
-        {...props}
-        ref={inputRef}
-        id={fieldId}
-        className="adm-input lc-textarea"
-        value={value}
-        onChange={(event) => onValueChange(event.target.value)}
-        aria-invalid={error ? true : undefined}
-        aria-describedby={describedBy}
-      />
-      {error ? <p className="adm-field__error" id={errorId} role="alert">{error}</p> : null}
-      {hint ? <p className="adm-field__hint" id={hintId}>{hint}</p> : null}
-    </div>
+    <TextAreaField
+      {...props}
+      inputRef={inputRef}
+      id={id}
+      className="lc-textarea"
+      label={label}
+      value={value}
+      onValueChange={onValueChange}
+      error={error}
+      errorRole="alert"
+      hint={hint}
+    />
   )
 }

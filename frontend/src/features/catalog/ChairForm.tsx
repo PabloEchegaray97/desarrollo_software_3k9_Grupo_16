@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { FloppyDisk, X } from '@phosphor-icons/react'
 import { chairsApi } from './api'
 import type { Chair } from './types'
 import { toFormErrors, type FormErrors } from './ui/api-errors'
@@ -44,8 +45,8 @@ export function ChairForm({ chair, onClose, onSaved }: ChairFormProps) {
       onClose={onClose}
       footer={(
         <>
-          <Button variant="ghost" onClick={onClose}>Cancelar</Button>
-          <Button variant="primary" type="submit" form="chair-form" loading={saving}>Guardar</Button>
+          <Button variant="ghost" leftIcon={<X size={16} />} onClick={onClose}>Cancelar</Button>
+          <Button variant="primary" leftIcon={<FloppyDisk size={16} />} type="submit" form="chair-form" loading={saving}>Guardar</Button>
         </>
       )}
     >

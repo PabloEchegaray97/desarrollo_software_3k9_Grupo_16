@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { ArrowLeft, WarningCircle } from '@phosphor-icons/react'
 import { AdminModal } from '../../catalog/ui/AdminModal'
 import { Button } from '../../catalog/ui/Button'
 import { TextAreaField } from './fields'
@@ -41,8 +42,8 @@ export function ExceptionModal({ inicio, finAtencion, saving, error, onCancel, o
       onClose={onCancel}
       footer={(
         <>
-          <Button variant="ghost" onClick={onCancel}>Volver al formulario</Button>
-          <Button variant="highlight" type="submit" form="exception-form" loading={saving}>Registrar como excepción</Button>
+          <Button variant="ghost" leftIcon={<ArrowLeft size={16} />} onClick={onCancel}>Volver al formulario</Button>
+          <Button variant="highlight" leftIcon={<WarningCircle size={16} />} type="submit" form="exception-form" loading={saving}>Registrar como excepción</Button>
         </>
       )}
     >

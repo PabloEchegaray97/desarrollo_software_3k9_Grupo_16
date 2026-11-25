@@ -1,8 +1,17 @@
 import { apiRequest } from '../../shared/api/client'
-import type { ExceptionCreateInput, ExceptionRecord, WeeklySaveInput, WeeklyScheduleResponse } from './types'
+import type { AvailabilityConfiguration, ExceptionCreateInput, ExceptionRecord, WeeklySaveInput, WeeklyScheduleResponse } from './types'
 
-export const getWeeklySchedule = (): Promise<WeeklyScheduleResponse> =>
-  apiRequest<WeeklyScheduleResponse>('/disponibilidad/semanales')
+export const getAvailabilityConfiguration = (signal?: AbortSignal): Promise<AvailabilityConfiguration> =>
+  apiRequest<AvailabilityConfiguration>('/disponibilidad/configuracion', { signal })
+
+export const saveAvailabilityConfiguration = (intervaloGlobalMinutos: number): Promise<AvailabilityConfiguration> =>
+  apiRequest<AvailabilityConfiguration>('/disponibilidad/configuracion', {
+    method: 'PATCH',
+    body: JSON.stringify({ intervaloGlobalMinutos }),
+  })
+
+export const getWeeklySchedule = (signal?: AbortSignal): Promise<WeeklyScheduleResponse> =>
+  apiRequest<WeeklyScheduleResponse>('/disponibilidad/semanales', { signal })
 
 export const saveWeeklySchedule = (input: WeeklySaveInput): Promise<WeeklyScheduleResponse> =>
   apiRequest<WeeklyScheduleResponse>('/disponibilidad/semanales', {
@@ -10,8 +19,8 @@ export const saveWeeklySchedule = (input: WeeklySaveInput): Promise<WeeklySchedu
     body: JSON.stringify(input),
   })
 
-export const getExceptions = (): Promise<ExceptionRecord[]> =>
-  apiRequest<ExceptionRecord[]>('/disponibilidad/excepciones')
+export const getExceptions = (signal?: AbortSignal): Promise<ExceptionRecord[]> =>
+  apiRequest<ExceptionRecord[]>('/disponibilidad/excepciones', { signal })
 
 export const createException = (input: ExceptionCreateInput): Promise<ExceptionRecord> =>
   apiRequest<ExceptionRecord>('/disponibilidad/excepciones', {

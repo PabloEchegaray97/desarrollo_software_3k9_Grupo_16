@@ -1,4 +1,11 @@
-import { addDaysToLocalDate, formatCivilDate, formatLocalTime, isValidLocalDate } from './time'
+import {
+  ArrowClockwise,
+  CalendarBlank,
+  FunnelSimple,
+  ListBullets,
+  MagnifyingGlass,
+} from '@phosphor-icons/react'
+import { formatLocalTime } from './time'
 
 export const AGENDA_VIEW_STORAGE_KEY = 'odosoft.agenda-view'
 export type AgendaView = 'list' | 'grid'
@@ -10,9 +17,9 @@ function isAgendaView(value: string | null): value is AgendaView {
 export function readAgendaViewPreference(storage?: Pick<Storage, 'getItem'>): AgendaView {
   try {
     const stored = (storage ?? window.localStorage).getItem(AGENDA_VIEW_STORAGE_KEY)
-    return isAgendaView(stored) ? stored : 'list'
+    return isAgendaView(stored) ? stored : 'grid'
   } catch {
-    return 'list'
+    return 'grid'
   }
 }
 
@@ -26,41 +33,91 @@ export function writeAgendaViewPreference(view: AgendaView, storage?: Pick<Stora
 }
 
 interface Props {
-  fecha: string
-  today: string
-  generadoEn: string | null
-  refreshing: boolean
+  searchDraft: string
+  onSearchDraftChange: (value: string) => void
+  onSearch: () => void
   view: AgendaView
-  onDateChange: (fecha: string) => void
-  onRefresh: () => void
   onViewChange: (view: AgendaView) => void
+  filtersOpen: boolean
+  hasActiveFilters: boolean
+  onToggleFilters: () => void
+  refreshing: boolean
+  generadoEn: string | null
+  onRefresh: () => void
 }
 
-export function AgendaToolbar({ fecha, today, generadoEn, refreshing, view, onDateChange, onRefresh, onViewChange }: Props) {
+export function AgendaToolbar({
+  searchDraft,
+  onSearchDraftChange,
+  onSearch,
+  view,
+  onViewChange,
+  filtersOpen,
+  hasActiveFilters,
+  onToggleFilters,
+  refreshing,
+  generadoEn,
+  onRefresh,
+}: Props) {
   return (
     <div className="agenda-toolbar">
-      <h2 className="agenda-toolbar__title">{formatCivilDate(fecha)}</h2>
-      <div className="agenda-toolbar__nav" role="group" aria-label="Navegar por fecha">
-        <button type="button" onClick={() => onDateChange(addDaysToLocalDate(fecha, -1))}>Día anterior</button>
-        <button type="button" onClick={() => onDateChange(today)} disabled={fecha === today}>Hoy</button>
-        <button type="button" onClick={() => onDateChange(addDaysToLocalDate(fecha, 1))}>Día siguiente</button>
-        <label className="agenda-toolbar__date">
-          <span>Fecha</span>
+      <form
+        className="agenda-toolbar__search"
+        aria-label="Buscar turnos del mes visible"
+        onSubmit={(event) => {
+          event.preventDefault()
+          onSearch()
+        }}
+      >
+        <label className="agenda-toolbar__search-field">
+          <MagnifyingGlass size={18} aria-hidden="true" />
+          <span className="agenda-visually-hidden">Buscar por paciente, prestación o sillón</span>
           <input
-            type="date"
-            value={fecha}
-            onChange={(event) => { if (isValidLocalDate(event.target.value)) onDateChange(event.target.value) }}
+            className="agenda-toolbar__search-input"
+            type="search"
+            maxLength={80}
+            value={searchDraft}
+            onChange={(event) => onSearchDraftChange(event.target.value)}
+            placeholder="Buscar paciente, prestación o sillón"
           />
         </label>
+        <button type="submit" className="agenda-action-button agenda-action-button--primary">
+          <MagnifyingGlass size={16} aria-hidden="true" />
+          <span>Buscar</span>
+        </button>
+      </form>
+
+      <div className="agenda-toolbar__controls">
+        <button
+          type="button"
+          className="agenda-action-button"
+          aria-expanded={filtersOpen}
+          aria-controls="agenda-filters-panel"
+          onClick={onToggleFilters}
+        >
+          <FunnelSimple size={16} aria-hidden="true" />
+          <span>Filtros</span>
+          {hasActiveFilters ? <i className="agenda-toolbar__filter-dot" aria-hidden="true" /> : null}
+        </button>
+
+        <div className="agenda-toolbar__view" role="group" aria-label="Vista de turnos">
+          <button type="button" aria-pressed={view === 'list'} onClick={() => onViewChange('list')}>
+            <ListBullets size={16} aria-hidden="true" />
+            <span>Lista</span>
+          </button>
+          <button type="button" aria-pressed={view === 'grid'} onClick={() => onViewChange('grid')}>
+            <CalendarBlank size={16} aria-hidden="true" />
+            <span>Calendario</span>
+          </button>
+        </div>
+
+        <button type="button" className="agenda-action-button agenda-action-button--refresh" onClick={onRefresh} disabled={refreshing}>
+          <ArrowClockwise size={16} aria-hidden="true" />
+          <span>{refreshing ? 'Actualizando…' : 'Actualizar'}</span>
+        </button>
       </div>
-      <div className="agenda-toolbar__view" role="group" aria-label="Vista de agenda">
-        <button type="button" aria-pressed={view === 'list'} onClick={() => onViewChange('list')}>Lista</button>
-        <button type="button" aria-pressed={view === 'grid'} onClick={() => onViewChange('grid')}>Grilla</button>
-      </div>
-      <div className="agenda-toolbar__refresh">
-        <button type="button" onClick={onRefresh} disabled={refreshing}>{refreshing ? 'Actualizando…' : 'Actualizar'}</button>
-        {generadoEn ? <span className="agenda-toolbar__stamp">Actualizado a las {formatLocalTime(generadoEn)}</span> : null}
-      </div>
+
+      {generadoEn ? <p className="agenda-toolbar__stamp">Actualizado a las {formatLocalTime(generadoEn)}</p> : null}
     </div>
   )
 }

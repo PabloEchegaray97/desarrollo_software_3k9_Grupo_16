@@ -1,8 +1,10 @@
+import { useState } from 'react'
 import { Navigate, Route, Routes, useLocation, useNavigate, type Location as RouterLocation } from 'react-router-dom'
 import { AppointmentCreationPage } from '../features/appointments/create'
 import { AppointmentLifecyclePage } from '../features/appointments/lifecycle'
 import { AppointmentAgendaPage } from '../features/agenda'
 import { AvailabilityPage } from '../features/availability'
+import { BlocksPage } from '../features/availability/blocks'
 import { CatalogPage } from '../features/catalog'
 import { PatientsPage } from '../features/patients'
 import { AppModal } from '../shared/components/AppModal'
@@ -54,6 +56,7 @@ function getBackgroundRoute(location: RouterLocation): BackgroundRoute | null {
 
 function AppointmentCreationModal({ background }: { background: BackgroundRoute }) {
   const navigate = useNavigate()
+  const [step, setStep] = useState(1)
   const close = () => {
     if (background.direct) navigate('/', { replace: true })
     else navigate(-1)
@@ -62,11 +65,14 @@ function AppointmentCreationModal({ background }: { background: BackgroundRoute 
   return (
     <AppModal
       open
-      title="Nuevo turno"
+      className="appointment-wizard-modal"
+      title="Nueva reserva"
+      description={`Paso ${step} de 2 · ${step === 1 ? 'Elegí el paciente' : 'Completá la atención'}`}
       closeLabel="Cerrar alta de turno"
       onClose={close}
+      progress={{ current: step, total: 2, label: 'Progreso de la nueva reserva' }}
     >
-      <AppointmentCreationPage onClose={close} />
+      <AppointmentCreationPage onClose={close} onStepChange={setStep} />
     </AppModal>
   )
 }
@@ -85,6 +91,7 @@ export function AppRoutes() {
         <Route path="/pacientes" element={<PatientsPage />} />
         <Route path="/prestaciones" element={<CatalogPage />} />
         <Route path="/disponibilidad" element={<AvailabilityPage />} />
+        <Route path="/bloqueos" element={<BlocksPage />} />
         <Route path={authRoute.path} element={authRoute.element} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

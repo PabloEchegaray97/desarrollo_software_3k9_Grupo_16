@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import { cleanup, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
@@ -6,6 +7,8 @@ import { AuthPage } from '../../features/auth'
 import { authenticated, callsTo, FICTIONAL_USER, mockApi, serverError, unauthorized, type FakeResponse } from '../../features/auth/test-utils'
 import { ThemeProvider } from '../theme/ThemeProvider'
 import { AppShell } from './AppShell'
+
+const appShellCss = readFileSync('src/app/shell/app-shell.css', 'utf8')
 
 function renderShell(path = '/pacientes') {
   render(
@@ -40,6 +43,13 @@ afterEach(() => {
 })
 
 describe('AppShell', () => {
+  it('keeps the desktop sidebar flush and the content full-width with a one-rem inset', () => {
+    expect(appShellCss).toMatch(/\.app-shell\s*\{[^}]*grid-template-columns: var\(--sidebar-expanded\) minmax\(0, 1fr\)/)
+    expect(appShellCss).toMatch(/\.app-shell\[data-sidebar-collapsed='true'\]\s*\{[^}]*grid-template-columns: var\(--sidebar-collapsed\) minmax\(0, 1fr\)/)
+    expect(appShellCss).toMatch(/\.app-main\s*\{[^}]*width: 100%;[^}]*margin: 0;[^}]*padding: var\(--space-4\)/)
+    expect(appShellCss).toMatch(/\.app-sidebar\s*\{[^}]*top: 0;[^}]*height: 100dvh;[^}]*margin: 0;[^}]*border-radius: 0 var\(--radius-lg\) var\(--radius-lg\) 0/)
+  })
+
   it('shows a loading state and no protected content while the session is checked', async () => {
     let resolveSession: (value: FakeResponse) => void = () => {}
     mockApi({ '/auth/sesion': () => new Promise<FakeResponse>((resolve) => { resolveSession = resolve }) })
@@ -77,12 +87,12 @@ describe('AppShell', () => {
     mockApi({ '/auth/sesion': () => authenticated })
     renderShell('/prestaciones')
     const nav = await screen.findByRole('navigation', { name: 'Navegación principal' })
-    for (const name of ['Inicio', 'Agenda', 'Pacientes', 'Prestaciones y sillones', 'Disponibilidad']) {
+    for (const name of ['Inicio', 'Agenda', 'Pacientes', 'Servicios', 'Disponibilidad']) {
       expect(within(nav).getByRole('link', { name })).toBeInTheDocument()
     }
-    expect(within(nav).getByRole('link', { name: 'Prestaciones y sillones' })).toHaveAttribute('aria-current', 'page')
+    expect(within(nav).getByRole('link', { name: 'Servicios' })).toHaveAttribute('aria-current', 'page')
     expect(screen.getByText(FICTIONAL_USER.email)).toBeInTheDocument()
-    expect(within(nav).getByRole('link', { name: 'Prestaciones y sillones' }).querySelector('svg'))
+    expect(within(nav).getByRole('link', { name: 'Servicios' }).querySelector('svg'))
       .toHaveAttribute('data-phosphor-weight', 'fill')
     expect(within(nav).getByRole('link', { name: 'Agenda' }).querySelector('svg'))
       .toHaveAttribute('data-phosphor-weight', 'regular')

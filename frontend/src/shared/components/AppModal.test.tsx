@@ -1,8 +1,12 @@
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { useState } from 'react'
 import { cleanup, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { AppModal } from './AppModal'
+
+const appModalCss = readFileSync(resolve(process.cwd(), 'src/shared/components/app-modal.css'), 'utf8').replace(/\r\n/g, '\n')
 
 function ModalHarness({ onClose }: { onClose: () => void }) {
   const [open, setOpen] = useState(false)
@@ -126,5 +130,18 @@ describe.each(['light', 'dark'] as const)('AppModal en tema %s', (theme) => {
 
     expect(onClose).not.toHaveBeenCalled()
     expect(screen.getByRole('dialog', { name: 'Confirmar' })).toBeInTheDocument()
+  })
+})
+
+describe('layout responsive de AppModal', () => {
+  it('centra el diálogo en escritorio y usa bottom sheet en móvil sin alterar el drawer', () => {
+    expect(appModalCss).toContain('place-items: center;')
+    expect(appModalCss).toContain('width: min(46rem, calc(100vw - 32px));')
+    expect(appModalCss).toContain('@media (max-width: 48rem)')
+    expect(appModalCss).toContain('.app-modal-backdrop {\n    align-items: end;')
+    expect(appModalCss).toContain('.app-modal:not(.shell-drawer-panel) {')
+    expect(appModalCss).toContain('width: 100%;')
+    expect(appModalCss).toContain('border-radius: var(--radius-lg) var(--radius-lg) 0 0;')
+    expect(appModalCss).toContain('env(safe-area-inset-bottom)')
   })
 })
