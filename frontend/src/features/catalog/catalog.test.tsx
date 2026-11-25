@@ -46,8 +46,8 @@ describe('CatalogPage', () => {
     mockApi([['GET /prestaciones', () => ({ status: 200, body: page([procedure(), procedure({ id: 'p-2', nombre: 'Limpieza ficticia', intervaloPosteriorMinutos: 5, activo: false })]) })]])
     renderPage()
 
-    expect(await screen.findByText('Control ficticio')).toBeInTheDocument()
-    expect(screen.getByText('30 min · usa intervalo global')).toBeInTheDocument()
+    expect((await screen.findAllByText('Control ficticio')).length).toBeGreaterThan(0)
+    expect(screen.getAllByText('30 min · usa intervalo global').length).toBeGreaterThan(0)
     expect(screen.getByText('30 min · intervalo posterior 5 min')).toBeInTheDocument()
     expect(screen.getByText('Inactivo')).toBeInTheDocument()
   })
@@ -58,11 +58,11 @@ describe('CatalogPage', () => {
       ['GET /sillones', () => ({ status: 200, body: page([chair()]) })],
     ])
     renderPage()
-    await screen.findByText('Control ficticio')
+    await screen.findAllByText('Control ficticio')
 
     await userEvent.click(screen.getByRole('tab', { name: 'Sillones' }))
 
-    expect(await screen.findByText('Sillón 1')).toBeInTheDocument()
+    expect((await screen.findAllByText('Sillón 1')).length).toBeGreaterThan(0)
     expect(screen.getByRole('tab', { name: 'Sillones' })).toHaveAttribute('aria-selected', 'true')
     expect(screen.getByTestId('location')).toHaveTextContent('/prestaciones?seccion=sillones')
     expect(requests.some((request) => request.path.startsWith('/sillones'))).toBe(true)
@@ -71,7 +71,7 @@ describe('CatalogPage', () => {
   it('abre la sección indicada en la URL', async () => {
     mockApi([['GET /sillones', () => ({ status: 200, body: page([chair()]) })]])
     renderPage('/prestaciones?seccion=sillones')
-    expect(await screen.findByText('Sillón 1')).toBeInTheDocument()
+    expect((await screen.findAllByText('Sillón 1')).length).toBeGreaterThan(0)
   })
 
   it('muestra el estado vacío con acción para crear', async () => {
@@ -88,9 +88,9 @@ describe('CatalogPage', () => {
     mockApi([['GET /prestaciones', () => (++calls === 1 ? apiError(500, 'INTERNAL_ERROR', 'Unexpected server error') : { status: 200, body: page([procedure()]) })]])
     renderPage()
 
-    expect(await screen.findByText('No se pudieron cargar las prestaciones')).toBeInTheDocument()
+    expect(await screen.findByText('No se pudieron cargar los servicios')).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Reintentar' }))
-    expect(await screen.findByText('Control ficticio')).toBeInTheDocument()
+    expect((await screen.findAllByText('Control ficticio')).length).toBeGreaterThan(0)
   })
 
   it('muestra junto al campo el error de rango del backend y conserva los valores', async () => {
@@ -99,8 +99,8 @@ describe('CatalogPage', () => {
       ['POST /prestaciones', () => apiError(400, 'VALIDATION_ERROR', 'Request validation failed', ['duracionPredeterminadaMinutos must not be greater than 240'])],
     ])
     renderPage()
-    await userEvent.click(await screen.findByRole('button', { name: 'Nueva prestación' }))
-    const dialog = screen.getByRole('dialog', { name: 'Nueva prestación' })
+    await userEvent.click(await screen.findByRole('button', { name: 'Nuevo servicio' }))
+    const dialog = screen.getByRole('dialog', { name: 'Nuevo servicio' })
 
     await userEvent.type(within(dialog).getByLabelText(/Nombre/), 'Cirugía ficticia')
     await userEvent.type(within(dialog).getByLabelText(/Duración predeterminada/), '241')
@@ -121,13 +121,13 @@ describe('CatalogPage', () => {
   it('valida presencia y tipo en el cliente sin llamar al backend', async () => {
     const { requests } = mockApi([['GET /prestaciones', () => ({ status: 200, body: page([]) })]])
     renderPage()
-    await userEvent.click(await screen.findByRole('button', { name: 'Nueva prestación' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Nuevo servicio' }))
     const dialog = screen.getByRole('dialog')
 
     await userEvent.type(within(dialog).getByLabelText(/Duración predeterminada/), 'treinta')
     await userEvent.click(within(dialog).getByRole('button', { name: 'Guardar' }))
 
-    expect(within(dialog).getByText('Ingresá el nombre de la prestación.')).toBeInTheDocument()
+    expect(within(dialog).getByText('Ingresá el nombre del servicio.')).toBeInTheDocument()
     expect(within(dialog).getByText('Ingresá la duración en minutos enteros.')).toBeInTheDocument()
     expect(requests.some((request) => request.method === 'POST')).toBe(false)
   })

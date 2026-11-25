@@ -1,11 +1,11 @@
-# Contrato de componentes — revisión 2
+# Contrato de componentes — revisión 4
 
 Adaptación para OdoSoft de la referencia ubicada en `revisar_ui/cambio-de-turno-ui-pack/`. Define comportamiento y forma; la implementación React usa Phosphor Icons y no queda atada a otra biblioteca visual.
 
 ## Forma compartida
 
-- Tarjetas, paneles, sidebar y modales: `rounded-2xl` / `1rem`.
-- Inputs, selects y áreas de texto: `rounded-lg` / `0.5rem`.
+- Tarjetas, paneles y modales: superficies planas, sin borde perimetral ni sombra.
+- Inputs, selects y áreas de texto: `rounded-2xl` / `1rem`, fondo transparente y borde funcional.
 - Botones, chips, badges y controles segmentados: píldora cuando su contenido lo permita.
 - Evitar tarjetas anidadas. Preferir separadores, fondos suaves o secciones.
 - Densidad compacta en escritorio; aumentar targets y separación en móvil.
@@ -22,7 +22,7 @@ Adaptación para OdoSoft de la referencia ubicada en `revisar_ui/cambio-de-turno
 ## Dashboard
 
 - Encabezado compacto con fecha/título y `+ Nuevo turno` arriba a la derecha.
-- Métricas en tarjetas breves: valor, etiqueta e icono; no agregar descripción si valor+etiqueta ya son suficientes.
+- Métricas sin cajas: valor, etiqueta e icono agrupados por espacio y separadores; no agregar descripción si valor+etiqueta ya son suficientes.
 - Accesos rápidos como enlaces, no como tarjetas decorativas sin acción.
 - En móvil las métricas se apilan o pasan a dos columnas sin overflow.
 
@@ -46,14 +46,16 @@ Variantes `primary`, `secondary`, `ghost`, `highlight` y `danger`; tamaños `sm`
 ## Input
 
 - Etiqueta visible arriba; ayuda solo si aporta un límite o consecuencia; error debajo.
-- Altura objetivo mínima: 40 px en escritorio y 44 px en móvil.
-- Radio `--radius-sm`, borde `--color-border-strong`, fondo `--color-surface`.
+- Altura objetivo mínima: 44 px en todos los tamaños.
+- Radio `1rem`, borde `--color-border-strong`, fondo transparente.
 - Foco mediante `--focus-ring`; error mediante borde, texto y mensaje.
 - No usar inputs tipo píldora.
+- Usar `frontend/src/shared/components/FormField.tsx` para inputs, selects y áreas de texto.
 
 ## Tarjeta o panel
 
-- Fondo `--color-surface`, borde de 1 px, radio `--radius-lg` y sombra semántica.
+- Fondo `--color-surface`, sin borde perimetral ni sombra.
+- Separar contenido con espacio negativo y divisores de `--color-border` solo cuando ayuden a leer listas.
 - Encabezado con título y una acción breve; descripción solo cuando cambia la comprensión.
 - Evitar scroll interno salvo agenda, modal o patrón que lo requiera.
 
@@ -62,10 +64,13 @@ Variantes `primary`, `secondary`, `ghost`, `highlight` y `danger`; tamaños `sm`
 - Componente compartido: `AppModal`; las features aportan contenido y acciones.
 - Ancho compacto: `min(46rem, calc(100vw - 32px))`; formularios breves pueden usar 460 px.
 - Alto máximo: `calc(100dvh - 32px)`.
+- Escritorio: centrado horizontal y verticalmente en el viewport.
+- Móvil (hasta 48rem): bottom sheet a ancho completo, anclado al borde inferior y con radios solo en las esquinas superiores; limitar su alto al 90dvh y dejar desplazar el body.
+- El footer y el contenido respetan `safe-area-inset-bottom`; el drawer lateral de navegación no se convierte en bottom sheet.
 - Estructura: header, body desplazable y footer solo con acciones reales.
 - Título obligatorio; descripción opcional y no redundante.
 - Fondo inerte, foco inicial/encerrado, `Esc` cuando no exista confirmación crítica y retorno al disparador.
-- Contenedor `--radius-lg`; en móvil ocupa el ancho disponible sin convertirse automáticamente en bottom sheet.
+- Contenedor `--radius-lg`.
 
 ## Agenda lista/grilla
 

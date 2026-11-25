@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { StatePanel } from '../../../shared/components/StatePanel'
-import { chairsApi } from '../../catalog/api'
-import type { Chair } from '../../catalog/types'
+import { chairsApi, proceduresApi } from '../../catalog/api'
+import type { Chair, Procedure } from '../../catalog/types'
+import { patientsApi } from '../../patients/api'
+import type { Patient } from '../../patients/types'
 import { AppointmentDetail } from './AppointmentDetail'
 import { lifecycleApi } from './api'
 import { CancelModal } from './CancelModal'
@@ -20,15 +22,18 @@ import type {
 type LoadState =
   | { status: 'loading' }
   | { status: 'error'; message: string }
-  | { status: 'ready'; appointment: LifecycleAppointment; eventos: LifecycleEvent[]; chairs: Chair[] }
+  | { status: 'ready'; appointment: LifecycleAppointment; eventos: LifecycleEvent[]; chairs: Chair[]; patients: Patient[]; procedures: Procedure[] }
 
 /** La página solo presenta respuestas del backend: nunca calcula disponibilidad ni ventanas temporales. */
 export function AppointmentLifecyclePage() {
   const { appointmentId } = useParams<{ appointmentId: string }>()
+  const location = useLocation()
+  const navigate = useNavigate()
   const id = appointmentId ?? ''
   const [attempt, setAttempt] = useState(0)
   const [state, setState] = useState<LoadState>({ status: 'loading' })
-  const [modal, setModal] = useState<'reschedule' | 'cancel' | null>(null)
+  const requestedAction = readDashboardAction(location.state)
+  const [modal, setModal] = useState<'reschedule' | 'cancel' | null>(requestedAction)
   const [busy, setBusy] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
   const [focusTick, setFocusTick] = useState(0)
@@ -44,10 +49,12 @@ export function AppointmentLifecyclePage() {
 
     const load = async () => {
       try {
-        const [detalle, historial, catalogo] = await Promise.all([
+        const [detalle, historial, catalogo, pacientes, prestaciones] = await Promise.all([
           lifecycleApi.getAppointment(id, controller.signal),
           lifecycleApi.getHistory(id, controller.signal),
           chairsApi.list({ pageSize: 100 }, controller.signal),
+          patientsApi.list({ pageSize: 100, incluirInactivos: true }, controller.signal),
+          proceduresApi.list({ pageSize: 100, incluirInactivos: true }, controller.signal),
         ])
         if (!active) return
         setState({
@@ -55,6 +62,8 @@ export function AppointmentLifecyclePage() {
           appointment: detalle.turno,
           eventos: historial.eventos,
           chairs: catalogo.items,
+          patients: pacientes.items,
+          procedures: prestaciones.items,
         })
       } catch (cause) {
         if (!active || controller.signal.aborted) return
@@ -99,6 +108,11 @@ export function AppointmentLifecyclePage() {
     void runMutation(() => lifecycleApi.changeStatus(id, { estado })).catch(() => undefined)
   }
 
+  const closeModal = () => {
+    setModal(null)
+    if (requestedAction) navigate(location.pathname, { replace: true, state: null })
+  }
+
   if (state.status === 'loading') {
     return <StatePanel state="loading" title="Cargando turno…" description="Esto puede tardar unos segundos." />
   }
@@ -122,23 +136,32 @@ export function AppointmentLifecyclePage() {
         appointment={state.appointment}
         eventos={state.eventos}
         chairs={state.chairs}
+        patients={state.patients}
+        procedures={state.procedures}
         busy={busy}
+        onBack={() => navigate('/agenda')}
         onReschedule={() => setModal('reschedule')}
         onCancel={() => setModal('cancel')}
         onChangeStatus={changeStatus}
       />
       <CancelModal
         open={modal === 'cancel'}
-        onClose={() => setModal(null)}
+        onClose={closeModal}
         onConfirm={(motivo) => runMutation(() => lifecycleApi.cancel(id, { motivo }))}
       />
       <RescheduleModal
         open={modal === 'reschedule'}
         appointment={state.appointment}
         chairs={state.chairs}
-        onClose={() => setModal(null)}
+        onClose={closeModal}
         onSave={(input: RescheduleInput) => runMutation(() => lifecycleApi.reschedule(id, input))}
       />
     </div>
   )
+}
+
+function readDashboardAction(state: unknown): 'reschedule' | 'cancel' | null {
+  if (!state || typeof state !== 'object' || !('dashboardAction' in state)) return null
+  const action = state.dashboardAction
+  return action === 'reschedule' || action === 'cancel' ? action : null
 }

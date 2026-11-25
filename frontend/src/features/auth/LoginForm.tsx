@@ -1,5 +1,6 @@
 import { useId, useState, type FormEvent } from 'react'
 import { ApiClientError } from '../../shared/api/client'
+import { TextField } from '../../shared/components/FormField'
 import { login } from './api'
 import type { SessionUser } from './types'
 import './auth.css'
@@ -64,38 +65,27 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
     <form className="auth-form" onSubmit={handleSubmit} noValidate aria-busy={submitting}>
       {formError ? <p className="auth-form__alert" role="alert">{formError}</p> : null}
 
-      <div className="auth-field">
-        <label className="auth-field__label" htmlFor={emailId}>Email</label>
-        <input
-          id={emailId}
-          className="auth-input"
-          type="email"
-          name="email"
-          autoComplete="username"
-          inputMode="email"
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
-          aria-invalid={errors.email ? true : undefined}
-          aria-describedby={errors.email ? `${emailId}-error` : undefined}
-        />
-        {errors.email ? <p className="auth-field__error" id={`${emailId}-error`}>{errors.email}</p> : null}
-      </div>
-
-      <div className="auth-field">
-        <label className="auth-field__label" htmlFor={passwordId}>Contraseña</label>
-        <input
-          id={passwordId}
-          className="auth-input"
-          type="password"
-          name="contrasena"
-          autoComplete="current-password"
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
-          aria-invalid={errors.contrasena ? true : undefined}
-          aria-describedby={errors.contrasena ? `${passwordId}-error` : undefined}
-        />
-        {errors.contrasena ? <p className="auth-field__error" id={`${passwordId}-error`}>{errors.contrasena}</p> : null}
-      </div>
+      <TextField
+        id={emailId}
+        label="Email"
+        type="email"
+        name="email"
+        autoComplete="username"
+        inputMode="email"
+        value={email}
+        onValueChange={setEmail}
+        error={errors.email}
+      />
+      <TextField
+        id={passwordId}
+        label="Contraseña"
+        type="password"
+        name="contrasena"
+        autoComplete="current-password"
+        value={password}
+        onValueChange={setPassword}
+        error={errors.contrasena}
+      />
 
       <button className="auth-submit" type="submit" disabled={submitting}>
         {submitting ? 'Ingresando…' : 'Ingresar'}

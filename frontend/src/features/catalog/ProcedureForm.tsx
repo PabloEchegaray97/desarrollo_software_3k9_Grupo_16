@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { FloppyDisk, X } from '@phosphor-icons/react'
 import { proceduresApi } from './api'
 import type { Procedure, ProcedureInput } from './types'
 import { toFormErrors, type FormErrors } from './ui/api-errors'
@@ -33,7 +34,7 @@ export function ProcedureForm({ procedure, onClose, onSaved }: ProcedureFormProp
     event.preventDefault()
     // Solo presencia y tipo: los rangos los valida el backend, que es la autoridad.
     const fields: FormErrors<Field>['fields'] = {}
-    if (nombre.trim() === '') fields.nombre = 'Ingresá el nombre de la prestación.'
+    if (nombre.trim() === '') fields.nombre = 'Ingresá el nombre del servicio.'
     if (!WHOLE_NUMBER.test(duracion.trim())) fields.duracionPredeterminadaMinutos = 'Ingresá la duración en minutos enteros.'
     if (intervalo.trim() !== '' && !WHOLE_NUMBER.test(intervalo.trim())) fields.intervaloPosteriorMinutos = 'Ingresá minutos enteros o dejalo vacío.'
     if (Object.keys(fields).length > 0) {
@@ -60,13 +61,13 @@ export function ProcedureForm({ procedure, onClose, onSaved }: ProcedureFormProp
   return (
     <AdminModal
       open
-      title={procedure ? 'Editar prestación' : 'Nueva prestación'}
+      title={procedure ? 'Editar servicio' : 'Nuevo servicio'}
       description="Los cambios aplican a turnos futuros; los turnos ya creados conservan su duración."
       onClose={onClose}
       footer={(
         <>
-          <Button variant="ghost" onClick={onClose}>Cancelar</Button>
-          <Button variant="primary" type="submit" form="procedure-form" loading={saving}>Guardar</Button>
+          <Button variant="ghost" leftIcon={<X size={16} />} onClick={onClose}>Cancelar</Button>
+          <Button variant="primary" leftIcon={<FloppyDisk size={16} />} type="submit" form="procedure-form" loading={saving}>Guardar</Button>
         </>
       )}
     >

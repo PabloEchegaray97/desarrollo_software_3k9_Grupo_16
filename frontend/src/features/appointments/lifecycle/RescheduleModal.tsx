@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { AdminModal } from '../../catalog/ui/AdminModal'
 import { Button } from '../../catalog/ui/Button'
+import { SelectField, TextField } from '../../../shared/components/FormField'
 import { toLifecycleProblem } from './errors'
 import { normalizeReason, ReasonField, reasonError } from './fields'
 import { formatLocalRange, toLocalDateTimeInput } from './time'
@@ -95,22 +96,19 @@ export function RescheduleModal({ open, appointment, chairs, onClose, onSave }: 
       )}
     >
       <div className="lc-form-grid">
-        <div className="adm-field">
-          <label className="adm-field__label" htmlFor="lc-fecha">Fecha</label>
-          <input className="adm-input" id="lc-fecha" type="date" value={fecha} onChange={(event) => setFecha(event.target.value)} />
-        </div>
-        <div className="adm-field">
-          <label className="adm-field__label" htmlFor="lc-hora">Hora de inicio</label>
-          <input className="adm-input" id="lc-hora" type="time" value={horaInicio} onChange={(event) => setHoraInicio(event.target.value)} />
-        </div>
+        <TextField id="lc-fecha" label="Fecha" type="date" value={fecha} onValueChange={setFecha} disabled={saving} />
+        <TextField id="lc-hora" label="Hora de inicio" type="time" value={horaInicio} onValueChange={setHoraInicio} disabled={saving} />
       </div>
 
-      <div className="adm-field">
-        <label className="adm-field__label" htmlFor="lc-sillon">Sillón</label>
-        <select className="adm-input" id="lc-sillon" value={sillonId} onChange={(event) => setSillonId(event.target.value)}>
-          {chairs.map((chair) => <option key={chair.id} value={chair.id}>{chair.nombre}</option>)}
-        </select>
-      </div>
+      <SelectField
+        id="lc-sillon"
+        label="Sillón"
+        value={sillonId}
+        options={chairs.map((chair) => ({ value: chair.id, label: chair.nombre }))}
+        placeholder="Seleccioná un sillón"
+        onValueChange={setSillonId}
+        disabled={saving}
+      />
 
       <ReasonField
         autoFocus

@@ -1,18 +1,17 @@
-import { useId, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import {
   CalendarBlank,
-  CaretDoubleLeft,
-  CaretDoubleRight,
+  CalendarX,
   Clock,
-  Desktop,
   House,
   List,
   Moon,
+  SidebarSimple,
   SignOut,
   Stethoscope,
   Sun,
-  UserCircle,
+  Tooth,
   Users,
   X,
   type Icon as PhosphorIcon,
@@ -20,25 +19,38 @@ import {
 import { AppModal } from '../../shared/components/AppModal'
 import { useSession } from '../../features/auth/session'
 import { useTheme } from '../theme/ThemeProvider'
-import type { ThemePreference } from '../theme/theme'
 
 const navigationItems: { to: string; label: string; Icon: PhosphorIcon; end?: boolean }[] = [
   { to: '/', label: 'Inicio', Icon: House, end: true },
   { to: '/agenda', label: 'Agenda', Icon: CalendarBlank },
   { to: '/pacientes', label: 'Pacientes', Icon: Users },
-  { to: '/prestaciones', label: 'Prestaciones y sillones', Icon: Stethoscope },
+  { to: '/prestaciones', label: 'Servicios', Icon: Stethoscope },
   { to: '/disponibilidad', label: 'Disponibilidad', Icon: Clock },
+  { to: '/bloqueos', label: 'Bloqueos', Icon: CalendarX },
 ]
 
-const themeOptions: { preference: ThemePreference; label: string; Icon: PhosphorIcon }[] = [
+const themeOptions = [
   { preference: 'light', label: 'Claro', Icon: Sun },
   { preference: 'dark', label: 'Oscuro', Icon: Moon },
-  { preference: 'system', label: 'Sistema', Icon: Desktop },
-]
+] as const
 
 interface ShellNavigationProps {
   collapsed: boolean
   onToggleCollapsed: () => void
+}
+
+function ShellBrand({ collapsed = false }: { collapsed?: boolean }) {
+  return (
+    <NavLink className="shell-brand" to="/" aria-label="Ir al inicio" title="OdoSoft">
+      <Tooth className="shell-brand__tooth" size={30} weight="fill" aria-hidden="true" />
+      {!collapsed ? (
+        <span className="shell-brand__wordmark" aria-hidden="true">
+          <span className="shell-brand__wordmark-main">Odo</span>
+          <span className="shell-brand__wordmark-accent">Soft</span>
+        </span>
+      ) : null}
+    </NavLink>
+  )
 }
 
 function NavigationLinks({ collapsed, onNavigate }: { collapsed: boolean; onNavigate: () => void }) {
@@ -75,66 +87,127 @@ function NavigationLinks({ collapsed, onNavigate }: { collapsed: boolean; onNavi
   )
 }
 
-function SidebarFooter({
-  collapsed,
-  email,
-  signingOut,
-  onSignOut,
-}: {
-  collapsed: boolean
-  email: string
-  signingOut: boolean
-  onSignOut: () => void
-}) {
-  const { preference, setPreference } = useTheme()
+function SidebarThemePicker({ collapsed }: { collapsed: boolean }) {
+  const { resolvedTheme, setPreference } = useTheme()
+  const [expanded, setExpanded] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const triggerRef = useRef<HTMLButtonElement>(null)
+  const optionsId = useId()
+  const ActiveThemeIcon = resolvedTheme === 'dark' ? Moon : Sun
+
+  useEffect(() => {
+    if (!expanded) return
+
+    function closeOnOutsideClick(event: MouseEvent) {
+      if (event.target instanceof Node && !containerRef.current?.contains(event.target)) {
+        setExpanded(false)
+      }
+    }
+
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key !== 'Escape') return
+      setExpanded(false)
+      triggerRef.current?.focus()
+    }
+
+    document.addEventListener('mousedown', closeOnOutsideClick)
+    document.addEventListener('keydown', closeOnEscape)
+    return () => {
+      document.removeEventListener('mousedown', closeOnOutsideClick)
+      document.removeEventListener('keydown', closeOnEscape)
+    }
+  }, [expanded])
+
+  function chooseTheme(theme: 'light' | 'dark') {
+    setPreference(theme)
+    setExpanded(false)
+    triggerRef.current?.focus()
+  }
 
   return (
-    <div className="shell-sidebar__footer">
-      <div className="shell-theme" role="group" aria-label="Tema">
-        <span className={`shell-theme__label${collapsed ? ' shell-visually-hidden' : ''}`}>Tema</span>
-        <div className="shell-theme__options">
+    <div
+      ref={containerRef}
+      className="shell-theme-picker"
+      data-expanded={expanded}
+      data-collapsed={collapsed}
+    >
+      <button
+        ref={triggerRef}
+        className="shell-control-button shell-theme-picker__trigger"
+        type="button"
+        aria-label={`Elegir tema, actual: ${resolvedTheme === 'dark' ? 'oscuro' : 'claro'}`}
+        aria-expanded={expanded}
+        aria-controls={optionsId}
+        title="Elegir tema"
+        onClick={() => setExpanded((current) => !current)}
+      >
+        <ActiveThemeIcon size={22} aria-hidden="true" />
+      </button>
+      {expanded ? (
+        <div id={optionsId} className="shell-theme-picker__options" role="group" aria-label="Elegir tema">
           {themeOptions.map(({ preference: option, label, Icon }) => (
             <button
               key={option}
-              className="shell-theme__button"
+              className="shell-control-button shell-theme-picker__option"
               type="button"
-              aria-label={`Tema ${label}`}
-              aria-pressed={preference === option}
-              title={`Tema ${label}`}
-              onClick={() => setPreference(option)}
+              aria-label={label}
+              aria-pressed={resolvedTheme === option}
+              title={label}
+              onClick={() => chooseTheme(option)}
             >
-              <Icon
-                size={20}
-                weight={preference === option ? 'fill' : 'regular'}
-                data-phosphor-weight={preference === option ? 'fill' : 'regular'}
-                aria-hidden="true"
-              />
-              <span className={collapsed ? 'shell-visually-hidden' : undefined}>{label}</span>
+              <Icon size={22} aria-hidden="true" />
             </button>
           ))}
         </div>
-      </div>
+      ) : null}
+    </div>
+  )
+}
 
-      <div className="shell-account">
-        <UserCircle size={22} aria-hidden="true" />
-        <span className={collapsed ? 'shell-visually-hidden' : 'shell-account__email'} title={email}>
-          {email}
-        </span>
-      </div>
-
+function SidebarFooter({
+  collapsed,
+  signingOut,
+  onSignOut,
+  onToggleCollapsed,
+  showCollapse = true,
+}: {
+  collapsed: boolean
+  signingOut: boolean
+  onSignOut: () => void
+  onToggleCollapsed: () => void
+  showCollapse?: boolean
+}) {
+  return (
+    <div className="shell-sidebar__footer" data-collapsed={collapsed}>
       <button
-        className="shell-logout"
+        className="shell-control-button shell-logout"
         type="button"
         aria-label={signingOut ? 'Cerrando sesión' : 'Cerrar sesión'}
-        title="Cerrar sesión"
+        title={signingOut ? 'Cerrando sesión' : 'Cerrar sesión'}
         onClick={onSignOut}
         disabled={signingOut}
       >
-        <SignOut size={20} aria-hidden="true" />
-        <span className={collapsed ? 'shell-visually-hidden' : undefined}>
-          {signingOut ? 'Cerrando…' : 'Cerrar sesión'}
-        </span>
+        <SignOut size={22} aria-hidden="true" />
       </button>
+
+      <span className="shell-control-divider" aria-hidden="true" />
+      <SidebarThemePicker collapsed={collapsed} />
+      {showCollapse ? (
+        <>
+          <span className="shell-control-divider" aria-hidden="true" />
+          <button
+            className="shell-control-button shell-collapse"
+            type="button"
+            data-collapsed={collapsed}
+            aria-label={collapsed ? 'Expandir barra lateral' : 'Contraer barra lateral'}
+            aria-expanded={!collapsed}
+            title={collapsed ? 'Expandir barra lateral' : 'Contraer barra lateral'}
+            onClick={onToggleCollapsed}
+          >
+            <SidebarSimple size={23} aria-hidden="true" />
+          </button>
+        </>
+      ) : null}
     </div>
   )
 }
@@ -144,9 +217,7 @@ export function ShellNavigation({ collapsed, onToggleCollapsed }: ShellNavigatio
   const toggleRef = useRef<HTMLButtonElement>(null)
   const [open, setOpen] = useState(false)
   const [signingOut, setSigningOut] = useState(false)
-  const { state, signOut } = useSession()
-  const email = state.status === 'authenticated' ? state.user.email : ''
-
+  const { signOut } = useSession()
   const close = () => setOpen(false)
 
   async function handleSignOut() {
@@ -158,10 +229,7 @@ export function ShellNavigation({ collapsed, onToggleCollapsed }: ShellNavigatio
   return (
     <>
       <header className="shell-mobilebar">
-        <NavLink className="shell-brand" to="/" aria-label="Ir al inicio">
-          <span className="shell-brand__mark" aria-hidden="true">O</span>
-          <span>OdoSoft</span>
-        </NavLink>
+        <ShellBrand />
         <button
           ref={toggleRef}
           className="shell-mobilebar__toggle"
@@ -177,30 +245,15 @@ export function ShellNavigation({ collapsed, onToggleCollapsed }: ShellNavigatio
 
       <aside className="app-sidebar" data-collapsed={collapsed} aria-label="Barra lateral">
         <div className="app-sidebar__brand-row">
-          <NavLink className="shell-brand" to="/" aria-label="Ir al inicio" title="OdoSoft">
-            <span className="shell-brand__mark" aria-hidden="true">O</span>
-            <span className={collapsed ? 'shell-visually-hidden' : undefined}>OdoSoft</span>
-          </NavLink>
-          <button
-            className="shell-collapse"
-            type="button"
-            aria-label={collapsed ? 'Expandir navegación' : 'Contraer navegación'}
-            aria-expanded={!collapsed}
-            title={collapsed ? 'Expandir navegación' : 'Contraer navegación'}
-            onClick={onToggleCollapsed}
-          >
-            {collapsed
-              ? <CaretDoubleRight size={20} aria-hidden="true" />
-              : <CaretDoubleLeft size={20} aria-hidden="true" />}
-          </button>
+          <ShellBrand collapsed={collapsed} />
         </div>
 
         <NavigationLinks collapsed={collapsed} onNavigate={close} />
         <SidebarFooter
           collapsed={collapsed}
-          email={email}
           signingOut={signingOut}
           onSignOut={() => void handleSignOut()}
+          onToggleCollapsed={onToggleCollapsed}
         />
       </aside>
 
@@ -214,9 +267,10 @@ export function ShellNavigation({ collapsed, onToggleCollapsed }: ShellNavigatio
         footer={
           <SidebarFooter
             collapsed={false}
-            email={email}
             signingOut={signingOut}
             onSignOut={() => void handleSignOut()}
+            onToggleCollapsed={onToggleCollapsed}
+            showCollapse={false}
           />
         }
       >

@@ -53,6 +53,26 @@ export function todayLocal(now: Date = new Date()): string {
   return todayFormatter.format(now)
 }
 
+/** Fecha civil del instante ISO en la zona del consultorio. */
+export function localDateFromInstant(iso: string): string {
+  return todayFormatter.format(new Date(iso))
+}
+
+/** Límites inclusivos del mes civil de una fecha. El rango nunca supera los 31 días de la API. */
+export function monthRange(fecha: string): { desde: string; hasta: string } {
+  const millis = civilNoon(fecha)
+  if (millis === null) throw new RangeError('Fecha local inexistente')
+  const date = new Date(millis)
+  const year = date.getUTCFullYear()
+  const month = date.getUTCMonth()
+  const firstDay = new Date(Date.UTC(year, month, 1))
+  const lastDay = new Date(Date.UTC(year, month + 1, 0))
+  return {
+    desde: firstDay.toISOString().slice(0, 10),
+    hasta: lastDay.toISOString().slice(0, 10),
+  }
+}
+
 /** Suma días a una fecha civil válida. */
 export function addDaysToLocalDate(fecha: string, days: number): string {
   const millis = civilNoon(fecha)

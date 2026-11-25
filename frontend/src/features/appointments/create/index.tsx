@@ -20,9 +20,10 @@ interface Created {
 
 interface AppointmentCreationPageProps {
   onClose?: () => void
+  onStepChange?: (step: number) => void
 }
 
-export function AppointmentCreationPage({ onClose }: AppointmentCreationPageProps) {
+export function AppointmentCreationPage({ onClose, onStepChange }: AppointmentCreationPageProps) {
   const [load, setLoad] = useState<LoadState>({ status: 'loading' })
   const [attempt, setAttempt] = useState(0)
   const [created, setCreated] = useState<Created | null>(null)
@@ -77,7 +78,7 @@ export function AppointmentCreationPage({ onClose }: AppointmentCreationPageProp
         <StatePanel
           state="empty"
           title="Faltan prestaciones o sillones activos"
-          description="Registrá al menos una prestación y un sillón en Prestaciones y sillones para poder dar turnos."
+          description="Registrá al menos un servicio y un sillón en Servicios para poder dar turnos."
         />
       ) : created ? (
         <AppointmentSummary
@@ -89,7 +90,7 @@ export function AppointmentCreationPage({ onClose }: AppointmentCreationPageProp
           onClose={onClose}
         />
       ) : (
-        <AppointmentForm key={formKey} options={load.options} onCreated={onCreated} />
+        <AppointmentForm key={formKey} options={load.options} onCreated={onCreated} onStepChange={onStepChange} />
       )}
     </section>
   )

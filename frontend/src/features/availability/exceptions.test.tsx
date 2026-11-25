@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { AvailabilityPage } from '.'
+import { ExceptionsForm } from './ui/ExceptionsForm'
 import { apiError, mockApi, weeklyResponse, type RecordedRequest } from './test-utils'
 import type { ExceptionRecord } from './types'
 
@@ -20,10 +20,11 @@ const feriado = (overrides: Partial<ExceptionRecord> = {}): ExceptionRecord => (
 
 function renderPage(routes: Route[]) {
   const result = mockApi([
+    ['GET /disponibilidad/configuracion', () => ({ status: 200, body: { intervaloGlobalMinutos: 10, zonaHoraria: 'America/Argentina/Buenos_Aires' } })],
     ['GET /disponibilidad/semanales', () => ({ status: 200, body: weeklyResponse([]) })],
     ...routes,
   ])
-  render(<AvailabilityPage />)
+  render(<ExceptionsForm />)
   return result
 }
 

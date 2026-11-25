@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { ArrowLeft, Check, FloppyDisk, X } from '@phosphor-icons/react'
 import { toFormErrors, type FormErrors } from '../catalog/ui/api-errors'
 import { AdminModal } from '../catalog/ui/AdminModal'
 import { Button } from '../catalog/ui/Button'
@@ -76,13 +77,13 @@ export function PatientForm({ patient, onClose, onSaved }: PatientFormProps) {
 
   const footer = duplicates ? (
     <>
-      <Button variant="ghost" onClick={() => setDuplicates(null)}>Volver a revisar</Button>
-      <Button variant="highlight" loading={saving} onClick={() => void save(true)}>Registrar de todos modos</Button>
+      <Button variant="secondary" leftIcon={<ArrowLeft size={16} />} onClick={() => setDuplicates(null)}>Volver a revisar</Button>
+      <Button className="clients-modal__save" variant="primary" leftIcon={<Check size={16} />} loading={saving} loadingText="Guardando…" onClick={() => void save(true)}>Registrar de todos modos</Button>
     </>
   ) : (
     <>
-      <Button variant="ghost" onClick={onClose}>Cancelar</Button>
-      <Button variant="primary" type="submit" form="patient-form" loading={saving}>Guardar</Button>
+      <Button variant="secondary" leftIcon={<X size={16} />} onClick={onClose} disabled={saving}>Cancelar</Button>
+      <Button className="clients-modal__save" variant="primary" leftIcon={<FloppyDisk size={16} />} type="submit" form="patient-form" loading={saving} loadingText="Guardando…">Guardar paciente</Button>
     </>
   )
 
@@ -90,17 +91,18 @@ export function PatientForm({ patient, onClose, onSaved }: PatientFormProps) {
     <AdminModal
       open
       title={patient ? 'Editar paciente' : 'Nuevo paciente'}
-      description="Solo datos administrativos para asociar turnos."
+      description="Completá los datos principales del paciente."
       onClose={onClose}
       footer={footer}
+      className="clients-patient-modal"
     >
-      <form id="patient-form" className="adm-page" noValidate onSubmit={submit}>
+      <form id="patient-form" className="clients-modal-form" noValidate onSubmit={submit}>
         {duplicates ? <DuplicateWarning candidates={duplicates} /> : null}
         {errors.form ? <div className="adm-alert" data-tone="danger" role="alert"><p>{errors.form}</p></div> : null}
-        <TextField label="Nombre y apellido" value={nombre} onValueChange={editIdentity(setNombre)} error={errors.fields.nombre} maxLength={120} autoComplete="off" required />
-        <TextField label="Teléfono" type="tel" value={telefono} onValueChange={editIdentity(setTelefono)} error={errors.fields.telefono} hint="Puede compartirse con otro paciente." maxLength={30} autoComplete="off" required />
-        <TextField label="DNI" value={dni} onValueChange={setDni} error={errors.fields.dni} hint="7 u 8 dígitos; podés usar puntos." inputMode="numeric" maxLength={12} autoComplete="off" optional />
-        <TextField label="Email" type="email" value={email} onValueChange={setEmail} error={errors.fields.email} maxLength={254} autoComplete="off" optional />
+        <TextField label="Nombre y apellido" value={nombre} onValueChange={editIdentity(setNombre)} error={errors.fields.nombre} placeholder="Ej: Juan Pérez" maxLength={120} autoComplete="off" required />
+        <TextField label="DNI" value={dni} onValueChange={setDni} error={errors.fields.dni} placeholder="Ej: 30.123.456" inputMode="numeric" maxLength={12} autoComplete="off" optional />
+        <TextField label="Correo" type="email" value={email} onValueChange={setEmail} error={errors.fields.email} placeholder="paciente@email.com" maxLength={254} autoComplete="off" optional />
+        <TextField label="Teléfono" type="tel" value={telefono} onValueChange={editIdentity(setTelefono)} error={errors.fields.telefono} placeholder="11 2345-6789" maxLength={30} autoComplete="off" required />
       </form>
     </AdminModal>
   )

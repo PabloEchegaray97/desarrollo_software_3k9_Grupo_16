@@ -1,18 +1,15 @@
-import type { ButtonHTMLAttributes } from 'react'
+import { AppButton, type AppButtonProps, type AppButtonVariant } from '../../../shared/components/Button'
 
-export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'highlight'
+export type ButtonVariant = AppButtonVariant
 
-interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: ButtonVariant
+interface ButtonProps extends Omit<AppButtonProps, 'size'> {
   size?: 'sm' | 'md'
-  loading?: boolean
 }
 
-export function Button({ variant = 'secondary', size = 'md', loading = false, className, disabled, type = 'button', children, ...props }: ButtonProps) {
-  const classes = ['adm-button', `adm-button--${variant}`, size === 'sm' ? 'adm-button--sm' : '', className ?? ''].filter(Boolean).join(' ')
-  return (
-    <button {...props} type={type} className={classes} disabled={disabled || loading} aria-busy={loading || undefined}>
-      {children}
-    </button>
-  )
+export function Button({ variant = 'secondary', size = 'md', className, ...props }: ButtonProps) {
+  const classes = ['adm-button', `adm-button--${variant}`, size === 'sm' ? 'adm-button--sm' : '', className ?? '']
+    .filter(Boolean)
+    .join(' ')
+
+  return <AppButton {...props} variant={variant} size={size} className={classes} />
 }

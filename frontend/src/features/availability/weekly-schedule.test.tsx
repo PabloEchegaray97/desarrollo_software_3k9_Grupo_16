@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { AvailabilityPage } from '.'
@@ -6,10 +6,17 @@ import { apiError, mockApi, weeklyResponse, type RecordedRequest } from './test-
 
 type Route = [string, (request: RecordedRequest) => { status: number; body: unknown }]
 
+const configuration = (intervaloGlobalMinutos = 10) => ({
+  intervaloGlobalMinutos,
+  zonaHoraria: 'America/Argentina/Buenos_Aires',
+})
+
 function renderPage(routes: Route[]) {
   const result = mockApi([
-    ['GET /disponibilidad/excepciones', () => ({ status: 200, body: [] })],
     ...routes,
+    ['GET /disponibilidad/configuracion', () => ({ status: 200, body: configuration() })],
+    ['GET /disponibilidad/semanales', () => ({ status: 200, body: weeklyResponse([]) })],
+    ['GET /disponibilidad/excepciones', () => ({ status: 200, body: [] })],
   ])
   render(<AvailabilityPage />)
   return result
@@ -20,126 +27,82 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-function setTime(input: HTMLElement, value: string) {
-  fireEvent.change(input, { target: { value } })
+function setTime(label: string, value: string) {
+  fireEvent.change(screen.getByLabelText(label), { target: { value } })
 }
 
-describe('5.1 Edición de horarios semanales', () => {
-  it('envía dos tramos en un solo PUT y muestra la confirmación', async () => {
+describe('edición de disponibilidad semanal', () => {
+  it('muestra la semana como cerrada y el intervalo global actual', async () => {
+    renderPage([])
+    const schedule = screen.getByRole('region', { name: 'Horario de atención' })
+
+    expect(await within(schedule).findByRole('switch', { name: 'Abrir lunes' })).not.toBeChecked()
+    expect(within(schedule).getByRole('switch', { name: 'Abrir domingo' })).not.toBeChecked()
+    expect(within(schedule).getByLabelText('Intervalo general')).toHaveValue('10')
+    expect(screen.getByRole('button', { name: 'Guardar cambios' })).toBeEnabled()
+  })
+
+  it('guarda días abiertos, varios tramos y el intervalo general en sus contratos existentes', async () => {
     const { requests } = renderPage([
-      ['GET /disponibilidad/semanales', () => ({ status: 200, body: weeklyResponse([]) })],
-      ['PUT /disponibilidad/semanales', () => ({
+      ['PUT /disponibilidad/semanales', (request) => ({
         status: 200,
-        body: weeklyResponse([
-          { diaSemana: 1, horaInicio: '09:00', horaFin: '13:00' },
-          { diaSemana: 1, horaInicio: '16:00', horaFin: '20:00' },
-        ], 'version-2'),
+        body: weeklyResponse(request.body && typeof request.body === 'object' && 'tramos' in request.body
+          ? request.body.tramos as Array<{ diaSemana: number; horaInicio: string; horaFin: string }>
+          : [], 'version-2'),
+      })],
+      ['PATCH /disponibilidad/configuracion', (request) => ({
+        status: 200,
+        body: configuration(
+          request.body && typeof request.body === 'object' && 'intervaloGlobalMinutos' in request.body
+            ? Number(request.body.intervaloGlobalMinutos)
+            : 10,
+        ),
       })],
     ])
-    await userEvent.click(await screen.findByRole('button', { name: 'Agregar primer tramo' }))
-    await userEvent.click(screen.getByRole('button', { name: 'Agregar tramo' }))
+    const user = userEvent.setup()
+    const schedule = screen.getByRole('region', { name: 'Horario de atención' })
 
-    const dias = screen.getAllByLabelText('Día del tramo')
-    const inicios = screen.getAllByLabelText('Inicio del tramo')
-    const fines = screen.getAllByLabelText('Fin del tramo')
-    expect(dias).toHaveLength(2)
-    await userEvent.selectOptions(dias[0], '1')
-    await userEvent.selectOptions(dias[1], '1')
-    setTime(inicios[0], '09:00')
-    setTime(fines[0], '13:00')
-    setTime(inicios[1], '16:00')
-    setTime(fines[1], '20:00')
+    await user.click(await within(schedule).findByRole('switch', { name: 'Abrir lunes' }))
+    setTime('Inicio lunes, tramo 1', '09:00')
+    setTime('Fin lunes, tramo 1', '13:00')
+    await user.click(within(schedule).getByRole('button', { name: 'Agregar otro tramo' }))
+    setTime('Inicio lunes, tramo 2', '14:00')
+    setTime('Fin lunes, tramo 2', '18:00')
+    await user.selectOptions(within(schedule).getByLabelText('Intervalo general'), '15')
+    await user.click(screen.getByRole('button', { name: 'Guardar cambios' }))
 
-    await userEvent.click(screen.getByRole('button', { name: 'Guardar horarios' }))
-
-    expect(await screen.findByRole('status')).toHaveTextContent('Horarios guardados correctamente.')
-    const puts = requests.filter((request) => request.method === 'PUT')
-    expect(puts).toHaveLength(1)
-    expect(puts[0].path).toBe('/disponibilidad/semanales')
-    expect(puts[0].body).toEqual({
+    expect(await screen.findByRole('status')).toHaveTextContent('Cambios guardados correctamente.')
+    expect(requests.find((request) => request.method === 'PUT' && request.path === '/disponibilidad/semanales')?.body).toEqual({
       version: 'version-1',
       tramos: [
         { diaSemana: 1, horaInicio: '09:00', horaFin: '13:00' },
-        { diaSemana: 1, horaInicio: '16:00', horaFin: '20:00' },
+        { diaSemana: 1, horaInicio: '14:00', horaFin: '18:00' },
       ],
     })
+    expect(requests.find((request) => request.method === 'PATCH' && request.path === '/disponibilidad/configuracion')?.body)
+      .toEqual({ intervaloGlobalMinutos: 15 })
   })
 
-  it('muestra el día y el conflicto devueltos y conserva los valores introducidos', async () => {
-    const mensaje = 'El lunes tiene tramos que comparten minutos. Revisá el conflicto.'
+  it('conserva los datos y explica el guardado parcial si falla el horario', async () => {
     const { requests } = renderPage([
       ['GET /disponibilidad/semanales', () => ({
         status: 200,
-        body: weeklyResponse([
-          { diaSemana: 1, horaInicio: '09:00', horaFin: '13:00' },
-          { diaSemana: 1, horaInicio: '16:00', horaFin: '20:00' },
-        ]),
+        body: weeklyResponse([{ diaSemana: 1, horaInicio: '09:00', horaFin: '13:00' }]),
       })],
-      ['PUT /disponibilidad/semanales', () => apiError(400, 'WEEKLY_SLOT_OVERLAP', mensaje)],
+      ['PUT /disponibilidad/semanales', () => apiError(400, 'WEEKLY_SLOT_OVERLAP', 'El lunes tiene tramos superpuestos.')],
+      ['PATCH /disponibilidad/configuracion', () => ({ status: 200, body: configuration(20) })],
     ])
-    expect(await screen.findByDisplayValue('09:00')).toBeInTheDocument()
-    const inicios = screen.getAllByLabelText('Inicio del tramo')
-    const fines = screen.getAllByLabelText('Fin del tramo')
-    setTime(inicios[1], '12:00')
-    setTime(fines[1], '17:00')
+    const user = userEvent.setup()
+    const schedule = screen.getByRole('region', { name: 'Horario de atención' })
+    await within(schedule).findByDisplayValue('09:00')
+    await user.selectOptions(within(schedule).getByLabelText('Intervalo general'), '20')
+    await user.click(screen.getByRole('button', { name: 'Guardar cambios' }))
 
-    await userEvent.click(screen.getByRole('button', { name: 'Guardar horarios' }))
-
-    const alerta = await screen.findByRole('alert')
-    expect(alerta).toHaveTextContent(mensaje)
-    expect(screen.getByDisplayValue('09:00')).toBeInTheDocument()
-    expect(screen.getByDisplayValue('12:00')).toBeInTheDocument()
-    expect(screen.getByDisplayValue('17:00')).toBeInTheDocument()
-    expect(requests.filter((request) => request.method === 'PUT')).toHaveLength(1)
-    await waitFor(() => expect(screen.queryByRole('status')).not.toBeInTheDocument())
-  })
-
-  it('no bloquea localmente un rango que el backend decide aceptar', async () => {
-    renderPage([
-      ['GET /disponibilidad/semanales', () => ({
-        status: 200,
-        body: weeklyResponse([{ diaSemana: 2, horaInicio: '10:00', horaFin: '12:00' }]),
-      })],
-      ['PUT /disponibilidad/semanales', () => ({
-        status: 200,
-        body: weeklyResponse([{ diaSemana: 2, horaInicio: '10:00', horaFin: '13:00' }], 'version-2'),
-      })],
-    ])
-    await screen.findByDisplayValue('10:00')
-    await userEvent.click(screen.getByRole('button', { name: 'Agregar tramo' }))
-    const dias = screen.getAllByLabelText('Día del tramo')
-    await userEvent.selectOptions(dias[1], '2')
-    setTime(screen.getAllByLabelText('Inicio del tramo')[1], '11:30')
-    setTime(screen.getAllByLabelText('Fin del tramo')[1], '13:00')
-
-    await userEvent.click(screen.getByRole('button', { name: 'Guardar horarios' }))
-
-    expect(await screen.findByRole('status')).toHaveTextContent('Horarios guardados correctamente.')
-    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
-  })
-
-  it('quita un tramo antes de guardar y envía solo los restantes', async () => {
-    const { requests } = renderPage([
-      ['GET /disponibilidad/semanales', () => ({
-        status: 200,
-        body: weeklyResponse([
-          { diaSemana: 3, horaInicio: '09:00', horaFin: '12:00' },
-          { diaSemana: 4, horaInicio: '10:00', horaFin: '13:00' },
-        ]),
-      })],
-      ['PUT /disponibilidad/semanales', () => ({ status: 200, body: weeklyResponse([{ diaSemana: 4, horaInicio: '10:00', horaFin: '13:00' }], 'version-2') })],
-    ])
-    await screen.findByDisplayValue('09:00')
-    await userEvent.click(screen.getByRole('button', { name: 'Quitar tramo 1' }))
-    await userEvent.click(screen.getByRole('button', { name: 'Guardar horarios' }))
-
-    const puts = requests.filter((request) => request.method === 'PUT')
-    expect(puts).toHaveLength(1)
-    expect(puts[0].body).toEqual({
-      version: 'version-1',
-      tramos: [{ diaSemana: 4, horaInicio: '10:00', horaFin: '13:00' }],
-    })
-    expect(await screen.findByRole('status')).toHaveTextContent('Horarios guardados correctamente.')
-    expect(within(screen.getByRole('region', { name: 'Horarios semanales' })).getAllByLabelText('Día del tramo')).toHaveLength(1)
+    expect(await within(schedule).findByRole('alert')).toHaveTextContent(
+      'Se guardó el intervalo, pero no el horario. El lunes tiene tramos superpuestos.',
+    )
+    expect(within(schedule).getByDisplayValue('09:00')).toBeInTheDocument()
+    expect(within(schedule).getByLabelText('Intervalo general')).toHaveValue('20')
+    expect(requests.some((request) => request.method === 'PATCH' && request.path === '/disponibilidad/configuracion')).toBe(true)
   })
 })

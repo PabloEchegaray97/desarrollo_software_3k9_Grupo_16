@@ -1,4 +1,6 @@
-import { useCallback, type KeyboardEvent } from 'react'
+import { useCallback, useState, type KeyboardEvent } from 'react'
+import { Armchair, Plus, Tooth } from '@phosphor-icons/react'
+import { Button } from './ui/Button'
 import { useSearchParams } from 'react-router-dom'
 import { chairsApi, proceduresApi } from './api'
 import { CatalogPanel } from './CatalogPanel'
@@ -8,7 +10,7 @@ import type { CatalogListParams, CatalogSection, Chair, Procedure } from './type
 import './ui/admin-ui.css'
 
 const SECTIONS: ReadonlyArray<{ id: CatalogSection; label: string }> = [
-  { id: 'prestaciones', label: 'Prestaciones' },
+  { id: 'prestaciones', label: 'Servicios' },
   { id: 'sillones', label: 'Sillones' },
 ]
 
@@ -21,6 +23,7 @@ export function describeProcedure(procedure: Procedure): string {
 
 export function CatalogPage() {
   const [searchParams, setSearchParams] = useSearchParams()
+  const [createRequest, setCreateRequest] = useState<{ section: CatalogSection; key: number } | null>(null)
   const section: CatalogSection = searchParams.get('seccion') === 'sillones' ? 'sillones' : 'prestaciones'
 
   const selectSection = (next: CatalogSection) => {
@@ -39,22 +42,29 @@ export function CatalogPage() {
   const loadChairs = useCallback((params: CatalogListParams, signal: AbortSignal) => chairsApi.list(params, signal), [])
 
   return (
-    <section className="adm-page">
-      <header className="adm-page__header">
+    <section className="catalog-page">
+      <header className="catalog-page__header">
         <div>
-          <h1 className="page-heading">Prestaciones y sillones</h1>
-          <p className="page-lead">Definí las prestaciones con su duración e intervalo, y los sillones del consultorio.</p>
+          <h1 className="page-heading">Servicios</h1>
+          <p className="page-lead">Gestioná los servicios y sillones disponibles para tus turnos.</p>
         </div>
+        <Button
+          variant="primary"
+          leftIcon={<Plus size={16} />}
+          onClick={() => setCreateRequest((current) => ({ section, key: (current?.key ?? 0) + 1 }))}
+        >
+          {section === 'prestaciones' ? 'Nuevo servicio' : 'Nuevo sillón'}
+        </Button>
       </header>
 
-      <div className="adm-tabs" role="tablist" aria-label="Secciones del catálogo">
+      <div className="catalog-tabs" role="tablist" aria-label="Secciones del catálogo">
         {SECTIONS.map((item) => (
           <button
             key={item.id}
             id={`catalog-tab-${item.id}`}
             type="button"
             role="tab"
-            className="adm-tab"
+            className="catalog-tab"
             aria-selected={section === item.id}
             aria-controls={`catalog-panel-${item.id}`}
             tabIndex={section === item.id ? 0 : -1}
@@ -70,19 +80,25 @@ export function CatalogPage() {
         {section === 'prestaciones' ? (
           <CatalogPanel<Procedure>
             key="prestaciones"
-            noun={{ singular: 'prestación', plural: 'prestaciones', article: 'la' }}
+            noun={{ singular: 'servicio', plural: 'servicios', article: 'el' }}
+            Icon={Tooth}
             load={loadProcedures}
             setActive={proceduresApi.setActive}
             describe={describeProcedure}
             renderForm={(item, close, saved) => <ProcedureForm procedure={item} onClose={close} onSaved={saved} />}
+            createRequestKey={createRequest?.section === 'prestaciones' ? createRequest.key : 0}
+            onCreateRequestHandled={() => setCreateRequest(null)}
           />
         ) : (
           <CatalogPanel<Chair>
             key="sillones"
             noun={{ singular: 'sillón', plural: 'sillones', article: 'el' }}
+            Icon={Armchair}
             load={loadChairs}
             setActive={chairsApi.setActive}
             describe={(chair) => (chair.activo ? 'Disponible para turnos nuevos' : 'No se ofrece para turnos nuevos')}
+            createRequestKey={createRequest?.section === 'sillones' ? createRequest.key : 0}
+            onCreateRequestHandled={() => setCreateRequest(null)}
             renderForm={(item, close, saved) => <ChairForm chair={item} onClose={close} onSaved={saved} />}
           />
         )}
