@@ -2,12 +2,16 @@ import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import {
   ArrowCounterClockwise,
   CheckCircle,
-  MagnifyingGlass,
+  FunnelSimple,
+  ListBullets,
   PencilSimple,
   Prohibit,
   Stack,
+  Table,
   type Icon as PhosphorIcon,
 } from '@phosphor-icons/react'
+import { FilterModal } from '../../shared/components/FilterModal'
+import { SearchInput } from '../../shared/components/SearchInput'
 import { StatePanel } from '../../shared/components/StatePanel'
 import type { CatalogListParams } from './types'
 import { Button } from './ui/Button'
@@ -31,15 +35,18 @@ interface CatalogPanelProps<T extends CatalogItem> {
   renderDetail?: (item: T | null) => ReactNode
   renderSummary?: (page: Paginated<T>) => ReactNode
   searchPlaceholder?: string
+  tabs?: ReactNode
   createRequestKey?: number
   onCreateRequestHandled?: () => void
 }
 
 const PAGE_SIZE = 20
 
-export function CatalogPanel<T extends CatalogItem>({ noun, Icon, load, setActive, describe, renderForm, renderDetail, renderSummary, searchPlaceholder = 'Buscar por nombre', createRequestKey = 0, onCreateRequestHandled }: CatalogPanelProps<T>) {
+export function CatalogPanel<T extends CatalogItem>({ noun, Icon, load, setActive, describe, renderForm, renderDetail, renderSummary, searchPlaceholder = 'Buscar por nombre', tabs, createRequestKey = 0, onCreateRequestHandled }: CatalogPanelProps<T>) {
   const [search, setSearch] = useState('')
   const [includeInactive, setIncludeInactive] = useState(false)
+  const [filtersOpen, setFiltersOpen] = useState(false)
+  const [viewMode, setViewMode] = useState<'detail' | 'table'>('detail')
   const [page, setPage] = useState(1)
   const [editing, setEditing] = useState<{ item: T | null } | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -103,74 +110,113 @@ export function CatalogPanel<T extends CatalogItem>({ noun, Icon, load, setActiv
         </div>
       ) : null}
 
-      <div className="catalog-workspace">
-        <section className="catalog-panel catalog-panel--list" aria-label={`${capitalize(noun.plural)} encontrados`}>
-          <div className="catalog-panel__toolbar">
-            <span className="catalog-panel__eyebrow">{capitalize(noun.plural)}</span>
-            <label className="catalog-inactive-toggle">
-              <input
-                type="checkbox"
-                checked={includeInactive}
-                onChange={(event) => { setIncludeInactive(event.target.checked); setPage(1) }}
+      <div className="catalog-folder">
+        {tabs}
+        <div className={`catalog-workspace${viewMode === 'table' ? ' catalog-workspace--table' : ''}`}>
+          <section className="catalog-panel catalog-panel--list" aria-label={`${capitalize(noun.plural)} encontrados`}>
+            <div className="catalog-panel__toolbar">
+              <SearchInput
+                value={search}
+                onChange={(value) => { setSearch(value); setPage(1) }}
+                onSearch={() => setPage(1)}
+                placeholder={searchPlaceholder}
+                aria-label={`Buscar ${noun.plural}`}
               />
-              <span aria-hidden="true" />
-              Incluir inactivos
-            </label>
-          </div>
+              <div className="catalog-panel__toolbar-controls">
+                <Button
+                  variant="secondary"
+                  leftIcon={<FunnelSimple />}
+                  aria-expanded={filtersOpen}
+                  onClick={() => setFiltersOpen(true)}
+                >
+                  Filtros{includeInactive ? ' (1)' : ''}
+                </Button>
+                <div className="clients-view-switch" aria-label={`Vista de ${noun.plural}`}>
+                  <button type="button" aria-pressed={viewMode === 'detail'} onClick={() => setViewMode('detail')}><ListBullets size={15} /> Lista</button>
+                  <button type="button" aria-pressed={viewMode === 'table'} onClick={() => setViewMode('table')}><Table size={15} /> Tabla</button>
+                </div>
+              </div>
+            </div>
 
-          <label className="catalog-search">
-            <span className="catalog-visually-hidden">Buscar {noun.plural}</span>
-            <MagnifyingGlass size={18} aria-hidden="true" />
-            <input
-              type="search"
-              value={search}
-              onChange={(event) => { setSearch(event.target.value); setPage(1) }}
-              placeholder={searchPlaceholder}
-              autoComplete="off"
-            />
-          </label>
+            <p className="catalog-status" role="status">{status}</p>
 
-          <p className="catalog-status" role="status">{status}</p>
+            {state.status === 'loading' ? (
+              <StatePanel state="loading" title={`Cargando ${noun.plural}…`} description="Esto puede tardar unos segundos." />
+            ) : state.status === 'error' ? (
+              <StatePanel state="error" title={`No se pudieron cargar ${noun.article === 'la' ? 'las' : 'los'} ${noun.plural}`} description={state.message} actionLabel="Reintentar" onAction={reload} />
+            ) : state.data.items.length === 0 ? (
+              <StatePanel
+                state="empty"
+                title={q ? 'Sin resultados' : `Todavía no hay ${noun.plural}`}
+                description={q ? `Ninguna coincidencia con «${q}».` : `Usá «${newLabel}» para registrar ${noun.article === 'la' ? 'la primera' : 'el primero'} y poder usarl${ending} en los turnos.`}
+              />
+            ) : (
+              <>
+                {renderSummary ? renderSummary(state.data) : null}
+                {viewMode === 'table' ? (
+                  <div className="clients-table-wrap">
+                    <table className="clients-table">
+                      <thead>
+                        <tr>
+                          <th>{capitalize(noun.singular)}</th>
+                          <th>Configuración</th>
+                          <th>Estado</th>
+                          <th aria-label="Acciones" />
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {items.map((item) => (
+                          <tr key={item.id} data-selected={selectedItem?.id === item.id} onClick={() => setSelectedId(item.id)}>
+                            <td>
+                              <span className="catalog-list-item__icon"><Icon size={16} aria-hidden="true" /></span>
+                              <strong>{item.nombre}</strong>
+                            </td>
+                            <td>{describe(item)}</td>
+                            <td>{item.activo ? 'Activo' : 'Inactivo'}</td>
+                            <td>
+                              <button
+                                type="button"
+                                className="clients-icon-button"
+                                aria-label={`Editar ${item.nombre}`}
+                                onClick={(event) => { event.stopPropagation(); setEditing({ item }) }}
+                              >
+                                <PencilSimple size={16} />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <ul className="catalog-list">
+                    {items.map((item) => (
+                      <li key={item.id}>
+                        <button
+                          type="button"
+                          className="catalog-list-item"
+                          aria-pressed={selectedItem?.id === item.id}
+                          onClick={() => setSelectedId(item.id)}
+                        >
+                          <span className="catalog-list-item__icon"><Icon size={18} weight={selectedItem?.id === item.id ? 'fill' : 'regular'} aria-hidden="true" /></span>
+                          <span className="catalog-list-item__body">
+                            <strong>{item.nombre}</strong>
+                            <small>{describe(item)}</small>
+                          </span>
+                          {item.activo ? <span className="catalog-list-item__status">Activo</span> : <InactiveBadge />}
+                          <span className="catalog-list-item__indicator" aria-hidden="true" />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <Pager page={state.data.page} pageSize={state.data.pageSize} total={state.data.total} onPageChange={setPage} />
+              </>
+            )}
+          </section>
 
-          {state.status === 'loading' ? (
-            <StatePanel state="loading" title={`Cargando ${noun.plural}…`} description="Esto puede tardar unos segundos." />
-          ) : state.status === 'error' ? (
-            <StatePanel state="error" title={`No se pudieron cargar ${noun.article === 'la' ? 'las' : 'los'} ${noun.plural}`} description={state.message} actionLabel="Reintentar" onAction={reload} />
-          ) : state.data.items.length === 0 ? (
-            <StatePanel
-              state="empty"
-              title={q ? 'Sin resultados' : `Todavía no hay ${noun.plural}`}
-              description={q ? `Ninguna coincidencia con «${q}».` : `Usá «${newLabel}» para registrar ${noun.article === 'la' ? 'la primera' : 'el primero'} y poder usarl${ending} en los turnos.`}
-            />
-          ) : (
-            <>
-              {renderSummary ? renderSummary(state.data) : null}
-              <ul className="catalog-list">
-                {items.map((item) => (
-                  <li key={item.id}>
-                    <button
-                      type="button"
-                      className="catalog-list-item"
-                      aria-pressed={selectedItem?.id === item.id}
-                      onClick={() => setSelectedId(item.id)}
-                    >
-                      <span className="catalog-list-item__icon"><Icon size={18} weight={selectedItem?.id === item.id ? 'fill' : 'regular'} aria-hidden="true" /></span>
-                      <span className="catalog-list-item__body">
-                        <strong>{item.nombre}</strong>
-                        <small>{describe(item)}</small>
-                      </span>
-                      {item.activo ? <span className="catalog-list-item__status">Activo</span> : <InactiveBadge />}
-                      <span className="catalog-list-item__indicator" aria-hidden="true" />
-                    </button>
-                  </li>
-                ))}
-              </ul>
-              <Pager page={state.data.page} pageSize={state.data.pageSize} total={state.data.total} onPageChange={setPage} />
-            </>
-          )}
-        </section>
-
-        <aside className="catalog-panel catalog-panel--detail" aria-label={`Detalle ${noun.singular}`}>
+          {viewMode === 'detail' ? (
+            <aside className="catalog-panel catalog-panel--detail" aria-label={`Detalle ${noun.singular}`}>
           {renderDetail ? renderDetail(selectedItem) : selectedItem ? (
             <div className="catalog-detail">
               <header className="catalog-detail__header">
@@ -209,8 +255,32 @@ export function CatalogPanel<T extends CatalogItem>({ noun, Icon, load, setActiv
               <p>Seleccioná un {noun.singular} para ver su detalle.</p>
             </div>
           )}
-        </aside>
+            </aside>
+          ) : null}
+        </div>
       </div>
+
+      <FilterModal
+        open={filtersOpen}
+        title="Filtros"
+        description={`Filtrá ${noun.article === 'la' ? 'las' : 'los'} ${noun.plural} por estado.`}
+        onClose={() => setFiltersOpen(false)}
+        onClear={() => {
+          setIncludeInactive(false)
+          setPage(1)
+        }}
+        onApply={() => setFiltersOpen(false)}
+      >
+        <label className="catalog-inactive-toggle">
+          <input
+            type="checkbox"
+            checked={includeInactive}
+            onChange={(event) => { setIncludeInactive(event.target.checked); setPage(1) }}
+          />
+          <span aria-hidden="true" />
+          Incluir inactivos
+        </label>
+      </FilterModal>
 
       {editing ? renderForm(editing.item, () => setEditing(null), saved) : null}
     </section>

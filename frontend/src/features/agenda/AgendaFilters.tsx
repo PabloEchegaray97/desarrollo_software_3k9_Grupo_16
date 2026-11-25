@@ -1,37 +1,76 @@
-import { ArrowClockwise, X } from '@phosphor-icons/react'
+import { ArrowClockwise } from '@phosphor-icons/react'
+import { useState } from 'react'
+import { FilterModal } from '../../shared/components/FilterModal'
 import { STATUS_PRESENTATION } from './status'
 import { APPOINTMENT_STATUSES, type AppointmentStatus, type ChairOption } from './types'
 
+type EstadoSelection = AppointmentStatus | 'all'
+
 interface Props {
+  open: boolean
   chairs: ChairOption[]
   chairsError: boolean
   onRetryChairs: () => void
   sillonId?: string
   estados: AppointmentStatus[]
-  canClear: boolean
   onSillonChange: (id: string | undefined) => void
   onEstadosChange: (estados: AppointmentStatus[]) => void
+  onClose: () => void
   onClear: () => void
+  onApply: () => void
 }
 
-export function AgendaFilters({ chairs, chairsError, onRetryChairs, sillonId, estados, canClear, onSillonChange, onEstadosChange, onClear }: Props) {
-  const toggle = (status: AppointmentStatus, checked: boolean) => {
-    const next = new Set(estados)
-    if (checked) next.add(status)
-    else next.delete(status)
-    onEstadosChange(APPOINTMENT_STATUSES.filter((s) => next.has(s)))
+function toSelection(estados: AppointmentStatus[]): EstadoSelection {
+  return estados.length === APPOINTMENT_STATUSES.length ? 'all' : (estados[0] ?? 'all')
+}
+
+export function AgendaFilters({
+  open,
+  chairs,
+  chairsError,
+  onRetryChairs,
+  sillonId,
+  estados,
+  onSillonChange,
+  onEstadosChange,
+  onClose,
+  onClear,
+  onApply,
+}: Props) {
+  const [selected, setSelected] = useState<EstadoSelection>(() => toSelection(estados))
+
+  const handleSelect = (value: EstadoSelection) => {
+    setSelected(value)
+    onEstadosChange(value === 'all' ? APPOINTMENT_STATUSES : [value as AppointmentStatus])
   }
+
+  const handleClear = () => {
+    setSelected('all')
+    onClear()
+  }
+
   return (
-    <form className="agenda-filters" aria-label="Filtros de la agenda" onSubmit={(event) => event.preventDefault()}>
-      <label className="app-field agenda-filters__field">
-        <span className="app-field__label">Sillón</span>
-        <select className="app-control" value={sillonId ?? ''} onChange={(event) => onSillonChange(event.target.value || undefined)}>
+    <FilterModal
+      open={open}
+      title="Filtros"
+      description="Filtrá por sillón y estado."
+      onClose={onClose}
+      onClear={handleClear}
+      onApply={onApply}
+    >
+      <div className="filter-modal__field">
+        <label htmlFor="agenda-filter-sillon">Sillón</label>
+        <select
+          id="agenda-filter-sillon"
+          value={sillonId ?? ''}
+          onChange={(event) => onSillonChange(event.target.value || undefined)}
+        >
           <option value="">Todos los sillones</option>
           {chairs.map((chair) => (
             <option key={chair.id} value={chair.id}>{chair.nombre}{chair.activo ? '' : ' (inactivo)'}</option>
           ))}
         </select>
-      </label>
+      </div>
       {chairsError ? (
         <p className="agenda-filters__error" role="alert">
           No se pudieron cargar los sillones.
@@ -43,18 +82,31 @@ export function AgendaFilters({ chairs, chairsError, onRetryChairs, sillonId, es
       ) : null}
       <fieldset className="agenda-filters__states">
         <legend>Estado</legend>
-        {APPOINTMENT_STATUSES.map((status) => (
-          <label key={status}>
-            <input type="checkbox" checked={estados.includes(status)} onChange={(event) => toggle(status, event.target.checked)} />
-            <span>{STATUS_PRESENTATION[status].label}</span>
+        <div className="agenda-filters__status-list">
+          <label className="agenda-filters__status-option">
+            <input
+              type="radio"
+              name="agenda-estado"
+              value="all"
+              checked={selected === 'all'}
+              onChange={() => handleSelect('all')}
+            />
+            <span>Todos</span>
           </label>
-        ))}
+          {APPOINTMENT_STATUSES.map((status) => (
+            <label key={status} className="agenda-filters__status-option">
+              <input
+                type="radio"
+                name="agenda-estado"
+                value={status}
+                checked={selected === status}
+                onChange={() => handleSelect(status)}
+              />
+              <span>{STATUS_PRESENTATION[status].label}</span>
+            </label>
+          ))}
+        </div>
       </fieldset>
-      {estados.length === 0 ? <p className="agenda-filters__hint" role="status">Elegí al menos un estado para ver turnos.</p> : null}
-      <button type="button" className="agenda-action-button" onClick={onClear} disabled={!canClear}>
-        <X size={16} aria-hidden="true" />
-        Limpiar filtros
-      </button>
-    </form>
+    </FilterModal>
   )
 }

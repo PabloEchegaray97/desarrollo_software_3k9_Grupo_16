@@ -1,4 +1,4 @@
-# Contrato de componentes — revisión 4
+# Contrato de componentes — revisión 5
 
 Adaptación para OdoSoft de la referencia ubicada en `revisar_ui/cambio-de-turno-ui-pack/`. Define comportamiento y forma; la implementación React usa Phosphor Icons y no queda atada a otra biblioteca visual.
 
@@ -13,7 +13,7 @@ Adaptación para OdoSoft de la referencia ubicada en `revisar_ui/cambio-de-turno
 ## Shell y sidebar
 
 - Escritorio: sidebar izquierdo fijo de `--sidebar-expanded`, contraíble a `--sidebar-collapsed`.
-- El contenedor usa fondo `--color-sidebar`, texto `--color-on-sidebar`, radio `--radius-lg` y separación del borde de la ventana.
+- El contenedor usa `--color-sidebar` (igual a `--color-surface` en ambos temas), `--color-on-sidebar`, radio `--radius-lg` y separación del borde de la ventana. En tema claro la superficie es blanca; en oscuro coincide con las tarjetas.
 - El destino activo combina fondo/contraste, texto y Phosphor `fill`.
 - Contraído: ocultar etiquetas visualmente, pero conservar `aria-label` y tooltip visible en hover/focus.
 - Móvil: drawer modal con botón `aria-expanded`, cierre por destino, botón o `Esc`, y retorno de foco.
