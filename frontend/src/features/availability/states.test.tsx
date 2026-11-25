@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -15,6 +17,16 @@ function stubFetch(handler: (path: string, init?: RequestInit) => Promise<Respon
 afterEach(() => {
   cleanup()
   vi.unstubAllGlobals()
+})
+
+const availabilityCss = readFileSync(resolve(process.cwd(), 'src/features/availability/ui/styles.css'), 'utf8')
+
+describe('estilos de disponibilidad', () => {
+  it('usa tokens temáticos y no agrega animaciones decorativas', () => {
+    expect(availabilityCss).not.toMatch(/#[0-9a-fA-F]{3,8}\b/)
+    expect(availabilityCss).not.toMatch(/rgba?\(/)
+    expect(availabilityCss).not.toMatch(/transition|animation/)
+  })
 })
 
 describe('5.5 Estados y accesibilidad', () => {

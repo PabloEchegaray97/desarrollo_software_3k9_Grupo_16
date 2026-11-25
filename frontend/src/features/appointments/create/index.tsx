@@ -18,7 +18,11 @@ interface Created {
   patient: Patient
 }
 
-export function AppointmentCreationPage() {
+interface AppointmentCreationPageProps {
+  onClose?: () => void
+}
+
+export function AppointmentCreationPage({ onClose }: AppointmentCreationPageProps) {
   const [load, setLoad] = useState<LoadState>({ status: 'loading' })
   const [attempt, setAttempt] = useState(0)
   const [created, setCreated] = useState<Created | null>(null)
@@ -55,13 +59,15 @@ export function AppointmentCreationPage() {
   }
 
   return (
-    <section className="adm-page">
-      <header className="adm-page__header">
-        <div>
-          <h1 className="page-heading">Nuevo turno</h1>
-          <p className="page-lead">Elegí paciente, prestación, sillón y horario. El sistema verifica la disponibilidad y que no se superponga con otros turnos.</p>
-        </div>
-      </header>
+    <section className={`adm-page${onClose ? ' apt-create--modal' : ''}`}>
+      {onClose ? null : (
+        <header className="adm-page__header">
+          <div>
+            <h1 className="page-heading">Nuevo turno</h1>
+            <p className="page-lead">Elegí paciente, prestación, sillón y horario. El sistema verifica la disponibilidad y que no se superponga con otros turnos.</p>
+          </div>
+        </header>
+      )}
 
       {load.status === 'loading' ? (
         <StatePanel state="loading" title="Cargando prestaciones y sillones…" description="Esto puede tardar unos segundos." />
@@ -80,6 +86,7 @@ export function AppointmentCreationPage() {
           procedureName={load.options.procedures.find((item) => item.id === created.appointment.prestacionId)?.nombre ?? '—'}
           chairName={load.options.chairs.find((item) => item.id === created.appointment.sillonId)?.nombre ?? '—'}
           onCreateAnother={createAnother}
+          onClose={onClose}
         />
       ) : (
         <AppointmentForm key={formKey} options={load.options} onCreated={onCreated} />

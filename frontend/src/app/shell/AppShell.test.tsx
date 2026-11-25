@@ -1,25 +1,38 @@
 import { cleanup, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { AuthPage } from '../../features/auth'
 import { authenticated, callsTo, FICTIONAL_USER, mockApi, serverError, unauthorized, type FakeResponse } from '../../features/auth/test-utils'
+import { ThemeProvider } from '../theme/ThemeProvider'
 import { AppShell } from './AppShell'
 
 function renderShell(path = '/pacientes') {
   render(
-    <MemoryRouter initialEntries={[path]}>
-      <AppShell>
-        <Routes>
-          <Route path="/acceso" element={<AuthPage />} />
-          <Route path="/agenda" element={<h1>Agenda</h1>} />
-          <Route path="/pacientes" element={<h1>Pacientes</h1>} />
-          <Route path="/prestaciones" element={<h1>Prestaciones</h1>} />
-        </Routes>
-      </AppShell>
-    </MemoryRouter>,
+    <ThemeProvider>
+      <MemoryRouter initialEntries={[path]}>
+        <AppShell>
+          <Routes>
+            <Route path="/" element={<h1>Inicio</h1>} />
+            <Route path="/acceso" element={<AuthPage />} />
+            <Route path="/agenda" element={<h1>Agenda</h1>} />
+            <Route path="/pacientes" element={<h1>Pacientes</h1>} />
+            <Route path="/prestaciones" element={<h1>Prestaciones</h1>} />
+          </Routes>
+        </AppShell>
+      </MemoryRouter>
+    </ThemeProvider>,
   )
 }
+
+beforeEach(() => {
+  localStorage.clear()
+  vi.stubGlobal('matchMedia', () => ({
+    matches: false,
+    addEventListener: () => undefined,
+    removeEventListener: () => undefined,
+  }))
+})
 
 afterEach(() => {
   cleanup()
@@ -64,30 +77,73 @@ describe('AppShell', () => {
     mockApi({ '/auth/sesion': () => authenticated })
     renderShell('/prestaciones')
     const nav = await screen.findByRole('navigation', { name: 'Navegación principal' })
-    for (const name of ['Agenda', 'Pacientes', 'Prestaciones y sillones', 'Disponibilidad']) {
+    for (const name of ['Inicio', 'Agenda', 'Pacientes', 'Prestaciones y sillones', 'Disponibilidad']) {
       expect(within(nav).getByRole('link', { name })).toBeInTheDocument()
     }
-    expect(within(nav).getByText('Configuración')).toBeInTheDocument()
     expect(within(nav).getByRole('link', { name: 'Prestaciones y sillones' })).toHaveAttribute('aria-current', 'page')
     expect(screen.getByText(FICTIONAL_USER.email)).toBeInTheDocument()
+    expect(within(nav).getByRole('link', { name: 'Prestaciones y sillones' }).querySelector('svg'))
+      .toHaveAttribute('data-phosphor-weight', 'fill')
+    expect(within(nav).getByRole('link', { name: 'Agenda' }).querySelector('svg'))
+      .toHaveAttribute('data-phosphor-weight', 'regular')
   })
 
-  it('toggles the mobile menu and closes it with Escape or after choosing a link', async () => {
+  it('collapses the sidebar and persists the visual preference', async () => {
     mockApi({ '/auth/sesion': () => authenticated })
     renderShell()
     const user = userEvent.setup()
-    const toggle = await screen.findByRole('button', { name: 'Menú' })
+    await screen.findByRole('navigation', { name: 'Navegación principal' })
+
+    await user.click(screen.getByRole('button', { name: 'Contraer navegación' }))
+    expect(document.querySelector('.app-shell')).toHaveAttribute('data-sidebar-collapsed', 'true')
+    expect(localStorage.getItem('odosoft.sidebar-collapsed')).toBe('true')
+    expect(screen.getByRole('link', { name: 'Agenda' })).toHaveAttribute('title', 'Agenda')
+
+    await user.click(screen.getByRole('button', { name: 'Expandir navegación' }))
+    expect(document.querySelector('.app-shell')).toHaveAttribute('data-sidebar-collapsed', 'false')
+    expect(localStorage.getItem('odosoft.sidebar-collapsed')).toBe('false')
+  })
+
+  it('changes the theme preference from the sidebar controls', async () => {
+    mockApi({ '/auth/sesion': () => authenticated })
+    renderShell()
+    const user = userEvent.setup()
+    await screen.findByRole('navigation', { name: 'Navegación principal' })
+
+    await user.click(screen.getByRole('button', { name: 'Tema Oscuro' }))
+
+    expect(screen.getByRole('button', { name: 'Tema Oscuro' })).toHaveAttribute('aria-pressed', 'true')
+    expect(document.documentElement).toHaveAttribute('data-theme', 'dark')
+    expect(localStorage.getItem('odosoft.theme')).toBe('dark')
+  })
+
+  it('opens the mobile drawer, traps focus and closes with Escape, its button or a destination', async () => {
+    mockApi({ '/auth/sesion': () => authenticated })
+    renderShell()
+    const user = userEvent.setup()
+    const toggle = await screen.findByRole('button', { name: 'Abrir menú de navegación' })
     expect(toggle).toHaveAttribute('aria-expanded', 'false')
     await user.click(toggle)
-    expect(screen.getByRole('button', { name: 'Cerrar menú' })).toHaveAttribute('aria-expanded', 'true')
+    const dialog = screen.getByRole('dialog', { name: 'Menú de navegación' })
+    expect(toggle).toHaveAttribute('aria-expanded', 'true')
+    expect(toggle).toHaveAttribute('aria-controls', dialog.id)
+    expect(screen.getByRole('heading', { name: 'Menú de navegación' })).toHaveFocus()
     await user.keyboard('{Escape}')
-    expect(screen.getByRole('button', { name: 'Menú' })).toHaveAttribute('aria-expanded', 'false')
-    expect(screen.getByRole('button', { name: 'Menú' })).toHaveFocus()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Abrir menú de navegación' })).toHaveAttribute('aria-expanded', 'false')
+    expect(screen.getByRole('button', { name: 'Abrir menú de navegación' })).toHaveFocus()
 
-    await user.click(screen.getByRole('button', { name: 'Menú' }))
-    await user.click(screen.getByRole('link', { name: 'Agenda' }))
+    await user.click(screen.getByRole('button', { name: 'Abrir menú de navegación' }))
+    await user.click(screen.getByRole('button', { name: 'Cerrar navegación' }))
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Abrir menú de navegación' })).toHaveFocus()
+
+    await user.click(screen.getByRole('button', { name: 'Abrir menú de navegación' }))
+    const mobileNav = within(screen.getByRole('dialog')).getByRole('navigation', { name: 'Navegación principal' })
+    await user.click(within(mobileNav).getByRole('link', { name: 'Agenda' }))
     expect(await screen.findByRole('heading', { name: 'Agenda' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Menú' })).toHaveAttribute('aria-expanded', 'false')
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Abrir menú de navegación' })).toHaveFocus()
   })
 
   it('signs out through the API and returns to the login screen', async () => {

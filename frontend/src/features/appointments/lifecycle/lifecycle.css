@@ -1,4 +1,4 @@
-/* Ciclo de vida del turno (C-06). Prefijo lc-; solo tokens de design-system/tokens.css rev. 1. */
+/* Ciclo de vida del turno (C-06). Prefijo lc-; solo tokens de design-system/tokens.css rev. 2. */
 
 .lc-page { display: grid; gap: var(--space-5); }
 

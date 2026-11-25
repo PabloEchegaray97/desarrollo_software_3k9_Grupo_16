@@ -1,59 +1,93 @@
-# Contrato de componentes
+# Contrato de componentes — revisión 2
 
-Adaptación para este proyecto de la referencia ubicada en `revisar_ui/cambio-de-turno-ui-pack/`. Este documento define el comportamiento y la forma; no obliga a una biblioteca React concreta.
+Adaptación para OdoSoft de la referencia ubicada en `revisar_ui/cambio-de-turno-ui-pack/`. Define comportamiento y forma; la implementación React usa Phosphor Icons y no queda atada a otra biblioteca visual.
 
 ## Forma compartida
 
-- Tarjetas, paneles y modales: `rounded-2xl` / `1rem`.
+- Tarjetas, paneles, sidebar y modales: `rounded-2xl` / `1rem`.
 - Inputs, selects y áreas de texto: `rounded-lg` / `0.5rem`.
-- Botones, chips, badges y buscadores compactos: `rounded-full`.
-- Evitar una tarjeta dentro de otra tarjeta. Usar separadores, fondos suaves o secciones internas.
+- Botones, chips, badges y controles segmentados: píldora cuando su contenido lo permita.
+- Evitar tarjetas anidadas. Preferir separadores, fondos suaves o secciones.
+- Densidad compacta en escritorio; aumentar targets y separación en móvil.
+
+## Shell y sidebar
+
+- Escritorio: sidebar izquierdo fijo de `--sidebar-expanded`, contraíble a `--sidebar-collapsed`.
+- El contenedor usa fondo `--color-sidebar`, texto `--color-on-sidebar`, radio `--radius-lg` y separación del borde de la ventana.
+- El destino activo combina fondo/contraste, texto y Phosphor `fill`.
+- Contraído: ocultar etiquetas visualmente, pero conservar `aria-label` y tooltip visible en hover/focus.
+- Móvil: drawer modal con botón `aria-expanded`, cierre por destino, botón o `Esc`, y retorno de foco.
+- Tema, cuenta y Cerrar sesión permanecen en la zona inferior.
+
+## Dashboard
+
+- Encabezado compacto con fecha/título y `+ Nuevo turno` arriba a la derecha.
+- Métricas en tarjetas breves: valor, etiqueta e icono; no agregar descripción si valor+etiqueta ya son suficientes.
+- Accesos rápidos como enlaces, no como tarjetas decorativas sin acción.
+- En móvil las métricas se apilan o pasan a dos columnas sin overflow.
+
+## Iconografía
+
+- Familia única: Phosphor Icons.
+- Peso `regular` en estado normal; `fill` en destino activo o selección sostenida.
+- Tamaño habitual: 18–20 px; 22–24 px en acciones principales.
+- Un icono nunca reemplaza el texto de un estado ni el nombre accesible de un control.
 
 ## Botón
 
-El componente compartido admite variantes `primary`, `secondary`, `ghost` y `danger`, tamaños `sm`, `md` y `lg`, iconos laterales, estado `loading` e `iconOnly` con `aria-label` obligatorio.
+Variantes `primary`, `secondary`, `ghost`, `highlight` y `danger`; tamaños `sm`, `md`, `lg`; estado `loading`; `iconOnly` exige `aria-label`.
 
-- `primary`: fondo azul `#0D3D9E`, texto blanco.
-- `secondary`: acción neutra con borde; el verde fluorescente no reemplaza todos los secundarios.
-- `highlight`: uso excepcional para confirmaciones o llamadas de alta prioridad, fondo `#73FFA0` y texto `#0B1E4D`.
-- La pulsación desplaza el botón `1px`; no se usan animaciones decorativas.
+- `primary`: `--color-primary` y `--color-on-primary`.
+- `secondary`: superficie y borde semánticos.
+- `highlight`: `--color-secondary` con `--color-on-secondary`, uso puntual.
+- `danger`: solo para acciones destructivas funcionales.
+- Feedback `:active` de 1 px; sin animación decorativa.
 
 ## Input
 
-- Etiqueta visible arriba; ayuda y error debajo.
-- Altura objetivo: `40px`.
-- Radio moderado de `0.5rem`, borde `--color-border-strong` y fondo blanco.
-- Foco visible mediante `--focus-ring`; el error combina borde, texto y mensaje.
+- Etiqueta visible arriba; ayuda solo si aporta un límite o consecuencia; error debajo.
+- Altura objetivo mínima: 40 px en escritorio y 44 px en móvil.
+- Radio `--radius-sm`, borde `--color-border-strong`, fondo `--color-surface`.
+- Foco mediante `--focus-ring`; error mediante borde, texto y mensaje.
 - No usar inputs tipo píldora.
 
 ## Tarjeta o panel
 
-- Fondo `--color-surface`, borde de `1px`, radio `--radius-lg` (`1rem`) y sombra sutil.
-- El encabezado puede tener título, descripción y una acción breve.
-- El contenido operativo debe crecer con el documento; evitar scroll interno salvo que el patrón lo necesite.
+- Fondo `--color-surface`, borde de 1 px, radio `--radius-lg` y sombra semántica.
+- Encabezado con título y una acción breve; descripción solo cuando cambia la comprensión.
+- Evitar scroll interno salvo agenda, modal o patrón que lo requiera.
 
 ## Modal administrativo
 
-- Composición React sugerida: `Dialog` + `AdminModalShell`; puede implementarse con la biblioteca accesible elegida por el equipo.
-- Ancho compacto: `min(460px, calc(100vw - 32px))`.
-- Alto máximo: `calc(100dvh - 32px)` y hasta `90vh` en escritorio.
-- Estructura: `grid-template-rows: auto minmax(0, 1fr) auto`.
-- Header con título, descripción opcional y cierre `X` accesible.
-- Body con scroll propio y padding consistente.
-- Footer solo cuando existan acciones reales; no agregar “Cerrar” si la `X` es suficiente.
-- Contenedor `rounded-2xl`, sin tarjeta interna duplicada y sin animación del shell.
-- En móvil, un flujo auxiliar puede convertirse en bottom sheet con `rounded-t-2xl`.
+- Componente compartido: `AppModal`; las features aportan contenido y acciones.
+- Ancho compacto: `min(46rem, calc(100vw - 32px))`; formularios breves pueden usar 460 px.
+- Alto máximo: `calc(100dvh - 32px)`.
+- Estructura: header, body desplazable y footer solo con acciones reales.
+- Título obligatorio; descripción opcional y no redundante.
+- Fondo inerte, foco inicial/encerrado, `Esc` cuando no exista confirmación crítica y retorno al disparador.
+- Contenedor `--radius-lg`; en móvil ocupa el ancho disponible sin convertirse automáticamente en bottom sheet.
 
-## Estados y listas
+## Agenda lista/grilla
 
-- Los estados nunca dependen solo del color: combinan texto, color y forma.
-- Los estados vacíos son mínimos: un icono opcional, título, explicación breve y una sola acción útil.
-- Las entidades seleccionadas se resumen en línea o mediante separadores, no con mini-tarjetas repetidas.
-- Las listas seleccionables usan un contenedor suave y un indicador explícito de selección.
+- Lista y grilla reciben la misma respuesta del backend.
+- El selector es un control segmentado accesible con estado activo.
+- La grilla representa turnos, intervalos y bloqueos; no colorea huecos como “disponibles”.
+- Selección, detalle, filtros y refresco son compartidos.
+- Todo estado mantiene texto, color y forma en ambos temas.
 
-## Accesibilidad
+## Estados
 
-- Contraste mínimo WCAG AA para texto normal.
-- No usar texto blanco sobre `#73FFA0`; usar `#0B1E4D`.
-- Foco visible en toda acción interactiva.
+- Estados vacíos: icono opcional, título, explicación solo si ayuda a recuperar y una acción útil.
+- Loading: skeleton o texto estable sin movimiento indispensable.
+- Error: mensaje seguro, referencia cuando exista y acción de reintento.
+- Deshabilitado: menor énfasis, pero contraste legible y razón disponible si no es evidente.
+- Turnos: texto + color + icono/forma; cancelado además se percibe como no bloqueante.
+
+## Tema y accesibilidad
+
+- Componentes consumen tokens semánticos; no deciden colores por tema.
+- Contraste objetivo WCAG AA para texto normal.
+- Nunca texto blanco sobre `#73FFA0`.
+- Foco visible en toda acción.
 - Respetar `prefers-reduced-motion`.
+- Verificar manualmente 390×844 y 1440×900 en claro y oscuro.

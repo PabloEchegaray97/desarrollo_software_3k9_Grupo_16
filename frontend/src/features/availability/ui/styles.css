@@ -1,4 +1,4 @@
-/* Estilos de la feature: solo variables del sistema visual revisión 1. */
+/* Estilos de la feature: solo variables del sistema visual revisión 2. */
 .avail-page { display: grid; gap: var(--space-6); }
 
 .avail-card {
@@ -83,7 +83,6 @@
   cursor: pointer;
   font-size: var(--font-size-14);
   font-weight: 700;
-  transition: background var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out);
 }
 .avail-card button:hover:not(:disabled) { border-color: var(--color-primary-hover); background: var(--color-primary-hover); }
 .avail-card button:active:not(:disabled) { border-color: var(--color-primary-pressed); background: var(--color-primary-pressed); }

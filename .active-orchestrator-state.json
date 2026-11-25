@@ -76,7 +76,8 @@
     "created_by": "design-system",
     "mode": "system-only",
     "status": "approved",
-    "revision": 1,
+    "revision": 2,
+    "approved_at": "2026-11-24",
     "path": "design-system/README.md"
   },
   "discovery": {

@@ -1,8 +1,9 @@
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { MemoryRouter } from 'react-router-dom'
+import { MemoryRouter, useLocation } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { AppointmentCreationPage } from '.'
+import { AppRoutes } from '../../../app/routes'
 import { apiError, mockApi, page, type RecordedRequest } from '../../catalog/test-utils'
 
 const PATIENT = { id: 'pa-1', nombre: 'Paciente Ficticio Uno', telefono: '11 5555-0001', dni: null, email: null, activo: true, createdAt: '', updatedAt: '' }
@@ -52,6 +53,11 @@ async function fillForm(options: { procedure?: string; chair?: string; date?: st
 }
 
 const posts = (requests: RecordedRequest[]) => requests.filter((request) => request.method === 'POST' && request.path === '/turnos')
+
+function CurrentPath() {
+  const location = useLocation()
+  return <output aria-label="Ruta actual">{location.pathname}</output>
+}
 
 // La configuración compartida de Vitest no habilita `globals`, por lo que RTL no limpia automáticamente.
 afterEach(() => {
@@ -127,6 +133,63 @@ describe('AppointmentCreationPage — envío al backend', () => {
 
     expect(screen.getByLabelText('Prestación')).toHaveValue('')
     expect(screen.getByLabelText('Fecha')).toHaveValue('')
+  })
+
+  it('creates inside the route modal and opens the dedicated appointment page from the summary', async () => {
+    const agenda = {
+      zonaHoraria: 'America/Argentina/Buenos_Aires',
+      desde: '2027-03-10',
+      hasta: '2027-03-10',
+      generadoEn: '2027-03-10T12:30:00.000Z',
+      turnos: [],
+      dias: [],
+    }
+    const { requests } = setup(undefined, [['GET /agenda', () => ({ status: 200, body: agenda })]])
+    render(
+      <MemoryRouter initialEntries={['/turnos/nuevo']}>
+        <AppRoutes />
+        <CurrentPath />
+      </MemoryRouter>,
+    )
+    const user = userEvent.setup()
+    await fillForm()
+    await user.click(screen.getByRole('button', { name: 'Registrar turno' }))
+
+    expect(await screen.findByRole('heading', { name: /Turno registrado/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Cerrar' })).toBeInTheDocument()
+    await user.click(screen.getByRole('link', { name: 'Ver turno' }))
+
+    expect(screen.getByLabelText('Ruta actual')).toHaveTextContent('/turnos/turno-1')
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(posts(requests)).toHaveLength(1)
+  })
+
+  it('closes the successful summary back to the dashboard', async () => {
+    const agenda = {
+      zonaHoraria: 'America/Argentina/Buenos_Aires',
+      desde: '2027-03-10',
+      hasta: '2027-03-10',
+      generadoEn: '2027-03-10T12:30:00.000Z',
+      turnos: [],
+      dias: [],
+    }
+    setup(undefined, [['GET /agenda', () => ({ status: 200, body: agenda })]])
+    render(
+      <MemoryRouter initialEntries={['/turnos/nuevo']}>
+        <AppRoutes />
+        <CurrentPath />
+      </MemoryRouter>,
+    )
+    const user = userEvent.setup()
+    await fillForm()
+    await user.click(screen.getByRole('button', { name: 'Registrar turno' }))
+    await screen.findByRole('heading', { name: /Turno registrado/ })
+
+    await user.click(screen.getByRole('button', { name: 'Cerrar' }))
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(screen.getByLabelText('Ruta actual')).toHaveTextContent('/')
+    expect(await screen.findByRole('heading', { name: 'Inicio' })).toBeInTheDocument()
   })
 
   it('fuera de disponibilidad: exige motivo y reenvía con override', async () => {

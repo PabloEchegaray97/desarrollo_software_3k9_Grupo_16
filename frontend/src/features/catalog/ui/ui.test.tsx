@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useState } from 'react'
@@ -9,6 +11,16 @@ import { TextField } from './fields'
 
 // La configuración compartida no habilita `globals`, por lo que RTL no limpia automáticamente.
 afterEach(() => cleanup())
+
+const adminUiCss = readFileSync(resolve(process.cwd(), 'src/features/catalog/ui/admin-ui.css'), 'utf8')
+
+describe('estilos administrativos', () => {
+  it('usa el token de overlay compartido con ambos temas', () => {
+    expect(adminUiCss).toContain('.adm-modal::backdrop { background: var(--color-overlay); }')
+    expect(adminUiCss).not.toMatch(/#[0-9a-fA-F]{3,8}\b/)
+    expect(adminUiCss).not.toMatch(/rgba?\(/)
+  })
+})
 
 describe('AdminModal', () => {
   it('muestra título y descripción accesibles y cierra con la X', async () => {

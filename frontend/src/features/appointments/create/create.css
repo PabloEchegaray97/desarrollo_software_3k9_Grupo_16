@@ -5,6 +5,16 @@
   border: 1px solid var(--color-border); border-radius: var(--radius-lg);
   background: var(--color-surface); box-shadow: var(--shadow-sm);
 }
+.apt-create--modal .apt-form,
+.apt-create--modal .apt-summary {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.apt-create--modal .apt-form,
+.apt-create--modal .apt-summary { gap: var(--space-4); }
 .apt-section { display: grid; gap: var(--space-4); margin: 0; padding: 0; border: 0; }
 .apt-section + .apt-section { padding-top: var(--space-5); border-top: 1px solid var(--color-border); }
 .apt-section__title { margin: 0; padding: 0; color: var(--color-primary); font-size: var(--font-size-16); font-weight: 800; }

@@ -1,12 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 48" role="img" aria-labelledby="title desc">
-  <title id="title">Logo provisional de Turnos Odontología</title>
-  <desc id="desc">Símbolo de calendario y texto que indica marca provisional</desc>
-  <rect width="220" height="48" rx="12" fill="#ffffff"/>
-  <rect x="2" y="2" width="44" height="44" rx="10" fill="#eaf1fc" stroke="#cddbf0"/>
-  <path d="M14 18.5h20v16H14z" fill="none" stroke="#0d3d9e" stroke-width="2"/>
-  <path d="M14 23h20M19 14.5v7M29 14.5v7" fill="none" stroke="#0d3d9e" stroke-width="2" stroke-linecap="round"/>
-  <path d="M20 29l2.7 2.7L29 25.5" fill="none" stroke="#1ebe5b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  <text x="58" y="21" fill="#0f172a" font-family="Manrope, Segoe UI, sans-serif" font-size="13" font-weight="700">Turnos Odontología</text>
-  <text x="58" y="35" fill="#526076" font-family="Manrope, Segoe UI, sans-serif" font-size="8" font-weight="600" letter-spacing="1.4">MARCA PROVISIONAL</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 56" role="img" aria-labelledby="title desc">
+  <title id="title">OdoSoft, logo provisional</title>
+  <desc id="desc">Marca azul con una pieza dental abstracta, nombre OdoSoft y etiqueta de logo provisional</desc>
+  <rect x="0.5" y="0.5" width="239" height="55" rx="14" fill="#ffffff" stroke="#dbe5f4"/>
+  <rect x="6" y="6" width="44" height="44" rx="12" fill="#0d3d9e"/>
+  <path d="M20 16.5c2.2 0 3.3 1.5 5 1.5s2.8-1.5 5-1.5c4.5 0 7 3.2 7 7.2 0 3.2-1.4 5.3-2.6 7.7-1.2 2.3-1.4 7.9-4.7 7.9-2.1 0-2.2-4.6-4.7-4.6s-2.6 4.6-4.7 4.6c-3.3 0-3.5-5.6-4.7-7.9-1.2-2.4-2.6-4.5-2.6-7.7 0-4 2.5-7.2 7-7.2Z" fill="#ffffff"/>
+  <path d="M25 22v8M21 26h8" stroke="#73ffa0" stroke-width="2.4" stroke-linecap="round"/>
+  <text x="62" y="26" fill="#0f172a" font-family="Manrope, Segoe UI, sans-serif" font-size="19" font-weight="800">OdoSoft</text>
+  <text x="62" y="40" fill="#526076" font-family="Manrope, Segoe UI, sans-serif" font-size="7.5" font-weight="700" letter-spacing="1.25">LOGO PROVISIONAL</text>
 </svg>
 

@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { StatePanel } from '../../shared/components/StatePanel'
 import { AgendaFilters } from './AgendaFilters'
-import { AgendaToolbar } from './AgendaToolbar'
+import { AgendaGrid } from './AgendaGrid'
+import { AgendaToolbar, readAgendaViewPreference, writeAgendaViewPreference, type AgendaView } from './AgendaToolbar'
 import { AppointmentDetail } from './AppointmentDetail'
 import { AppointmentRow } from './AppointmentRow'
 import { DayOverview } from './DayOverview'
@@ -20,6 +21,7 @@ export function AppointmentAgendaPage({ renderActions }: AppointmentAgendaPagePr
   const [params, setParams] = useSearchParams()
   const today = useMemo(() => todayLocal(), [])
   const view = useMemo(() => readViewState(params, today), [params, today])
+  const [agendaView, setAgendaView] = useState<AgendaView>(() => readAgendaViewPreference())
   const query = useMemo(() => toAgendaQuery(view), [view])
   const { load, refresh, retry } = useAgenda(query)
 
@@ -59,6 +61,10 @@ export function AppointmentAgendaPage({ renderActions }: AppointmentAgendaPagePr
     if (id) window.setTimeout(() => document.querySelector<HTMLElement>(`[data-turno-id="${id}"]`)?.focus(), 0)
   }
   const select = (turno: AgendaTurno) => update({ turnoId: turno.id }, { keepTurno: true })
+  const changeAgendaView = (nextView: AgendaView) => {
+    setAgendaView(nextView)
+    writeAgendaViewPreference(nextView)
+  }
 
   const dia = load.status === 'ready' ? load.data.dias.find((d) => d.fecha === view.fecha) : undefined
   const filtered = !isDefaultFilters(view)
@@ -71,8 +77,10 @@ export function AppointmentAgendaPage({ renderActions }: AppointmentAgendaPagePr
         today={today}
         generadoEn={load.status === 'ready' ? load.data.generadoEn : null}
         refreshing={load.status === 'ready' && load.refreshing}
+        view={agendaView}
         onDateChange={(fecha) => update({ fecha })}
         onRefresh={() => { setNotice(null); void refresh() }}
+        onViewChange={changeAgendaView}
       />
       <AgendaFilters
         chairs={chairs}
@@ -114,6 +122,8 @@ export function AppointmentAgendaPage({ renderActions }: AppointmentAgendaPagePr
                   title={filtered ? 'Ningún turno coincide con los filtros' : 'No hay turnos para esta fecha'}
                   description={filtered ? 'Probá limpiar los filtros.' : 'La agenda de este día está libre.'}
                 />
+              ) : agendaView === 'grid' ? (
+                <AgendaGrid turnos={turnos} selectedId={view.turnoId} onSelect={select} />
               ) : (
                 <ul className="agenda-list__items" aria-label="Turnos del día">
                   {turnos.map((turno) => (

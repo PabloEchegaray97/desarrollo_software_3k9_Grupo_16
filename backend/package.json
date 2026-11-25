@@ -23,7 +23,8 @@
     "test:integration": "node test/run-integration-tests.mjs",
     "migration:run": "npm run build && typeorm migration:run -d dist/database/cli-data-source.js",
     "migration:revert": "npm run build && typeorm migration:revert -d dist/database/cli-data-source.js",
-    "provision:admin": "npm run build && node dist/modules/auth/provision-admin.js"
+    "provision:admin": "npm run build && node dist/modules/auth/provision-admin.js",
+    "seed:demo": "npm run build && node dist/database/seed-demo.js"
   },
   "dependencies": {
     "@nestjs/common": "^12.0.1",

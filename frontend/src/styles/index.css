@@ -14,32 +14,21 @@
 body { min-width: 20rem; min-height: 100vh; margin: 0; }
 button, a { font: inherit; }
 a:focus-visible, button:focus-visible { outline: none; box-shadow: var(--focus-ring); }
-.app-shell { min-height: 100vh; }
-.app-header {
-  display: flex; align-items: center; justify-content: space-between; gap: var(--space-4);
-  padding: var(--space-4) clamp(var(--space-4), 4vw, var(--space-10));
-  color: var(--color-on-primary); background: var(--color-primary);
-}
-.app-brand { display: flex; align-items: center; gap: var(--space-3); color: inherit; font-size: var(--font-size-20); font-weight: 800; text-decoration: none; }
-.app-brand__mark { display: grid; width: 2.25rem; height: 2.25rem; place-items: center; border-radius: var(--radius-md); color: var(--color-on-secondary); background: var(--color-secondary); }
-.app-nav { display: flex; flex-wrap: wrap; gap: var(--space-2); }
-.app-nav a { padding: var(--space-2) var(--space-3); border-radius: var(--radius-pill); color: inherit; text-decoration: none; }
-.app-nav a[aria-current='page'] { color: var(--color-on-secondary); background: var(--color-secondary); }
-.app-main { width: min(100% - 2rem, 72rem); margin: 0 auto; padding: var(--space-8) 0; }
 .page-heading { margin: 0 0 var(--space-2); color: var(--color-primary); font-size: clamp(var(--font-size-24), 4vw, var(--font-size-32)); }
 .page-lead { max-width: 42rem; margin: 0 0 var(--space-6); color: var(--color-text-muted); }
 .state-card { display: grid; max-width: 42rem; gap: var(--space-3); padding: var(--space-6); border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface); box-shadow: var(--shadow-sm); }
 .state-card[data-tone='error'] { border-color: var(--color-danger); background: var(--color-danger-soft); }
 .state-card__title, .state-card__body { margin: 0; }
 .state-card__body { color: var(--color-text-muted); }
-.state-card__action { justify-self: start; padding: var(--space-2) var(--space-4); border: 0; border-radius: var(--radius-pill); color: var(--color-on-primary); background: var(--color-primary); cursor: pointer; transition: transform var(--duration-fast) var(--ease-out), background var(--duration-fast) var(--ease-out); }
+.state-card__action { justify-self: start; padding: var(--space-2) var(--space-4); border: 0; border-radius: var(--radius-pill); color: var(--color-on-primary); background: var(--color-primary); cursor: pointer; }
 .state-card__action:hover { background: var(--color-primary-hover); }
 .state-card__action:active { transform: translateY(1px); background: var(--color-primary-pressed); }
 .state-card__action:disabled { cursor: wait; opacity: 0.7; }
 
+@media (prefers-reduced-motion: no-preference) {
+  .state-card__action { transition: transform var(--duration-fast) var(--ease-out), background var(--duration-fast) var(--ease-out); }
+}
+
 @media (max-width: 48rem) {
-  .app-header { align-items: flex-start; flex-direction: column; }
-  .app-nav { width: 100%; overflow-x: auto; flex-wrap: nowrap; padding-bottom: var(--space-1); }
-  .app-nav a { white-space: nowrap; }
-  .app-main { padding-top: var(--space-6); }
+  .page-lead { margin-bottom: var(--space-5); }
 }
