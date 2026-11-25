@@ -12,6 +12,7 @@ function renderAuth(entry: InitialEntry = '/acceso') {
       <SessionProvider>
         <Routes>
           <Route path="/acceso" element={<AuthPage />} />
+          <Route path="/" element={<h1>Inicio destino</h1>} />
           <Route path="/agenda" element={<h1>Agenda destino</h1>} />
           <Route path="/pacientes" element={<h1>Pacientes destino</h1>} />
         </Routes>
@@ -34,6 +35,12 @@ afterEach(() => {
 })
 
 describe('AuthPage', () => {
+  it('shows the OdoSoft brand on the access screen', async () => {
+    mockApi({ '/auth/sesion': () => unauthorized })
+    renderAuth()
+    expect(await screen.findByText('OdoSoft')).toBeInTheDocument()
+  })
+
   it('validates required fields without calling the API', async () => {
     const fetchMock = mockApi({ '/auth/sesion': () => unauthorized, '/auth/login': () => authenticated })
     renderAuth()
@@ -83,20 +90,20 @@ describe('AuthPage', () => {
     await user.click(pending)
     expect(callsTo(fetchMock, '/auth/login')).toHaveLength(1)
     resolveLogin(authenticated)
-    expect(await screen.findByRole('heading', { name: 'Agenda destino' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Inicio destino' })).toBeInTheDocument()
   })
 
-  it('redirects to the agenda when a session already exists', async () => {
+  it('redirects to the dashboard when a session already exists', async () => {
     mockApi({ '/auth/sesion': () => authenticated })
     renderAuth()
-    expect(await screen.findByRole('heading', { name: 'Agenda destino' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Inicio destino' })).toBeInTheDocument()
   })
 
   it('never stores the password in web storage', async () => {
     mockApi({ '/auth/sesion': () => unauthorized, '/auth/login': () => authenticated })
     renderAuth()
     await fillAndSubmit('odontologo.ficticio@example.test', 'contrasena-ficticia-123')
-    await waitFor(() => expect(screen.getByRole('heading', { name: 'Agenda destino' })).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'Inicio destino' })).toBeInTheDocument())
     expect(JSON.stringify({ ...localStorage })).not.toContain('contrasena-ficticia-123')
     expect(JSON.stringify({ ...sessionStorage })).not.toContain('contrasena-ficticia-123')
   })
@@ -105,11 +112,11 @@ describe('AuthPage', () => {
 describe('safeDestination', () => {
   it.each([
     [{ from: '/pacientes?q=1' }, '/pacientes?q=1'],
-    [{ from: '//sitio-externo.test' }, '/agenda'],
-    [{ from: 'https://sitio-externo.test' }, '/agenda'],
-    [{ from: '/acceso' }, '/agenda'],
-    [null, '/agenda'],
-    [{ from: 3 }, '/agenda'],
+    [{ from: '//sitio-externo.test' }, '/'],
+    [{ from: 'https://sitio-externo.test' }, '/'],
+    [{ from: '/acceso' }, '/'],
+    [null, '/'],
+    [{ from: 3 }, '/'],
   ])('maps %p to %p', (state, expected) => {
     expect(safeDestination(state)).toBe(expected)
   })

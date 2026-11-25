@@ -2,70 +2,70 @@
 
 ## Nombre
 
-- **Nombre de trabajo:** Turnos Odontología.
-- **Estado:** `(TBD)` / provisional.
-- **Uso:** nunca presentar este nombre como marca definitiva en entregables externos.
-- **Fuente única:** `brand.js`.
+- **Nombre definitivo:** OdoSoft.
+- **Estado:** aprobado por el usuario el 2026-11-24.
+- **Uso:** mostrar OdoSoft en acceso, sidebar, dashboard, documentación y demo.
+- **Fuente para previews:** `brand.js`.
 
 ## Promesa visual
 
-La interfaz debe comunicar que la agenda es ordenada, previsible y fácil de operar. Cada decisión visual debe ayudar a responder rápidamente:
+OdoSoft comunica una agenda ordenada, previsible y rápida de operar. Cada decisión visual debe ayudar a responder:
 
-1. ¿Qué turno sigue?
-2. ¿Qué estado tiene?
+1. ¿Qué ocurre hoy?
+2. ¿Qué turno sigue y qué estado tiene?
 3. ¿Cuánto tiempo bloquea?
-4. ¿Hay un conflicto o una excepción?
-5. ¿Qué acción es segura ahora?
+4. ¿Existe una excepción o un conflicto?
+5. ¿Cuál es la próxima acción segura?
 
 ## Personalidad
 
 | Atributo | Expresión visual | Evitar |
 |---|---|---|
-| Confiable | Contraste legible, bordes precisos, estados explícitos | Promesas grandilocuentes o decoración tecnológica |
-| Serena | Superficies claras, azul profundo y espacios regulares | Saturación extendida o alertas permanentes |
+| Confiable | Contraste legible, bordes precisos y estados explícitos | Decoración tecnológica o promesas grandilocuentes |
+| Serena | Neutros azulados, azul profundo y ritmo regular | Saturación extendida o alertas permanentes |
 | Clínica | Información estructurada y lenguaje concreto | Blanco hospitalario excesivo o iconografía médica literal |
-| Cercana | Radios moderados y mensajes útiles | Personajes genéricos, emojis o tono infantil |
-| Eficiente | Agenda compacta y acciones claras | Animaciones continuas o tarjetas innecesarias |
+| Cercana | Radios moderados y mensajes útiles | Emojis, tono infantil o textos de relleno |
+| Eficiente | Dashboard y agenda compactos, acciones directas | Animaciones continuas o tarjetas innecesarias |
 
 ## Logo
 
 - **Archivo estable:** `assets/logo.svg`.
-- **Estado:** `(TBD)` / provisional.
-- El placeholder combina una marca temporal abstracta de calendario y una etiqueta visible “PROVISIONAL”.
-- No usar el placeholder fuera de previews internos o documentación de fundación.
-- No deformar, recolorear ni agregar efectos al SVG.
+- **Nombre del producto:** definitivo.
+- **Símbolo/wordmark:** provisional hasta que el equipo apruebe un logo definitivo.
+- El placeholder combina una forma dental abstracta, el wordmark OdoSoft y la etiqueta visible “LOGO PROVISIONAL”.
+- No deformar, agregar glows ni copiar el SVG a rutas alternativas.
 
-## Color
+## Color y temas
 
-- Base clara de neutros azulados.
-- Azul `#0D3D9E` como primario de acción, navegación y jerarquía.
-- Verde fluorescente `#73FFA0` como secundario para confirmaciones y énfasis breve, siempre con texto azul oscuro.
-- El verde no debe ocupar grandes superficies ni competir con todas las acciones primarias.
-- Rojo apagado reservado para errores/cancelaciones.
-- Ámbar reservado para advertencias y ausencias.
-- Los estados siempre incluyen etiqueta textual.
+- Azul de marca `#0D3D9E` para navegación, acciones primarias y jerarquía.
+- Verde `#73FFA0` para confirmaciones y énfasis breve, siempre con texto oscuro.
+- Tema claro con superficies azuladas muy suaves.
+- Tema oscuro con canvas y superficies azul marino, sin negro puro.
+- Rojo apagado para errores/cancelaciones; ámbar para advertencias/ausencias.
+- Todo estado combina texto, color e icono/forma.
+
+## Iconografía
+
+- La aplicación usa Phosphor Icons.
+- Peso `regular` para navegación y acciones normales.
+- Peso `fill` para el destino activo o selección sostenida.
+- No mezclar familias ni usar un icono sin nombre accesible cuando no haya texto visible.
 
 ## Tipografía
 
-- Interfaz: `Manrope` cuando esté disponible, seguida de `Segoe UI Variable`, `Segoe UI` y fallback sans-serif del sistema.
-- Números de hora: pila monoespaciada del sistema.
-- No cargar tipografías remotas en la fundación.
-- No usar serif en la aplicación operativa.
+- Interfaz: `Manrope` cuando esté disponible, seguida de `Segoe UI Variable`, `Segoe UI` y sans-serif del sistema.
+- Horarios: pila monoespaciada del sistema.
+- No cargar tipografías remotas para operar o revisar la fundación.
 
 ## Imaginería
 
-El MVP no necesita fotografías. Si se incorporan en una etapa posterior:
-
-- deben mostrar contextos odontológicos reales y sobrios;
-- no deben exponer pacientes identificables ni datos clínicos;
-- deben evitar sonrisas publicitarias genéricas y bancos de imágenes evidentemente artificiales;
-- requieren fuente y licencia documentadas.
+El MVP no utiliza fotografías. Una incorporación posterior deberá documentar fuente/licencia y evitar pacientes identificables, información clínica o imágenes artificiales evidentes.
 
 ## Voz de interfaz
 
 - Frases breves, directas y en español.
-- Explicar conflictos: “Este horario se superpone con el turno de las 10:30”.
-- Evitar tecnicismos de implementación.
-- Confirmar operaciones destructivas funcionales, como cancelar, indicando su consecuencia.
-- No culpabilizar al usuario; ofrecer la siguiente acción posible.
+- No repetir con un subtítulo lo que el título, la etiqueta y el contexto ya explican.
+- Conservar ayuda cuando comunica límites, consecuencias o recuperación.
+- Explicar conflictos con una siguiente acción posible.
+- Confirmar operaciones funcionalmente destructivas, como cancelar, indicando la consecuencia.
 

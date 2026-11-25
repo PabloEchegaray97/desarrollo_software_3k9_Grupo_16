@@ -1,255 +1,217 @@
 <!doctype html>
-<html lang="es">
+<html lang="es" data-theme="light">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Sistema visual — Turnos Odontología</title>
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%230d3d9e'/%3E%3Cpath d='M6 8h12v10H6zM8 5v5M16 5v5M6 11h12' fill='none' stroke='white' stroke-width='1.7'/%3E%3C/svg%3E">
+  <title>Sistema visual — OdoSoft</title>
   <link rel="stylesheet" href="tokens.css">
   <style>
     * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      color: var(--color-text);
-      background: var(--color-canvas);
-      font-family: var(--font-sans);
-      font-size: var(--font-size-14);
-      line-height: var(--line-normal);
-      -webkit-font-smoothing: antialiased;
-    }
+    body { margin: 0; color: var(--color-text); background: var(--color-canvas); font: var(--font-size-14)/var(--line-normal) var(--font-sans); }
     button, input, select { font: inherit; }
     button { cursor: pointer; }
-    button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible {
-      outline: none;
-      box-shadow: var(--focus-ring);
-    }
-    .shell { min-height: 100dvh; display: grid; grid-template-columns: 236px 1fr; }
-    .sidebar {
-      background: #0b1e4d;
-      color: #ffffff;
-      padding: var(--space-5);
-      display: flex;
-      flex-direction: column;
-      gap: var(--space-8);
-    }
-    .brand { display: flex; align-items: center; gap: var(--space-3); }
-    .brand-mark {
-      width: 38px; height: 38px; border-radius: 10px;
-      display: grid; place-items: center;
-      background: var(--color-secondary); color: var(--color-on-secondary);
-    }
-    .brand-copy strong { display: block; font-size: 13px; }
-    .brand-copy span { color: #d1e2ff; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; }
+    button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible { outline: 0; box-shadow: var(--focus-ring); }
+    .icon { width: 1.15rem; height: 1.15rem; flex: 0 0 auto; stroke: currentColor; stroke-width: 1.8; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+    .shell { min-height: 100dvh; padding: var(--space-4); display: grid; grid-template-columns: var(--sidebar-expanded) minmax(0, 1fr); gap: var(--space-4); }
+    .sidebar { min-height: calc(100dvh - 2rem); padding: var(--space-4); border-radius: var(--radius-lg); color: var(--color-on-sidebar); background: var(--color-sidebar); display: flex; flex-direction: column; gap: var(--space-5); box-shadow: var(--shadow-md); }
+    .brand { min-height: 2.75rem; display: flex; align-items: center; gap: var(--space-3); font-size: var(--font-size-16); font-weight: 800; }
+    .brand-mark { width: 2.5rem; height: 2.5rem; border-radius: var(--radius-md); display: grid; place-items: center; color: var(--color-on-secondary); background: var(--color-secondary); font-size: 1.2rem; }
     .nav { display: grid; gap: var(--space-1); }
-    .nav a {
-      color: #d1e2ff; text-decoration: none; padding: 10px 12px;
-      border-radius: var(--radius-sm); display: flex; gap: 10px; align-items: center;
-      transition: color var(--duration-fast) ease, background var(--duration-fast) ease;
-    }
-    .nav a[aria-current="page"] { background: rgb(115 255 160 / .14); color: #ffffff; }
-    .nav svg { width: 18px; height: 18px; stroke-width: 1.8; }
-    .sidebar-note { margin-top: auto; padding-top: var(--space-4); border-top: 1px solid rgb(209 226 255 / .2); color: #d1e2ff; font-size: 12px; }
+    .nav a { min-height: 2.6rem; padding: .65rem .75rem; border-radius: var(--radius-md); color: var(--color-on-sidebar-muted); text-decoration: none; display: flex; align-items: center; gap: var(--space-3); font-weight: 650; }
+    .nav a:hover { color: var(--color-on-sidebar); background: var(--color-sidebar-hover); }
+    .nav a[aria-current="page"] { color: var(--color-on-sidebar); background: rgb(115 255 160 / .17); }
+    .nav a[aria-current="page"] .icon { fill: currentColor; stroke-width: 1.3; }
+    .sidebar-foot { margin-top: auto; display: grid; gap: var(--space-3); }
+    .theme-label { color: var(--color-on-sidebar-muted); font-size: var(--font-size-12); font-weight: 700; }
+    .theme-switch { display: grid; grid-template-columns: repeat(2, 1fr); padding: .2rem; border: 1px solid rgb(255 255 255 / .18); border-radius: var(--radius-pill); background: rgb(0 0 0 / .12); }
+    .theme-switch button { min-height: 2rem; border: 0; border-radius: var(--radius-pill); color: var(--color-on-sidebar-muted); background: transparent; font-size: var(--font-size-12); font-weight: 700; }
+    .theme-switch button[aria-pressed="true"] { color: var(--color-brand-ink); background: var(--color-secondary); }
+    .account { padding-top: var(--space-3); border-top: 1px solid rgb(255 255 255 / .18); display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: var(--space-2); }
+    .avatar { width: 2rem; height: 2rem; border-radius: 50%; display: grid; place-items: center; color: var(--color-brand-ink); background: var(--color-secondary); font-size: var(--font-size-12); font-weight: 800; }
+    .account strong, .account small { display: block; }
+    .account small { color: var(--color-on-sidebar-muted); }
+    .icon-button { width: 2.25rem; height: 2.25rem; padding: 0; border: 0; border-radius: var(--radius-pill); color: inherit; background: transparent; display: grid; place-items: center; }
+    .sidebar .icon-button:hover, .mobile-bar .icon-button:hover { background: var(--color-sidebar-hover); }
     .main { min-width: 0; }
     .mobile-bar { display: none; }
-    .topbar {
-      height: 70px; padding: 0 var(--space-8); display: flex; align-items: center; justify-content: space-between;
-      background: rgb(255 255 255 / .82); border-bottom: 1px solid var(--color-border);
-    }
-    .topbar h1 { margin: 0; font-size: var(--font-size-20); letter-spacing: -.02em; }
-    .topbar p { margin: 2px 0 0; color: var(--color-text-muted); font-size: 12px; }
-    .avatar { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: var(--color-accent-soft); color: var(--color-accent); font-weight: 700; }
-    .content { max-width: 1220px; margin: 0 auto; padding: var(--space-8); }
-    .page-head { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: var(--space-6); margin-bottom: var(--space-6); }
-    .eyebrow { margin: 0 0 var(--space-2); color: var(--color-accent); font-weight: 700; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; }
-    h2 { margin: 0; font-size: var(--font-size-32); line-height: var(--line-tight); letter-spacing: -.035em; }
-    .lede { margin: var(--space-2) 0 0; max-width: 62ch; color: var(--color-text-muted); }
-    .button-row { display: flex; gap: var(--space-2); flex-wrap: wrap; }
-    .btn {
-      border: 1px solid transparent; border-radius: var(--radius-pill); padding: 9px 14px; font-weight: 650;
-      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-      transition: transform var(--duration-fast) var(--ease-out), background var(--duration-fast) ease, border-color var(--duration-fast) ease;
-    }
+    .content { width: min(100%, var(--content-max)); margin: 0 auto; padding: var(--space-3) var(--space-4) var(--space-10); }
+    .page-head { margin-bottom: var(--space-5); display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); }
+    .page-head h1 { margin: 0; font-size: var(--font-size-24); letter-spacing: -.025em; }
+    .page-head time { display: block; margin-top: .15rem; color: var(--color-text-muted); font-size: var(--font-size-12); }
+    .btn { min-height: 2.5rem; padding: .58rem .95rem; border: 1px solid transparent; border-radius: var(--radius-pill); display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); font-weight: 750; transition: background var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out); }
     .btn:active { transform: translateY(1px); }
-    .btn-primary { background: var(--color-accent); color: var(--color-on-accent); }
-    .btn-primary:hover { background: var(--color-accent-hover); }
-    .btn-secondary { background: var(--color-surface); border-color: var(--color-border); color: var(--color-text); }
+    .btn-primary { color: var(--color-on-primary); background: var(--color-primary); }
+    .btn-primary:hover { background: var(--color-primary-hover); }
+    .btn-highlight { color: var(--color-on-secondary); background: var(--color-secondary); }
+    .btn-highlight:hover { background: var(--color-secondary-strong); }
+    .btn-secondary { color: var(--color-text); border-color: var(--color-border); background: var(--color-surface); }
     .btn-secondary:hover { border-color: var(--color-border-strong); background: var(--color-surface-subtle); }
-    .btn-highlight { background: var(--color-secondary); color: var(--color-on-secondary); }
-    .btn-highlight:hover { filter: brightness(.96); }
-    .btn-danger { background: var(--color-danger); color: #fff; }
-    .btn:disabled { cursor: not-allowed; opacity: .48; transform: none; }
-    .grid { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(290px, .75fr); gap: var(--space-5); }
-    .panel { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); }
-    .panel-head { padding: var(--space-5); border-bottom: 1px solid var(--color-border); display: flex; justify-content: space-between; align-items: center; gap: var(--space-4); }
-    .panel-head h3 { margin: 0; font-size: var(--font-size-16); }
-    .panel-head span { color: var(--color-text-muted); font-size: 12px; }
-    .timeline { padding: var(--space-2) var(--space-5) var(--space-5); }
-    .appointment {
-      display: grid; grid-template-columns: 74px 5px 1fr auto; gap: var(--space-3); align-items: start;
-      padding: var(--space-4) 0; border-bottom: 1px solid var(--color-border);
-    }
+    .metrics { margin-bottom: var(--space-4); display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-3); }
+    .metric, .panel { border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface); box-shadow: var(--shadow-sm); }
+    .metric { min-height: 7rem; padding: var(--space-4); display: grid; align-content: space-between; }
+    .metric-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); color: var(--color-text-muted); font-size: var(--font-size-12); font-weight: 700; }
+    .metric-icon { width: 2rem; height: 2rem; border-radius: var(--radius-md); display: grid; place-items: center; color: var(--color-primary); background: var(--color-primary-soft); }
+    .metric strong { font-size: var(--font-size-24); line-height: 1; }
+    .workspace { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(17rem, .7fr); gap: var(--space-4); align-items: start; }
+    .panel-head { min-height: 4.1rem; padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--color-border); display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+    .panel-head h2, .panel-head h3 { margin: 0; font-size: var(--font-size-16); }
+    .segmented { padding: .2rem; border: 1px solid var(--color-border); border-radius: var(--radius-pill); display: flex; background: var(--color-surface-subtle); }
+    .segmented button { width: 2.1rem; height: 1.9rem; padding: 0; border: 0; border-radius: var(--radius-pill); color: var(--color-text-muted); background: transparent; display: grid; place-items: center; }
+    .segmented button[aria-pressed="true"] { color: var(--color-primary); background: var(--color-surface); box-shadow: var(--shadow-sm); }
+    .appointments { padding: 0 var(--space-4) var(--space-2); }
+    .appointment { padding: var(--space-3) 0; border-bottom: 1px solid var(--color-border); display: grid; grid-template-columns: 4.25rem .3rem minmax(0, 1fr) auto; gap: var(--space-3); align-items: center; }
     .appointment:last-child { border-bottom: 0; }
-    .time { font-family: var(--font-mono); font-weight: 700; font-variant-numeric: tabular-nums; }
-    .duration { display: block; color: var(--color-text-soft); font: 11px var(--font-sans); margin-top: 2px; }
-    .rail { width: 5px; height: 42px; border-radius: var(--radius-pill); background: var(--color-accent); }
+    .time { align-self: start; font-family: var(--font-mono); font-weight: 800; }
+    .time small { display: block; color: var(--color-text-soft); font: var(--font-size-12) var(--font-sans); }
+    .rail { width: .3rem; height: 2.6rem; border-radius: var(--radius-pill); background: var(--color-info); }
     .rail.confirmed { background: var(--color-success); }
+    .rail.attended { background: var(--color-secondary-strong); }
     .rail.absent { background: var(--color-warning); }
-    .appointment strong { display: block; font-size: 14px; }
-    .appointment p { margin: 3px 0 0; color: var(--color-text-muted); font-size: 12px; }
-    .badge { display: inline-flex; align-items: center; gap: 6px; border-radius: var(--radius-pill); padding: 5px 9px; font-size: 11px; font-weight: 700; white-space: nowrap; }
-    .badge::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
-    .badge-programmed { color: var(--color-info); background: var(--color-info-soft); }
-    .badge-confirmed { color: var(--color-success); background: var(--color-success-soft); }
-    .badge-absent { color: var(--color-warning); background: var(--color-warning-soft); }
-    .badge-cancelled { color: var(--color-danger); background: var(--color-danger-soft); text-decoration: line-through; }
-    .side-stack { display: grid; gap: var(--space-5); align-content: start; }
-    .form { padding: var(--space-5); display: grid; gap: var(--space-4); }
-    .field { display: grid; gap: 6px; }
-    .field label { font-weight: 650; font-size: 12px; }
-    .field small { color: var(--color-text-muted); }
-    .control {
-      width: 100%; border: 1px solid var(--color-border-strong); background: var(--color-surface); color: var(--color-text);
-      border-radius: var(--radius-sm); padding: 10px 11px; transition: border-color var(--duration-fast) ease, box-shadow var(--duration-fast) ease;
-    }
+    .appointment strong { display: block; }
+    .appointment p { margin: .1rem 0 0; color: var(--color-text-muted); font-size: var(--font-size-12); }
+    .badge { min-height: 1.7rem; padding: .3rem .55rem; border-radius: var(--radius-pill); display: inline-flex; align-items: center; gap: .35rem; white-space: nowrap; font-size: .68rem; font-weight: 800; }
+    .badge::before { content: ""; width: .38rem; height: .38rem; border-radius: 50%; background: currentColor; }
+    .programmed { color: var(--color-info); background: var(--color-info-soft); }
+    .confirmed, .attended { color: var(--color-success); background: var(--color-success-soft); }
+    .absent { color: var(--color-warning); background: var(--color-warning-soft); }
+    .quick { padding: var(--space-4); display: grid; gap: var(--space-3); }
+    .quick .btn { width: 100%; justify-content: flex-start; }
+    .field { display: grid; gap: .35rem; }
+    .field label { font-size: var(--font-size-12); font-weight: 750; }
+    .control { width: 100%; min-height: 2.55rem; padding: .55rem .7rem; border: 1px solid var(--color-border-strong); border-radius: var(--radius-sm); color: var(--color-text); background: var(--color-surface); }
     .control:hover { border-color: var(--color-primary); }
     .control[aria-invalid="true"] { border-color: var(--color-danger); }
-    .error { color: var(--color-danger); font-size: 12px; }
-    .alert { margin: var(--space-5); padding: var(--space-4); border-radius: var(--radius-md); display: grid; grid-template-columns: auto 1fr; gap: var(--space-3); }
-    .alert-warning { background: var(--color-warning-soft); color: #664817; border: 1px solid #ead5a8; }
-    .alert svg { width: 19px; height: 19px; margin-top: 1px; }
-    .alert strong { display: block; }
-    .alert p { margin: 3px 0 0; font-size: 12px; }
-    .states { margin-top: var(--space-6); display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-5); }
-    .state-demo { padding: var(--space-5); }
-    .state-demo h3 { margin: 0 0 var(--space-4); }
-    .empty { min-height: 180px; display: grid; place-items: center; text-align: center; padding: var(--space-6); border: 1px dashed var(--color-border-strong); border-radius: var(--radius-md); background: var(--color-surface-subtle); }
-    .empty-icon { width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; margin: 0 auto var(--space-3); background: var(--color-accent-soft); color: var(--color-accent); }
-    .empty h4 { margin: 0; }
-    .empty p { margin: 5px auto 0; max-width: 34ch; color: var(--color-text-muted); font-size: 12px; }
-    .skeletons { display: grid; gap: var(--space-3); }
-    .skeleton { height: 14px; border-radius: var(--radius-pill); background: linear-gradient(90deg, var(--color-surface-subtle), #f7faf9, var(--color-surface-subtle)); background-size: 200% 100%; animation: shimmer 1.6s linear infinite; }
-    .skeleton:nth-child(2) { width: 78%; }
-    .skeleton:nth-child(3) { width: 56%; }
-    @keyframes shimmer { to { background-position: -200% 0; } }
-    .modal-reference { margin-top: var(--space-6); padding: var(--space-5); }
-    .modal-reference > h3 { margin: 0 0 var(--space-4); }
-    .modal-stage { min-height: 360px; padding: var(--space-6); display: grid; place-items: center; background: var(--color-surface-subtle); border-radius: var(--radius-md); }
-    .modal-shell { width: min(460px, 100%); max-height: min(90vh, 560px); display: grid; grid-template-rows: auto minmax(0, 1fr) auto; overflow: hidden; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); box-shadow: var(--shadow-md); }
-    .modal-head, .modal-foot { padding: var(--space-4) var(--space-5); display: flex; align-items: center; gap: var(--space-3); }
+    .error { color: var(--color-danger); font-size: var(--font-size-12); }
+    .states { margin-top: var(--space-4); display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+    .state { padding: var(--space-4); }
+    .state h3 { margin: 0 0 var(--space-3); font-size: var(--font-size-14); }
+    .empty { min-height: 9rem; padding: var(--space-4); border: 1px dashed var(--color-border-strong); border-radius: var(--radius-md); display: grid; place-items: center; text-align: center; background: var(--color-surface-subtle); }
+    .empty strong { display: block; }
+    .empty p { max-width: 32ch; margin: .25rem auto 0; color: var(--color-text-muted); font-size: var(--font-size-12); }
+    .alert { padding: var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-md); display: flex; gap: var(--space-3); color: var(--color-warning); background: var(--color-warning-soft); }
+    .alert strong { display: block; color: var(--color-text); }
+    .alert p { margin: .15rem 0 0; color: var(--color-text-muted); font-size: var(--font-size-12); }
+    .modal-reference { margin-top: var(--space-4); overflow: hidden; }
+    .modal-stage { min-height: 29rem; padding: var(--space-5); display: grid; place-items: center; background: var(--color-scrim); }
+    .modal { width: min(100%, 32rem); max-height: calc(100dvh - 2rem); overflow: hidden; border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface); box-shadow: var(--shadow-md); display: grid; grid-template-rows: auto minmax(0, 1fr) auto; }
+    .modal-head, .modal-foot { padding: var(--space-4); display: flex; align-items: center; gap: var(--space-3); }
     .modal-head { justify-content: space-between; border-bottom: 1px solid var(--color-border); }
-    .modal-head h4 { margin: 0; font-size: var(--font-size-20); }
-    .modal-head p { margin: 2px 0 0; color: var(--color-text-muted); font-size: 12px; }
-    .modal-body { padding: var(--space-5); overflow-y: auto; }
+    .modal-head h3 { margin: 0; font-size: var(--font-size-20); }
+    .modal-body { padding: var(--space-4); overflow-y: auto; display: grid; gap: var(--space-4); }
     .modal-foot { justify-content: flex-end; border-top: 1px solid var(--color-border); }
-    .icon-button { width: 36px; height: 36px; padding: 0; border: 0; border-radius: var(--radius-pill); background: transparent; color: var(--color-text-muted); }
-    .icon-button:hover { background: var(--color-surface-subtle); color: var(--color-text); }
-    .token-strip { margin-top: var(--space-6); padding: var(--space-5); display: flex; align-items: center; gap: var(--space-3); overflow: hidden; }
-    .swatch { width: 34px; height: 34px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 0 0 1px var(--color-border); flex: 0 0 auto; }
-    .token-strip p { margin: 0 0 0 var(--space-2); color: var(--color-text-muted); }
-    @media (hover: hover) and (pointer: fine) {
-      .btn:hover { transform: translateY(-1px); }
-      .btn:active { transform: translateY(1px); }
-    }
-    @media (max-width: 820px) {
-      .shell { display: block; }
+    .token-strip { margin-top: var(--space-4); padding: var(--space-4); display: flex; align-items: center; gap: var(--space-2); overflow: auto; }
+    .swatch { width: 2rem; height: 2rem; flex: 0 0 auto; border: 2px solid var(--color-surface); border-radius: 50%; box-shadow: 0 0 0 1px var(--color-border); }
+    .token-strip p { margin: 0 0 0 var(--space-2); color: var(--color-text-muted); white-space: nowrap; font-size: var(--font-size-12); }
+    @media (hover: hover) and (pointer: fine) { .btn:hover { transform: translateY(-1px); } }
+    @media (max-width: 980px) { .metrics { grid-template-columns: repeat(2, 1fr); } .workspace { grid-template-columns: 1fr; } }
+    @media (max-width: 720px) {
+      .shell { display: block; padding: 0; }
       .sidebar { display: none; }
-      .mobile-bar { height: 58px; display: flex; align-items: center; justify-content: space-between; padding: 0 var(--space-4); background: #0b1e4d; color: #fff; }
-      .mobile-brand { display: flex; align-items: center; gap: var(--space-2); font-weight: 700; }
-      .mobile-brand .brand-mark { width: 32px; height: 32px; }
-      .topbar { height: auto; padding: var(--space-4); align-items: flex-start; }
-      .topbar h1 { font-size: var(--font-size-16); }
+      .mobile-bar { min-height: 4rem; padding: var(--space-3) var(--space-4); color: var(--color-on-sidebar); background: var(--color-sidebar); display: flex; align-items: center; justify-content: space-between; }
+      .mobile-brand, .mobile-actions { display: flex; align-items: center; gap: var(--space-2); font-weight: 800; }
+      .mobile-bar .brand-mark { width: 2.25rem; height: 2.25rem; }
       .content { padding: var(--space-5) var(--space-4) var(--space-8); }
-      .page-head { grid-template-columns: 1fr; align-items: start; }
-      h2 { font-size: var(--font-size-24); }
-      .grid, .states { grid-template-columns: 1fr; }
-      .side-stack { order: -1; }
-      .appointment { grid-template-columns: 62px 4px 1fr; }
+      .page-head { align-items: flex-start; }
+      .page-head h1 { font-size: var(--font-size-20); }
+      .page-head .btn span { display: none; }
+      .metrics { grid-template-columns: 1fr 1fr; gap: var(--space-2); }
+      .metric { min-height: 6.6rem; padding: var(--space-3); }
+      .appointment { grid-template-columns: 3.8rem .25rem minmax(0, 1fr); align-items: start; }
       .appointment .badge { grid-column: 3; justify-self: start; }
-      .token-strip p { display: none; }
-      .modal-reference { padding: var(--space-4); }
-      .modal-stage { padding: var(--space-3); }
+      .states { grid-template-columns: 1fr; }
+      .modal-stage { min-height: 37rem; padding: var(--space-3); align-items: end; }
+      .modal-foot { display: grid; grid-template-columns: 1fr 1fr; }
+      .modal-foot .btn { width: 100%; }
     }
   </style>
 </head>
 <body>
   <div class="shell">
     <aside class="sidebar" aria-label="Navegación principal">
-      <div class="brand">
-        <div class="brand-mark" aria-hidden="true">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M8 15l2 2 5-5"/></svg>
-        </div>
-        <div class="brand-copy"><strong data-brand-name>Turnos Odontología</strong><span>Nombre provisional</span></div>
-      </div>
+      <div class="brand"><span class="brand-mark" aria-hidden="true">✦</span><span data-brand-name>OdoSoft</span></div>
       <nav class="nav">
-        <a href="#" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Agenda</a>
-        <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M16 11h6"/></svg>Pacientes</a>
-        <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 5h16M4 12h16M4 19h16"/><circle cx="8" cy="5" r="2"/><circle cx="16" cy="12" r="2"/><circle cx="10" cy="19" r="2"/></svg>Configuración</a>
+        <a href="#" aria-current="page"><svg class="icon" viewBox="0 0 24 24"><path d="M4 13h6V4H4v9Zm10 7h6V11h-6v9ZM4 20h6v-3H4v3Zm10-13h6V4h-6v3Z"/></svg>Inicio</a>
+        <a href="#"><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Agenda</a>
+        <a href="#"><svg class="icon" viewBox="0 0 24 24"><circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0M17 8h5M19.5 5.5v5"/></svg>Pacientes</a>
+        <a href="#"><svg class="icon" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="8" cy="6" r="2"/><circle cx="16" cy="12" r="2"/><circle cx="10" cy="18" r="2"/></svg>Prestaciones</a>
+        <a href="#"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg>Configuración</a>
       </nav>
-      <p class="sidebar-note">Referencia visual de fundación. Todos los nombres y datos son ficticios.</p>
+      <div class="sidebar-foot">
+        <span class="theme-label">Tema</span>
+        <div class="theme-switch" aria-label="Elegir tema"><button type="button" data-theme-choice="light" aria-pressed="true">Claro</button><button type="button" data-theme-choice="dark" aria-pressed="false">Oscuro</button></div>
+        <div class="account"><span class="avatar">PO</span><span><strong>Pablo</strong><small>Odontólogo</small></span><button class="icon-button" aria-label="Cerrar sesión"><svg class="icon" viewBox="0 0 24 24"><path d="M10 17l5-5-5-5M15 12H3M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/></svg></button></div>
+      </div>
     </aside>
 
     <main class="main">
-      <div class="mobile-bar">
-        <div class="mobile-brand"><div class="brand-mark" aria-hidden="true"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></div><span data-brand-name>Turnos Odontología</span></div>
-        <span class="badge badge-confirmed">En línea</span>
-      </div>
-      <header class="topbar">
-        <div><h1>Agenda del consultorio</h1><p>Zona horaria: Buenos Aires · UTC−03:00</p></div>
-        <div class="avatar" aria-label="Perfil de odontólogo ficticio">LM</div>
+      <header class="mobile-bar">
+        <div class="mobile-brand"><span class="brand-mark" aria-hidden="true">✦</span><span data-brand-name>OdoSoft</span></div>
+        <div class="mobile-actions"><button class="icon-button" type="button" data-mobile-theme aria-label="Cambiar tema"><svg class="icon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/></svg></button><button class="icon-button" aria-label="Abrir menú"><svg class="icon" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button></div>
       </header>
 
       <div class="content">
-        <section class="page-head">
-          <div><p class="eyebrow">Martes 24 de noviembre</p><h2>Una agenda clara, sin superposiciones</h2><p class="lede">Los estados, intervalos y excepciones se muestran de forma explícita para tomar decisiones rápidas.</p></div>
-          <div class="button-row"><button class="btn btn-secondary">Bloquear horario</button><button class="btn btn-primary">Nuevo turno</button><button class="btn btn-highlight">Confirmar agenda</button></div>
+        <header class="page-head">
+          <div><h1>Buen día, Pablo</h1><time datetime="2026-11-24">Martes 24 de noviembre</time></div>
+          <button class="btn btn-highlight"><svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span>Nuevo turno</span></button>
+        </header>
+
+        <section class="metrics" aria-label="Resumen del día">
+          <article class="metric"><div class="metric-head"><span>Turnos de hoy</span><span class="metric-icon"><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></span></div><strong>8</strong></article>
+          <article class="metric"><div class="metric-head"><span>Confirmados</span><span class="metric-icon"><svg class="icon" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></svg></span></div><strong>4</strong></article>
+          <article class="metric"><div class="metric-head"><span>Pendientes</span><span class="metric-icon"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span></div><strong>3</strong></article>
+          <article class="metric"><div class="metric-head"><span>Próximo turno</span><span class="metric-icon"><svg class="icon" viewBox="0 0 24 24"><path d="M12 6v6l4 2"/><circle cx="12" cy="12" r="9"/></svg></span></div><strong>09:00</strong></article>
         </section>
 
-        <div class="grid">
-          <section class="panel">
-            <div class="panel-head"><div><h3>Turnos de hoy</h3><span>3 turnos · Sillones 1 y 2</span></div><span class="badge badge-programmed">Actualizado</span></div>
-            <div class="timeline">
-              <article class="appointment"><div class="time">09:00<span class="duration">45 + 10 min</span></div><div class="rail confirmed"></div><div><strong>Martina Ferreyra</strong><p>Control odontológico · Sillón 1</p></div><span class="badge badge-confirmed">Confirmado</span></article>
-              <article class="appointment"><div class="time">10:10<span class="duration">60 + 10 min</span></div><div class="rail"></div><div><strong>Tomás Villalba</strong><p>Restauración simple · Sillón 2</p></div><span class="badge badge-programmed">Programado</span></article>
-              <article class="appointment"><div class="time">11:30<span class="duration">30 + 0 min</span></div><div class="rail absent"></div><div><strong>Elena Mansilla</strong><p>Consulta inicial · Sillón 1</p></div><span class="badge badge-absent">Ausente</span></article>
+        <div class="workspace">
+          <section class="panel" aria-labelledby="agenda-title">
+            <header class="panel-head"><h2 id="agenda-title">Agenda de hoy</h2><div class="segmented" aria-label="Vista de agenda"><button aria-label="Vista de lista" aria-pressed="true"><svg class="icon" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></button><button aria-label="Vista de grilla" aria-pressed="false"><svg class="icon" viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6"/><rect x="14" y="4" width="6" height="6"/><rect x="4" y="14" width="6" height="6"/><rect x="14" y="14" width="6" height="6"/></svg></button></div></header>
+            <div class="appointments">
+              <article class="appointment"><div class="time">09:00<small>45 + 10 min</small></div><span class="rail confirmed"></span><div><strong>Martina Ferreyra</strong><p>Control odontológico · Sillón 1</p></div><span class="badge confirmed">Confirmado</span></article>
+              <article class="appointment"><div class="time">10:10<small>60 + 10 min</small></div><span class="rail"></span><div><strong>Tomás Villalba</strong><p>Restauración simple · Sillón 2</p></div><span class="badge programmed">Programado</span></article>
+              <article class="appointment"><div class="time">11:30<small>30 + 0 min</small></div><span class="rail attended"></span><div><strong>Elena Mansilla</strong><p>Consulta inicial · Sillón 1</p></div><span class="badge attended">Atendido</span></article>
+              <article class="appointment"><div class="time">12:30<small>30 + 10 min</small></div><span class="rail absent"></span><div><strong>Lucas Roldán</strong><p>Control odontológico · Sillón 1</p></div><span class="badge absent">Ausente</span></article>
             </div>
           </section>
-
-          <div class="side-stack">
-            <section class="panel">
-              <div class="panel-head"><div><h3>Crear turno</h3><span>Formulario de referencia</span></div></div>
-              <form class="form">
-                <div class="field"><label for="patient">Paciente</label><input class="control" id="patient" value="Martina Ferreyra"><small>Nombre o teléfono.</small></div>
-                <div class="field"><label for="service">Prestación</label><select class="control" id="service"><option>Control odontológico · 45 min</option></select></div>
-                <div class="field"><label for="interval">Intervalo posterior</label><input class="control" id="interval" value="35 min" aria-invalid="true"><span class="error">Debe estar entre 0 y 30 minutos.</span></div>
-                <div class="button-row"><button type="button" class="btn btn-primary">Revisar disponibilidad</button><button type="button" class="btn btn-secondary" disabled>Guardar</button></div>
-              </form>
-            </section>
-            <section class="panel"><div class="alert alert-warning"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.8 2.7 17a2 2 0 0 0 1.7 3h15.2a2 2 0 0 0 1.7-3L13.7 3.8a2 2 0 0 0-3.4 0Z"/></svg><div><strong>Horario fuera de disponibilidad</strong><p>Podés continuar como excepción si agregás un motivo. Los solapamientos nunca se pueden ignorar.</p></div></div></section>
-          </div>
+          <aside class="panel" aria-labelledby="quick-title"><header class="panel-head"><h3 id="quick-title">Accesos rápidos</h3></header><div class="quick"><button class="btn btn-primary">＋ Nuevo turno</button><button class="btn btn-secondary">＋ Nuevo paciente</button><button class="btn btn-secondary">Ver agenda</button></div></aside>
         </div>
 
-        <div class="states">
-          <section class="panel state-demo"><h3>Estado vacío</h3><div class="empty"><div><div class="empty-icon"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 6h16M4 12h10M4 18h7"/></svg></div><h4>No hay turnos en este horario</h4><p>Creá un turno o registrá un bloqueo para mantener la agenda actualizada.</p></div></div></section>
-          <section class="panel state-demo"><h3>Estado de carga</h3><div class="skeletons" aria-label="Cargando agenda"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div><div class="button-row" style="margin-top:24px"><button class="btn btn-danger">Cancelar turno</button><button class="btn btn-secondary">Ver historial</button></div></section>
-        </div>
+        <section class="states" aria-label="Estados de componentes">
+          <article class="panel state"><h3>Estado vacío</h3><div class="empty"><div><strong>No hay turnos en este horario</strong><p>Creá un turno o registrá un bloqueo.</p></div></div></article>
+          <article class="panel state"><h3>Validación y alerta</h3><div class="field"><label for="interval">Intervalo posterior</label><input class="control" id="interval" value="35 min" aria-invalid="true"><span class="error">Debe estar entre 0 y 30 minutos.</span></div><div class="alert" style="margin-top:1rem"><svg class="icon" viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.8 2.7 17a2 2 0 0 0 1.7 3h15.2a2 2 0 0 0 1.7-3L13.7 3.8a2 2 0 0 0-3.4 0Z"/></svg><div><strong>Fuera de disponibilidad</strong><p>La excepción requiere un motivo.</p></div></div></article>
+        </section>
 
-        <section class="panel modal-reference">
-          <h3>Modal administrativo</h3>
+        <section class="panel modal-reference" aria-labelledby="modal-reference-title">
+          <header class="panel-head"><h2 id="modal-reference-title">Alta de turno en modal</h2></header>
           <div class="modal-stage">
-            <article class="modal-shell" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-              <header class="modal-head"><div><h4 id="modal-title">Confirmar nuevo turno</h4><p>Revisá los datos antes de guardar.</p></div><button class="icon-button" aria-label="Cerrar modal">×</button></header>
-              <div class="modal-body"><div class="field"><label>Paciente</label><strong>Martina Ferreyra</strong><small>Control odontológico · 45 min · Sillón 1</small></div><div class="alert alert-warning" style="margin:20px 0 0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.8 2.7 17a2 2 0 0 0 1.7 3h15.2a2 2 0 0 0 1.7-3L13.7 3.8a2 2 0 0 0-3.4 0Z"/></svg><div><strong>Intervalo posterior: 10 minutos</strong><p>El próximo horario disponible comienza a las 09:55.</p></div></div></div>
-              <footer class="modal-foot"><button class="btn btn-secondary">Volver</button><button class="btn btn-primary">Guardar turno</button></footer>
+            <article class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+              <header class="modal-head"><h3 id="modal-title">Nuevo turno</h3><button class="icon-button" aria-label="Cerrar modal">×</button></header>
+              <div class="modal-body">
+                <div class="field"><label for="patient">Paciente</label><input class="control" id="patient" value="Martina Ferreyra"></div>
+                <div class="field"><label for="service">Prestación</label><select class="control" id="service"><option>Control odontológico · 45 min</option></select></div>
+                <div class="field"><label for="chair">Sillón</label><select class="control" id="chair"><option>Sillón 1</option></select></div>
+                <div class="field"><label for="date">Fecha y hora</label><input class="control" id="date" value="24/11/2026 · 09:00"></div>
+              </div>
+              <footer class="modal-foot"><button class="btn btn-secondary">Cancelar</button><button class="btn btn-primary">Guardar turno</button></footer>
             </article>
           </div>
         </section>
 
-        <section class="panel token-strip" aria-label="Paleta principal">
-          <div class="swatch" style="background:#0d3d9e" title="Primario"></div><div class="swatch" style="background:#73ffa0" title="Secundario"></div><div class="swatch" style="background:#eaf1fc" title="Tinte"></div><div class="swatch" style="background:#f5f8ff" title="Canvas"></div><div class="swatch" style="background:#0f172a" title="Texto"></div><div class="swatch" style="background:#a84a4a" title="Peligro"></div><p>Paleta de revisión 1 · azul profundo como primario y verde fluorescente para énfasis puntual.</p>
-        </section>
+        <section class="panel token-strip" aria-label="Paleta principal"><span class="swatch" style="background:#0d3d9e"></span><span class="swatch" style="background:#73ffa0"></span><span class="swatch" style="background:var(--color-surface)"></span><span class="swatch" style="background:var(--color-canvas)"></span><span class="swatch" style="background:var(--color-text)"></span><p>Revisión 2 · tokens semánticos para claro y oscuro.</p></section>
       </div>
     </main>
   </div>
   <script src="brand.js"></script>
+  <script>
+    (() => {
+      const root = document.documentElement;
+      const choices = [...document.querySelectorAll('[data-theme-choice]')];
+      const setTheme = (theme) => {
+        root.dataset.theme = theme;
+        choices.forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.themeChoice === theme)));
+      };
+      choices.forEach((button) => button.addEventListener('click', () => setTheme(button.dataset.themeChoice)));
+      document.querySelector('[data-mobile-theme]')?.addEventListener('click', () => setTheme(root.dataset.theme === 'dark' ? 'light' : 'dark'));
+    })();
+  </script>
 </body>
 </html>

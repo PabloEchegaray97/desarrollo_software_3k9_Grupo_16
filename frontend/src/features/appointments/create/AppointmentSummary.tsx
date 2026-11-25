@@ -9,10 +9,11 @@ interface AppointmentSummaryProps {
   procedureName: string
   chairName: string
   onCreateAnother: () => void
+  onClose?: () => void
 }
 
 /** Presenta el turno tal como lo guardó el backend, en la hora local del consultorio. */
-export function AppointmentSummary({ appointment, patientName, procedureName, chairName, onCreateAnother }: AppointmentSummaryProps) {
+export function AppointmentSummary({ appointment, patientName, procedureName, chairName, onCreateAnother, onClose }: AppointmentSummaryProps) {
   const rows: Array<[string, string]> = [
     ['Paciente', patientName],
     ['Prestación', procedureName],
@@ -40,8 +41,9 @@ export function AppointmentSummary({ appointment, patientName, procedureName, ch
         ))}
       </dl>
       <div className="apt-actions">
-        <Link className="adm-button adm-button--ghost" to="/agenda">Ver agenda</Link>
+        <Link className="adm-button adm-button--ghost" to={`/turnos/${appointment.id}`}>Ver turno</Link>
         <Button variant="primary" onClick={onCreateAnother}>Crear otro turno</Button>
+        {onClose ? <Button variant="secondary" onClick={onClose}>Cerrar</Button> : null}
       </div>
     </section>
   )

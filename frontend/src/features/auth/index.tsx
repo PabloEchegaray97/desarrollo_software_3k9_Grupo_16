@@ -2,7 +2,7 @@ import { Navigate, useLocation } from 'react-router-dom'
 import { LoginForm } from './LoginForm'
 import { useSession } from './session'
 
-export const DEFAULT_DESTINATION = '/agenda'
+export const DEFAULT_DESTINATION = '/'
 
 /** Solo acepta rutas internas para evitar redirecciones abiertas. */
 export function safeDestination(state: unknown): string {
@@ -22,7 +22,7 @@ export function AuthPage() {
 
   return (
     <section className="auth-card" aria-labelledby="auth-title">
-      <div className="auth-card__brand" aria-hidden="true"><span className="auth-card__mark">+</span> Agenda odontológica</div>
+      <div className="auth-card__brand"><span className="auth-card__mark" aria-hidden="true">O</span> OdoSoft</div>
       <h1 className="auth-card__title" id="auth-title">Ingresar</h1>
       <p className="auth-card__lead">Accedé con el email y la contraseña del consultorio.</p>
       <LoginForm onSuccess={signIn} />

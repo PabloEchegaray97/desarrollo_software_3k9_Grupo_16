@@ -80,7 +80,7 @@
   border: 1px solid var(--color-border); border-radius: var(--radius-lg);
   color: var(--color-text); background: var(--color-surface); box-shadow: var(--shadow-md);
 }
-.adm-modal::backdrop { background: rgb(15 23 42 / 0.45); }
+.adm-modal::backdrop { background: var(--color-overlay); }
 .adm-modal__shell { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; max-height: inherit; }
 .adm-modal__header { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-3); padding: var(--space-5) var(--space-5) var(--space-3); }
 .adm-modal__title { margin: 0; color: var(--color-primary); font-size: var(--font-size-20); }
