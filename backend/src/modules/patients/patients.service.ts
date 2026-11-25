@@ -2,10 +2,12 @@ import { randomUUID } from 'node:crypto';
 import { Injectable } from '@nestjs/common';
 import { Brackets, Not, type Repository } from 'typeorm';
 import { DatabaseConnectionService } from '../../database/database-connection.service.js';
+import { AppointmentEntity } from '../appointments/core/entities/appointment.entity.js';
 import type {
   DuplicateCandidate,
   Paginated,
   PatientInputDto,
+  PatientDetailResponse,
   PatientListQueryDto,
   PatientResponse,
 } from './dto/patient.dto.js';
@@ -70,6 +72,57 @@ export class PatientsService {
 
   async findById(id: string): Promise<PatientResponse> {
     return toPatientResponse(await this.getEntity(id));
+  }
+
+  async findDetail(id: string): Promise<PatientDetailResponse> {
+    const patient = await this.getEntity(id);
+    const source = await this.database.ensureInitialized();
+    const appointments = await source.getRepository(AppointmentEntity).find({
+      where: { patientId: id },
+      relations: { procedure: true, chair: true },
+      order: { startsAt: 'DESC', id: 'ASC' },
+    });
+    const cancelled = appointments.filter((appointment) => appointment.status === 'CANCELADO').length;
+    const procedureCounts = new Map<string, { nombre: string; cantidad: number }>();
+    for (const appointment of appointments) {
+      const current = procedureCounts.get(appointment.procedureId);
+      procedureCounts.set(appointment.procedureId, {
+        nombre: appointment.procedure?.name ?? 'Prestación no disponible',
+        cantidad: (current?.cantidad ?? 0) + 1,
+      });
+    }
+    const mostFrequent = [...procedureCounts.values()].sort((left, right) =>
+      right.cantidad - left.cantidad || left.nombre.localeCompare(right.nombre, 'es'),
+    )[0]?.nombre ?? null;
+    const lastAttended = appointments.find((appointment) => appointment.status === 'ATENDIDO')?.startsAt ?? null;
+
+    return {
+      ...toPatientResponse(patient),
+      resumen: {
+        totalTurnos: appointments.length,
+        confirmados: appointments.filter((appointment) => appointment.status === 'CONFIRMADO').length,
+        atendidos: appointments.filter((appointment) => appointment.status === 'ATENDIDO').length,
+        cancelados: cancelled,
+        tasaCancelacion: appointments.length === 0 ? 0 : Math.round((cancelled / appointments.length) * 100),
+        ultimaAtencion: lastAttended,
+        prestacionMasFrecuente: mostFrequent,
+      },
+      turnos: appointments.map((appointment) => ({
+        id: appointment.id,
+        prestacion: {
+          id: appointment.procedureId,
+          nombre: appointment.procedure?.name ?? 'Prestación no disponible',
+        },
+        sillon: {
+          id: appointment.chairId,
+          nombre: appointment.chair?.name ?? 'Sillón no disponible',
+        },
+        estado: appointment.status,
+        inicio: appointment.startsAt,
+        finAtencion: appointment.careEndsAt,
+        duracionMinutos: appointment.durationMinutes,
+      })),
+    };
   }
 
   async create(input: PatientInputDto): Promise<PatientResponse> {

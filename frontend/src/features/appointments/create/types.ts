@@ -10,6 +10,7 @@ export interface AppointmentInput {
   intervaloPosteriorMinutos?: number
   fueraDisponibilidad?: boolean
   motivoExcepcion?: string
+  sobreturno?: boolean
 }
 
 export interface Appointment {

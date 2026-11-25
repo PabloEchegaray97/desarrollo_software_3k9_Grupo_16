@@ -87,12 +87,12 @@ describe('AppShell', () => {
     mockApi({ '/auth/sesion': () => authenticated })
     renderShell('/prestaciones')
     const nav = await screen.findByRole('navigation', { name: 'Navegación principal' })
-    for (const name of ['Inicio', 'Agenda', 'Pacientes', 'Servicios', 'Disponibilidad']) {
+    for (const name of ['Inicio', 'Agenda', 'Pacientes', 'Prestaciones', 'Disponibilidad']) {
       expect(within(nav).getByRole('link', { name })).toBeInTheDocument()
     }
-    expect(within(nav).getByRole('link', { name: 'Servicios' })).toHaveAttribute('aria-current', 'page')
+    expect(within(nav).getByRole('link', { name: 'Prestaciones' })).toHaveAttribute('aria-current', 'page')
     expect(screen.getByText(FICTIONAL_USER.email)).toBeInTheDocument()
-    expect(within(nav).getByRole('link', { name: 'Servicios' }).querySelector('svg'))
+    expect(within(nav).getByRole('link', { name: 'Prestaciones' }).querySelector('svg'))
       .toHaveAttribute('data-phosphor-weight', 'fill')
     expect(within(nav).getByRole('link', { name: 'Agenda' }).querySelector('svg'))
       .toHaveAttribute('data-phosphor-weight', 'regular')
@@ -127,33 +127,39 @@ describe('AppShell', () => {
     expect(localStorage.getItem('odosoft.theme')).toBe('dark')
   })
 
-  it('opens the mobile drawer, traps focus and closes with Escape, its button or a destination', async () => {
+  it('opens the mobile bottom sheet, traps focus and closes with Escape, its button or a destination', async () => {
     mockApi({ '/auth/sesion': () => authenticated })
     renderShell()
     const user = userEvent.setup()
-    const toggle = await screen.findByRole('button', { name: 'Abrir menú de navegación' })
+    await screen.findByRole('navigation', { name: 'Navegación principal' })
+    const mobileBar = document.querySelector('.shell-mobilebar') as HTMLElement
+    const toggle = await within(mobileBar).findByRole('button', { name: 'Abrir más opciones' })
     expect(toggle).toHaveAttribute('aria-expanded', 'false')
     await user.click(toggle)
-    const dialog = screen.getByRole('dialog', { name: 'Menú de navegación' })
+    const dialog = screen.getByRole('dialog', { name: 'Más opciones' })
     expect(toggle).toHaveAttribute('aria-expanded', 'true')
     expect(toggle).toHaveAttribute('aria-controls', dialog.id)
-    expect(screen.getByRole('heading', { name: 'Menú de navegación' })).toHaveFocus()
+    expect(screen.getByRole('heading', { name: 'Más opciones' })).toHaveFocus()
     await user.keyboard('{Escape}')
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Abrir menú de navegación' })).toHaveAttribute('aria-expanded', 'false')
-    expect(screen.getByRole('button', { name: 'Abrir menú de navegación' })).toHaveFocus()
+    expect(within(mobileBar).getByRole('button', { name: 'Abrir más opciones' })).toHaveAttribute('aria-expanded', 'false')
+    expect(within(mobileBar).getByRole('button', { name: 'Abrir más opciones' })).toHaveFocus()
 
-    await user.click(screen.getByRole('button', { name: 'Abrir menú de navegación' }))
-    await user.click(screen.getByRole('button', { name: 'Cerrar navegación' }))
+    await user.click(within(mobileBar).getByRole('button', { name: 'Abrir más opciones' }))
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Cerrar más opciones' }))
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Abrir menú de navegación' })).toHaveFocus()
+    expect(within(mobileBar).getByRole('button', { name: 'Abrir más opciones' })).toHaveFocus()
 
-    await user.click(screen.getByRole('button', { name: 'Abrir menú de navegación' }))
-    const mobileNav = within(screen.getByRole('dialog')).getByRole('navigation', { name: 'Navegación principal' })
-    await user.click(within(mobileNav).getByRole('link', { name: 'Agenda' }))
-    expect(await screen.findByRole('heading', { name: 'Agenda' })).toBeInTheDocument()
+    await user.click(within(mobileBar).getByRole('button', { name: 'Abrir más opciones' }))
+    const availabilityLink = within(screen.getByRole('dialog')).getByRole('link', { name: 'Disponibilidad' })
+    expect(availabilityLink).toHaveAttribute('href', '/disponibilidad')
+    await user.click(availabilityLink)
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Abrir menú de navegación' })).toHaveFocus()
+    expect(within(mobileBar).getByRole('button', { name: 'Abrir más opciones' })).toHaveFocus()
+
+    const bottomNav = screen.getByRole('navigation', { name: 'Navegación inferior' })
+    expect(within(bottomNav).getByRole('link', { name: 'Inicio' })).toHaveAttribute('href', '/')
+    expect(within(bottomNav).getByRole('link', { name: 'Agenda' })).toHaveAttribute('href', '/agenda')
   })
 
   it('signs out through the API and returns to the login screen', async () => {

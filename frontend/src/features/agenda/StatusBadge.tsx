@@ -20,7 +20,7 @@ function Shape({ shape }: { shape: StatusShape }) {
 export function StatusBadge({ estado }: { estado: AppointmentStatus }) {
   const { label, shape } = STATUS_PRESENTATION[estado]
   return (
-    <span className="agenda-badge" data-status={estado} data-shape={shape}>
+    <span className="agenda-badge appointment-status-badge" data-status={estado} data-shape={shape}>
       <Shape shape={shape} />
       <span>{label}</span>
     </span>

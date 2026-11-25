@@ -32,6 +32,9 @@ a:focus-visible, button:focus-visible { outline: none; box-shadow: var(--focus-r
 .state-card__action:active { transform: translateY(1px); background: var(--color-primary-pressed); }
 .state-card__action:disabled { cursor: wait; opacity: 0.7; }
 
+:root [data-sileo-viewport] { z-index: 1200; }
+:root [data-sileo-viewport] [data-sileo-description] { color: var(--color-text); font-weight: 400; }
+
 @media (prefers-reduced-motion: no-preference) {
   .state-card__action { transition: transform var(--duration-fast) var(--ease-out), background var(--duration-fast) var(--ease-out); }
 }

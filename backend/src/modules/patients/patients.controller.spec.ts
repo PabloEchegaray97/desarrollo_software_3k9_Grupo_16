@@ -14,6 +14,7 @@ describe('PatientsController (sin base de datos)', () => {
   const patients = {
     list: jest.fn(async () => ({ items: [], page: 1, pageSize: 20, total: 0 })),
     findById: jest.fn(async () => ({})),
+    findDetail: jest.fn(async () => ({ id: PATIENT_ID, resumen: {}, turnos: [] })),
     create: jest.fn(async () => ({ id: PATIENT_ID })),
     replace: jest.fn(async () => ({})),
     setActive: jest.fn(async () => ({})),
@@ -78,6 +79,11 @@ describe('PatientsController (sin base de datos)', () => {
 
     await request(app.getHttpServer()).patch(`/api/pacientes/${PATIENT_ID}/estado`).send({ activo: false }).expect(200);
     expect(patients.setActive).toHaveBeenCalledWith(PATIENT_ID, false);
+  });
+
+  it('consulta el detalle enriquecido del paciente', async () => {
+    await request(app.getHttpServer()).get(`/api/pacientes/${PATIENT_ID}/detalle`).expect(200);
+    expect(patients.findDetail).toHaveBeenCalledWith(PATIENT_ID);
   });
 
   it('rechaza ids que no son UUID y no expone DELETE', async () => {

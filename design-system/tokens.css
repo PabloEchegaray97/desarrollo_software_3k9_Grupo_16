@@ -55,21 +55,21 @@
   color-scheme: dark;
 
   /* Color semántico: tema oscuro, sin negro puro */
-  --color-canvas: #071426;
-  --color-surface: #0e2038;
-  --color-surface-subtle: #142a48;
+  --color-canvas: #000d21;
+  --color-surface: #000814;
+  --color-surface-subtle: #000c1c;
   --color-surface-strong: #1c385e;
   --color-text: #f3f7ff;
   --color-text-muted: #b8c6dc;
   --color-text-soft: #8799b5;
   --color-border: #263e60;
   --color-border-strong: #36577f;
-  --color-primary: #79a3ff;
+  --color-primary: #3d7bff;
   --color-primary-hover: #9ab9ff;
   --color-primary-pressed: #5f8de9;
   --color-primary-soft: #17396f;
   --color-on-primary: #071426;
-  --color-secondary: #73ffa0;
+  --color-secondary: #22ed62;
   --color-secondary-strong: #8dffb1;
   --color-on-secondary: #071d14;
   --color-accent: var(--color-primary);

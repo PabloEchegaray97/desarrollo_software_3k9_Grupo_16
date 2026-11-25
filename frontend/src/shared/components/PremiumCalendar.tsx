@@ -14,6 +14,7 @@ interface PremiumCalendarProps {
   showShell?: boolean
   className?: string
   eventCountByDate?: Readonly<Record<string, number>>
+  isDateDisabled?: (date: string) => boolean
 }
 
 const WEEKDAYS = ['D', 'L', 'M', 'M', 'J', 'V', 'S']
@@ -53,6 +54,7 @@ export function PremiumCalendar({
   showShell = true,
   className,
   eventCountByDate = {},
+  isDateDisabled,
 }: PremiumCalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(() => parseMonth(visibleMonth) ?? startOfMonth(parseDate(selectedDate) ?? new Date()))
 
@@ -81,7 +83,7 @@ export function PremiumCalendar({
     const parsed = parseDate(today) ?? new Date()
     setCurrentMonth(startOfMonth(parsed))
     onVisibleMonthChange?.(toMonthKey(parsed))
-    onDateSelect(today)
+    if (!isDateDisabled?.(today)) onDateSelect(today)
   }
 
   return (
@@ -105,9 +107,10 @@ export function PremiumCalendar({
           const date = `${year}-${pad2(month + 1)}-${pad2(day)}`
           const count = eventCountByDate[date] ?? 0
           const selected = date === selectedDate
+          const disabled = isDateDisabled?.(date) ?? false
           return (
             <div className="premium-calendar__cell" key={date}>
-              <button type="button" className="premium-calendar__day" aria-label={`Seleccionar día ${day}`} aria-pressed={selected} data-selected={selected} data-today={date === today} onClick={() => onDateSelect(date)}>
+              <button type="button" className="premium-calendar__day" disabled={disabled} aria-label={`Seleccionar día ${day}`} aria-pressed={selected} data-selected={selected} data-today={date === today} onClick={() => onDateSelect(date)}>
                 <span>{day}</span>
                 {count > 0 ? <i aria-hidden="true" /> : null}
               </button>

@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { Inject, Injectable } from '@nestjs/common';
 import type { EntityManager } from 'typeorm';
 import { AGENDA_CONFIGURATION_LOCK } from '../../../shared/database/transaction-boundary.js';
+import { ZONA_IANA } from '../../availability/availability.constants.js';
 import { AVAILABILITY_EVALUATION_PORT, type AvailabilityEvaluationPort } from '../../availability/availability.port.js';
 import { CatalogReferences } from '../../catalogs/catalog-references.js';
 import { PatientReferences } from '../../patients/patient-references.js';
@@ -91,21 +92,33 @@ export class CreateAppointmentService {
       if (evaluation.estado === 'DATOS_INVALIDOS' || evaluation.inicioUtc === null) throw invalidTime();
       const period = blockedPeriod(new Date(evaluation.inicioUtc), times);
 
-      // 5. Inicio no pasado, según el reloj del servidor.
-      if (period.startsAt.getTime() < this.clock.now().getTime()) throw startsInPast();
+      const todayLocalDate = new Intl.DateTimeFormat('en-CA', {
+        timeZone: ZONA_IANA,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      }).format(this.clock.now());
+      const isSobreturnoToday = input.sobreturno === true && input.fecha === todayLocalDate;
 
-      // 6. Conflictos antes que disponibilidad: el override nunca los exceptúa (RN-DI-06).
-      const conflicts = classifyConflicts(period, chair.id, await findBlockingConflicts(tx.manager, period));
-      if (conflicts) throw scheduleConflict(conflicts);
+      // 5. Inicio no pasado, según el reloj del servidor (anulado si es sobreturno para hoy).
+      if (!isSobreturnoToday && period.startsAt.getTime() < this.clock.now().getTime()) throw startsInPast();
 
-      // 7. Disponibilidad: solo FUERA_DE_DISPONIBILIDAD admite override justificado.
-      if (evaluation.estado === 'EXCEPCION_BLOQUEANTE') {
+      // 6. Conflictos antes que disponibilidad: el override nunca los exceptúa (RN-DI-06), salvo sobreturno hoy.
+      if (!isSobreturnoToday) {
+        const conflicts = classifyConflicts(period, chair.id, await findBlockingConflicts(tx.manager, period));
+        if (conflicts) throw scheduleConflict(conflicts);
+      }
+
+      // 7. Disponibilidad: solo FUERA_DE_DISPONIBILIDAD admite override justificado, salvo sobreturno hoy.
+      if (!isSobreturnoToday && evaluation.estado === 'EXCEPCION_BLOQUEANTE') {
         throw blockedByException(evaluation.tipoExcepcion, evaluation.motivoExcepcion);
       }
-      const outside = evaluation.estado === 'FUERA_DE_DISPONIBILIDAD';
-      if (outside && input.fueraDisponibilidad !== true) throw outsideAvailability(period);
-      const exceptionReason = outside ? (input.motivoExcepcion ?? null) : null;
-      if (outside && !exceptionReason) throw outsideAvailability(period);
+      const outside = evaluation.estado === 'FUERA_DE_DISPONIBILIDAD' || evaluation.estado === 'EXCEPCION_BLOQUEANTE';
+      if (!isSobreturnoToday && outside && input.fueraDisponibilidad !== true) throw outsideAvailability(period);
+      const exceptionReason = isSobreturnoToday && outside
+        ? (input.motivoExcepcion ?? 'Sobreturno')
+        : (outside ? (input.motivoExcepcion ?? null) : null);
+      if (!isSobreturnoToday && outside && !exceptionReason) throw outsideAvailability(period);
 
       // 8. Turno + historial en la misma transacción.
       const id = randomUUID();

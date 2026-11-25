@@ -4,6 +4,7 @@ import {
   PatientListQueryDto,
   SetPatientActiveDto,
   type Paginated,
+  type PatientDetailResponse,
   type PatientResponse,
 } from './dto/patient.dto.js';
 import { PatientsService } from './patients.service.js';
@@ -20,6 +21,11 @@ export class PatientsController {
   @Get(':id')
   findById(@Param('id', ParseUUIDPipe) id: string): Promise<PatientResponse> {
     return this.patients.findById(id);
+  }
+
+  @Get(':id/detalle')
+  findDetail(@Param('id', ParseUUIDPipe) id: string): Promise<PatientDetailResponse> {
+    return this.patients.findDetail(id);
   }
 
   @Post()

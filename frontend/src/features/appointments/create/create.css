@@ -25,6 +25,14 @@
   animation: apt-wizard-step-in 260ms var(--ease-out) both;
 }
 
+.apt-wizard__content,
+.apt-summary__content {
+  display: grid;
+  min-width: 0;
+  align-content: start;
+  gap: 1rem;
+}
+
 @keyframes apt-wizard-step-in {
   from { opacity: 0; transform: translateX(1rem); }
   to { opacity: 1; transform: translateX(0); }
@@ -55,36 +63,37 @@
 .apt-wizard__patient-toolbar .app-button:hover { background: var(--color-primary-soft); }
 
 .apt-wizard__patients {
-  display: grid;
-  min-height: 9.5rem;
-  max-height: 15rem;
-  align-content: start;
-  gap: .3rem;
-  padding: .35rem;
+  display: flex;
+  flex-direction: column;
+  min-height: 6rem;
+  max-height: 16.5rem;
+  gap: .25rem;
+  padding: .15rem .3rem .15rem .15rem;
   overflow-y: auto;
-  border-radius: 1.25rem;
-  background: color-mix(in srgb, var(--color-canvas) 56%, transparent);
+  overscroll-behavior: contain;
+  background: transparent;
   scrollbar-width: thin;
 }
 
 .apt-wizard__patient {
   display: flex;
+  flex: 0 0 auto;
   width: 100%;
   min-width: 0;
-  min-height: 3.75rem;
+  min-height: 3.4rem;
   align-items: center;
   gap: .75rem;
   padding: .6rem .75rem;
   border: 0;
   border-radius: 1rem;
   color: var(--color-text);
-  background: var(--color-surface);
+  background: transparent;
   text-align: left;
   cursor: pointer;
   transition: background-color var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out);
 }
 
-.apt-wizard__patient:hover { background: var(--color-surface-subtle); }
+.apt-wizard__patient:hover { background: var(--color-canvas); }
 .apt-wizard__patient:active { transform: scale(.995); }
 .apt-wizard__patient[aria-pressed='true'] { background: var(--color-primary-soft); }
 .apt-wizard__patient:focus-visible { outline: none; box-shadow: var(--focus-ring); }
@@ -118,12 +127,130 @@
 .apt-wizard__field input:focus, .apt-wizard__field select:focus { border-color: var(--color-primary); box-shadow: var(--focus-ring); }
 .apt-wizard__field > small { margin-top: -.2rem; color: var(--color-danger); font-size: .68rem; font-weight: 500; }
 
+.apt-wizard__switch {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  padding: .65rem .85rem;
+  border: 1px solid var(--color-border);
+  border-radius: 1rem;
+  cursor: pointer;
+}
+.apt-wizard__switch input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+.apt-wizard__switch > span {
+  position: relative;
+  width: 2.25rem;
+  height: 1.25rem;
+  flex: none;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-strong);
+  transition: background-color var(--duration-fast) var(--ease-out);
+}
+.apt-wizard__switch > span::after {
+  position: absolute;
+  top: .15rem;
+  left: .15rem;
+  width: .95rem;
+  height: .95rem;
+  border-radius: 50%;
+  background: var(--color-surface);
+  content: '';
+  transition: transform var(--duration-fast) var(--ease-out);
+}
+.apt-wizard__switch input:checked + span { background: var(--color-primary); }
+.apt-wizard__switch input:checked + span::after { transform: translateX(1rem); }
+.apt-wizard__switch input:focus-visible + span { box-shadow: var(--focus-ring); }
+.apt-wizard__switch > div { display: grid; gap: .1rem; min-width: 0; }
+.apt-wizard__switch strong { color: var(--color-text); font-size: .78rem; font-weight: 600; }
+.apt-wizard__switch small { color: var(--color-text-muted); font-size: .7rem; font-weight: 400; }
+.apt-wizard__switch-note { color: var(--color-text-muted); font-size: .72rem; font-weight: 400; }
+
 .apt-wizard__advanced { border: 1px solid var(--color-border); border-radius: 1rem; }
 .apt-wizard__advanced summary { padding: .7rem .85rem; color: var(--color-text-muted); font-size: .72rem; font-weight: 600; cursor: pointer; }
 .apt-wizard__advanced[open] summary { border-bottom: 1px solid var(--color-border); }
 .apt-wizard__advanced > div { padding: .8rem; }
 .apt-wizard__actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .65rem; padding-top: .1rem; }
+.apt-wizard__actions--single { justify-content: flex-end; }
 .apt-wizard__actions .app-button { width: auto; min-height: 2.5rem; font-weight: 600; }
+
+.apt-wizard__calendar {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.apt-wizard__calendar .premium-calendar__header { margin-bottom: .45rem; }
+.apt-wizard__calendar .premium-calendar__header strong { font-size: 1.05rem; }
+.apt-wizard__calendar .premium-calendar__header span { font-size: .75rem; }
+.apt-wizard__calendar .premium-calendar__navigation .app-button { width: 2rem; min-height: 2rem; }
+.apt-wizard__calendar .premium-calendar__weekdays { margin-bottom: .1rem; }
+.apt-wizard__calendar .premium-calendar__weekdays span { padding: .2rem 0; font-size: .62rem; }
+.apt-wizard__calendar .premium-calendar__grid { gap: .1rem; }
+.apt-wizard__calendar .premium-calendar__cell,
+.apt-wizard__calendar .premium-calendar__outside { min-height: 2.05rem; font-size: .8rem; }
+.apt-wizard__calendar .premium-calendar__day { width: 1.95rem; height: 1.95rem; font-size: .82rem; }
+
+.apt-wizard__slots {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(4.25rem, 1fr));
+  gap: .35rem;
+  padding: .15rem;
+}
+
+.apt-wizard__slot {
+  display: inline-flex;
+  min-height: 2rem;
+  align-items: center;
+  justify-content: center;
+  padding: 0 .5rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  color: var(--color-text);
+  background: var(--color-surface);
+  font: inherit;
+  font-size: .75rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
+}
+
+.apt-wizard__slot:hover { background: var(--color-surface-subtle); }
+.apt-wizard__slot[aria-pressed='true'] {
+  border-color: var(--color-primary);
+  color: var(--color-on-primary);
+  background: var(--color-primary);
+}
+.apt-wizard__slot:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+
+.apt-wizard__slots-state {
+  display: flex;
+  min-height: 3.25rem;
+  align-items: center;
+  gap: .5rem;
+  padding: .75rem .9rem;
+  border-radius: 1rem;
+  color: var(--color-text-muted);
+  background: var(--color-surface-subtle);
+  font-size: .75rem;
+  font-weight: 400;
+}
+
+.apt-wizard__slots-state button {
+  padding: 0;
+  border: 0;
+  color: var(--color-primary);
+  background: transparent;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
 
 /* Confirmación del turno: jerarquía compacta y acciones con iconos. */
 .apt-summary { display: grid; gap: 1rem; padding: var(--space-6); }
@@ -138,11 +265,51 @@
 .apt-summary__status[data-warning='true'] { color: var(--color-warning); background: var(--color-warning-soft); }
 .apt-summary__list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .15rem 1.25rem; margin: 0; }
 .apt-summary__item { min-width: 0; padding: .7rem 0; border-bottom: 1px solid var(--color-border); }
-.apt-summary__item dt { margin-bottom: .25rem; color: var(--color-text-muted); font-size: .68rem; }
+.apt-summary__item dt { display: flex; align-items: center; gap: .35rem; margin-bottom: .25rem; color: var(--color-text-muted); font-size: .68rem; }
+.apt-summary__item dt svg { flex: none; color: var(--color-primary); }
 .apt-summary__item dd { margin: 0; color: var(--color-text); font-size: .8rem; font-weight: 600; line-height: 1.45; overflow-wrap: anywhere; }
-.apt-summary__actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .55rem; padding-top: .2rem; }
+.apt-summary__actions { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: .55rem; padding-top: .2rem; }
 .apt-summary__actions .app-button, .apt-summary__link { width: auto; min-height: 2.35rem; font-size: .75rem; font-weight: 600; }
-.apt-summary__link { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); box-sizing: border-box; }
+.apt-summary__link { display: inline-flex; align-items: center; justify-content: center; justify-self: start; gap: var(--space-2); box-sizing: border-box; }
+.apt-summary__actions .app-button { justify-self: end; }
+.apt-summary__actions--close-only { grid-template-columns: 1fr; }
+.apt-summary__actions--close-only .app-button { justify-self: end; }
+
+.appointment-confirmation-modal.app-modal { width: min(31rem, calc(100vw - 32px)); }
+.apt-confirmation { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem 1rem; margin: 0; }
+.apt-confirmation > div { display: grid; min-width: 0; gap: .3rem; padding: .75rem; border-radius: 1rem; background: var(--color-canvas); }
+.apt-confirmation dt { display: flex; align-items: center; gap: .4rem; color: var(--color-text-muted); font-size: .7rem; font-weight: 600; }
+.apt-confirmation dt svg { flex: none; color: var(--color-primary); }
+.apt-confirmation dd { margin: 0; overflow-wrap: anywhere; color: var(--color-text); font-size: .82rem; font-weight: 650; }
+
+@media (min-width: 48.0625rem) {
+  .appointment-wizard-modal.app-modal { height: calc(100dvh - 32px); max-height: calc(100dvh - 32px); }
+  .appointment-wizard-modal .app-modal__body { flex: 1 1 auto; padding-bottom: 1rem; overflow: hidden; }
+  .appointment-wizard-modal .apt-create--modal,
+  .appointment-wizard-modal .apt-wizard,
+  .appointment-wizard-modal .apt-wizard__step,
+  .appointment-wizard-modal .apt-summary { height: 100%; min-height: 0; }
+  .appointment-wizard-modal .apt-wizard__step,
+  .appointment-wizard-modal .apt-summary { grid-template-rows: minmax(0, 1fr) auto; gap: 0; }
+  .appointment-wizard-modal .apt-wizard__content,
+  .appointment-wizard-modal .apt-summary__content {
+    min-height: 0;
+    padding-right: .25rem;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+  }
+  .appointment-wizard-modal .apt-wizard__actions,
+  .appointment-wizard-modal .apt-summary__actions {
+    position: static;
+    align-items: center;
+    margin-top: 1rem;
+    padding: 0;
+    border-top: 0;
+    background: var(--color-surface);
+    box-shadow: none;
+  }
+}
 
 @media (max-width: 48rem) {
   .appointment-wizard-modal.app-modal { width: 100%; height: 100dvh; max-height: 100dvh; border-radius: 0; }
@@ -158,7 +325,9 @@
   .apt-summary__hero { grid-template-columns: auto minmax(0, 1fr); }
   .apt-summary__status { grid-column: 2; justify-self: start; }
   .apt-summary__list { grid-template-columns: 1fr; }
-  .apt-summary__actions { justify-content: flex-end; }
+  .apt-summary__actions { grid-template-columns: minmax(0, 1fr) auto; }
+  .apt-summary__actions--close-only { grid-template-columns: 1fr; }
+  .apt-confirmation { grid-template-columns: 1fr; }
 }
 
 @media (prefers-reduced-motion: reduce) {

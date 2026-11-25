@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, useLocation } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -182,40 +182,13 @@ describe('AppointmentCreationPage — envío al backend', () => {
     await user.click(screen.getByRole('button', { name: 'Agendar turno' }))
 
     expect(await screen.findByRole('heading', { name: /Turno registrado/ })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Cerrar' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Cerrar' })).not.toBeInTheDocument()
+    expect(document.querySelectorAll('.apt-summary__item dt svg')).toHaveLength(6)
     await user.click(screen.getByRole('link', { name: 'Ver turno' }))
 
     expect(screen.getByLabelText('Ruta actual')).toHaveTextContent('/turnos/turno-1')
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     expect(posts(requests)).toHaveLength(1)
-  })
-
-  it('closes the successful summary back to the dashboard', async () => {
-    const agenda = {
-      zonaHoraria: 'America/Argentina/Buenos_Aires',
-      desde: '2027-03-10',
-      hasta: '2027-03-10',
-      generadoEn: '2027-03-10T12:30:00.000Z',
-      turnos: [],
-      dias: [],
-    }
-    setup(undefined, [['GET /agenda', () => ({ status: 200, body: agenda })]])
-    render(
-      <MemoryRouter initialEntries={['/turnos/nuevo']}>
-        <AppRoutes />
-        <CurrentPath />
-      </MemoryRouter>,
-    )
-    const user = userEvent.setup()
-    await fillForm()
-    await user.click(screen.getByRole('button', { name: 'Agendar turno' }))
-    await screen.findByRole('heading', { name: /Turno registrado/ })
-
-    await user.click(screen.getByRole('button', { name: 'Cerrar' }))
-
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
-    expect(screen.getByLabelText('Ruta actual')).toHaveTextContent('/')
-    expect(await screen.findByRole('heading', { name: 'Inicio' })).toBeInTheDocument()
   })
 
   it('fuera de disponibilidad: exige motivo y reenvía con override', async () => {

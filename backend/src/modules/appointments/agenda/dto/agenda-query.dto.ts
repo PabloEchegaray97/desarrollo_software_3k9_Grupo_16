@@ -35,3 +35,8 @@ export class AgendaQueryDto {
   @IsIn(APPOINTMENT_STATUSES, { each: true })
   estado?: AppointmentStatus[];
 }
+
+export class UpcomingAgendaQueryDto {
+  @Matches(AGENDA_LOCAL_DATE)
+  desde: string;
+}

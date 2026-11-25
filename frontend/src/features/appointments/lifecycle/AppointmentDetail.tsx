@@ -56,11 +56,11 @@ export function AppointmentDetail({ appointment, eventos, chairs, patients, proc
             <h1 className="lc-detail__title" id="lc-detail-title" tabIndex={-1}>Turno de {patientName}</h1>
             <p>{formatLocalShortDate(appointment.inicio)} · {formatLocalRange(appointment.inicio, appointment.finAtencion)}</p>
           </div>
-          <span className="lc-badge" data-estado={appointment.estado}>{appointment.estado}</span>
+          <span className="lc-badge appointment-status-badge" data-estado={appointment.estado} data-status={appointment.estado}>{appointment.estado}</span>
         </header>
 
         {tab === 'detail' ? (
-          <div className="lc-tab-panel" role="tabpanel">
+          <div className="lc-tab-panel lc-tab-panel--detail" role="tabpanel">
             <section className="lc-section" aria-labelledby="lc-booking-title">
               <h2 className="lc-section-title" id="lc-booking-title">Detalle de la reserva</h2>
               <dl className="lc-detail-grid">

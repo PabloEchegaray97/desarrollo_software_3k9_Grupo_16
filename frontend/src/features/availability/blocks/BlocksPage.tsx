@@ -1,7 +1,6 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useState, type FormEvent, type MouseEvent } from 'react'
 import {
   ArrowCounterClockwise,
-  ArrowLeft,
   CalendarCheck,
   CalendarDots,
   Clock,
@@ -11,7 +10,6 @@ import {
   Plus,
   Prohibit,
   Trash,
-  X,
 } from '@phosphor-icons/react'
 import { sileo } from 'sileo'
 import { AppButton } from '../../../shared/components/Button'
@@ -39,9 +37,6 @@ interface BlockEditorProps {
   saving: boolean
   onChange: (draft: BlockDraft) => void
   onSave: (event: FormEvent<HTMLFormElement>) => void
-  onClear: () => void
-  showClose?: boolean
-  onClose?: () => void
 }
 
 function localDateKey(date: Date): string {
@@ -81,9 +76,18 @@ function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : 'Ocurrió un error inesperado. Intentá nuevamente.'
 }
 
-function BlockEditor({ draft, error, saving, onChange, onSave, onClear, showClose = false, onClose }: BlockEditorProps) {
+function openNativePicker(event: MouseEvent<HTMLInputElement>) {
+  if (event.currentTarget.disabled || typeof event.currentTarget.showPicker !== 'function') return
+  try {
+    event.currentTarget.showPicker()
+  } catch {
+    // El selector nativo puede rechazar aperturas duplicadas; el input conserva su comportamiento normal.
+  }
+}
+
+function BlockEditor({ draft, error, saving, onChange, onSave }: BlockEditorProps) {
   return (
-    <form className="blocks-editor" onSubmit={onSave}>
+    <form id="block-editor-form" className="blocks-editor" onSubmit={onSave}>
       <fieldset className="blocks-editor__types" disabled={saving}>
         <legend>Tipo de bloqueo</legend>
         <div>
@@ -98,18 +102,18 @@ function BlockEditor({ draft, error, saving, onChange, onSave, onClear, showClos
 
       <div className="app-field">
         <label className="app-field__label" htmlFor="block-date">Fecha</label>
-        <input id="block-date" className="app-control" type="date" required value={draft.fecha} disabled={saving} onChange={(event) => onChange({ ...draft, fecha: event.target.value })} />
+        <input id="block-date" className="app-control" type="date" required value={draft.fecha} disabled={saving} onClick={openNativePicker} onChange={(event) => onChange({ ...draft, fecha: event.target.value })} />
       </div>
 
       {draft.cobertura === 'partial' ? (
         <div className="blocks-editor__times">
           <div className="app-field">
             <label className="app-field__label" htmlFor="block-start">Horario inicio</label>
-            <input id="block-start" className="app-control" type="time" required value={draft.horaInicio} disabled={saving} onChange={(event) => onChange({ ...draft, horaInicio: event.target.value })} />
+            <input id="block-start" className="app-control" type="time" required value={draft.horaInicio} disabled={saving} onClick={openNativePicker} onChange={(event) => onChange({ ...draft, horaInicio: event.target.value })} />
           </div>
           <div className="app-field">
             <label className="app-field__label" htmlFor="block-end">Horario fin</label>
-            <input id="block-end" className="app-control" type="time" required value={draft.horaFin} disabled={saving} onChange={(event) => onChange({ ...draft, horaFin: event.target.value })} />
+            <input id="block-end" className="app-control" type="time" required value={draft.horaFin} disabled={saving} onClick={openNativePicker} onChange={(event) => onChange({ ...draft, horaFin: event.target.value })} />
           </div>
         </div>
       ) : null}
@@ -120,12 +124,6 @@ function BlockEditor({ draft, error, saving, onChange, onSave, onClear, showClos
       </div>
 
       {error ? <p className="blocks-editor__error" role="alert">{error}</p> : null}
-
-      <div className="blocks-editor__actions">
-        <AppButton type="submit" variant="primary" leftIcon={<FloppyDisk />} loading={saving} loadingText="Guardando…">Guardar bloqueo</AppButton>
-        <AppButton type="button" variant="secondary" leftIcon={<ArrowCounterClockwise />} disabled={saving} onClick={onClear}>Limpiar</AppButton>
-        {showClose && onClose ? <AppButton type="button" variant="ghost" leftIcon={<X />} disabled={saving} onClick={onClose}>Cerrar</AppButton> : null}
-      </div>
     </form>
   )
 }
@@ -290,7 +288,13 @@ export function BlocksPage() {
                 </div>
               </header>
               {selectedBlocks.length === 0 ? (
-                <div className="blocks-selected-empty"><Leaf size={21} /><strong>Sin bloqueos para esta fecha</strong></div>
+                <div className="blocks-selected-empty">
+                  <Leaf size={21} weight="fill" aria-hidden="true" />
+                  <strong>Sin bloqueos para esta fecha</strong>
+                  <AppButton size="sm" variant="primary" leftIcon={<Plus size={15} />} onClick={openEditor}>
+                    Crear para {formatNumericDate(selectedDate)}
+                  </AppButton>
+                </div>
               ) : (
                 <ul className="blocks-selected-list">
                   {selectedBlocks.map((block) => <BlockCard key={block.id} block={block} onDelete={() => { setCancelTarget(block); setCancelError('') }} />)}
@@ -303,17 +307,31 @@ export function BlocksPage() {
 
       {loadStatus === 'ready' ? <AppButton className="blocks-fab" size="lg" variant="primary" leftIcon={<Plus />} onClick={openEditor}>Nuevo bloqueo</AppButton> : null}
 
-      <AppModal open={editorOpen} title="Nuevo bloqueo" onClose={() => { if (!saving) setEditorOpen(false) }} className="blocks-editor-modal">
-        <BlockEditor draft={draft} error={createError} saving={saving} onChange={(next) => { setDraft(next); setCreateError('') }} onSave={(event) => void submitCreate(event)} onClear={clearEditor} showClose onClose={() => setEditorOpen(false)} />
+      <AppModal
+        open={editorOpen}
+        title="Nuevo bloqueo"
+        description="Definí la fecha y el alcance del bloqueo."
+        onClose={() => { if (!saving) setEditorOpen(false) }}
+        className="clients-patient-modal blocks-editor-modal"
+        footer={(
+          <>
+            <AppButton className="blocks-modal__cancel" type="button" variant="ghost" disabled={saving} onClick={() => setEditorOpen(false)}>Cancelar</AppButton>
+            <AppButton type="button" variant="secondary" leftIcon={<ArrowCounterClockwise />} disabled={saving} onClick={clearEditor}>Limpiar</AppButton>
+            <AppButton className="clients-modal__save" type="submit" form="block-editor-form" variant="primary" leftIcon={<FloppyDisk />} loading={saving} loadingText="Guardando…">Guardar bloqueo</AppButton>
+          </>
+        )}
+      >
+        <BlockEditor draft={draft} error={createError} saving={saving} onChange={(next) => { setDraft(next); setCreateError('') }} onSave={(event) => void submitCreate(event)} />
       </AppModal>
 
       <AppModal
         open={cancelTarget !== null}
         title="Eliminar bloqueo"
         onClose={() => { if (!canceling) setCancelTarget(null) }}
+        className="clients-patient-modal blocks-delete-modal"
         footer={
           <>
-            <AppButton variant="secondary" leftIcon={<ArrowLeft />} disabled={canceling} onClick={() => setCancelTarget(null)}>Volver</AppButton>
+            <AppButton className="blocks-modal__cancel" variant="ghost" disabled={canceling} onClick={() => setCancelTarget(null)}>Cancelar</AppButton>
             <AppButton variant="danger" leftIcon={<Trash />} loading={canceling} loadingText="Eliminando…" onClick={() => void confirmCancel()}>Eliminar bloqueo</AppButton>
           </>
         }

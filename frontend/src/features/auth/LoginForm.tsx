@@ -1,5 +1,7 @@
 import { useId, useState, type FormEvent } from 'react'
+import { SignIn } from '@phosphor-icons/react'
 import { ApiClientError } from '../../shared/api/client'
+import { AppButton } from '../../shared/components/Button'
 import { TextField } from '../../shared/components/FormField'
 import { login } from './api'
 import type { SessionUser } from './types'
@@ -87,9 +89,15 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
         error={errors.contrasena}
       />
 
-      <button className="auth-submit" type="submit" disabled={submitting}>
-        {submitting ? 'Ingresando…' : 'Ingresar'}
-      </button>
+      <AppButton
+        className="auth-submit"
+        type="submit"
+        leftIcon={<SignIn size={17} />}
+        loading={submitting}
+        loadingText="Ingresando…"
+      >
+        Ingresar
+      </AppButton>
     </form>
   )
 }

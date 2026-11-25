@@ -20,7 +20,7 @@ interface Props {
   onApply: () => void
 }
 
-function toSelection(estados: AppointmentStatus[]): EstadoSelection {
+function toSelection(estados: readonly AppointmentStatus[]): EstadoSelection {
   return estados.length === APPOINTMENT_STATUSES.length ? 'all' : (estados[0] ?? 'all')
 }
 
@@ -41,7 +41,7 @@ export function AgendaFilters({
 
   const handleSelect = (value: EstadoSelection) => {
     setSelected(value)
-    onEstadosChange(value === 'all' ? APPOINTMENT_STATUSES : [value as AppointmentStatus])
+    onEstadosChange(value === 'all' ? [...APPOINTMENT_STATUSES] : [value as AppointmentStatus])
   }
 
   const handleClear = () => {

@@ -11,6 +11,7 @@ interface AppModalProps {
   children: ReactNode
   footer?: ReactNode
   closeOnEscape?: boolean
+  restoreFocus?: boolean
   id?: string
   className?: string
   closeLabel?: string
@@ -46,6 +47,7 @@ export function AppModal({
   children,
   footer,
   closeOnEscape = true,
+  restoreFocus = true,
   id,
   className,
   closeLabel = 'Cerrar modal',
@@ -80,7 +82,11 @@ export function AppModal({
       element.setAttribute('inert', '')
     })
     document.body.style.overflow = 'hidden'
-    titleRef.current?.focus()
+    const dialog = dialogRef.current
+    const firstFormControl = dialog
+      ? getFocusableElements(dialog).find((element) => element.matches('input, select, textarea, [contenteditable="true"]'))
+      : undefined
+    ;(firstFormControl ?? titleRef.current)?.focus()
 
     return () => {
       if (dismissTimerRef.current !== null) {
@@ -93,11 +99,11 @@ export function AppModal({
       })
       document.body.style.overflow = previousOverflow
 
-      if (previouslyFocused?.isConnected && !previouslyFocused.closest('[inert]')) {
+      if (restoreFocus && previouslyFocused?.isConnected && !previouslyFocused.closest('[inert]')) {
         previouslyFocused.focus()
       }
     }
-  }, [open])
+  }, [open, restoreFocus])
 
   function handleSheetPointerDown(event: PointerEvent<HTMLDivElement>) {
     if (!open || isDismissing || dragStateRef.current || !event.isPrimary || !window.matchMedia('(max-width: 48rem)').matches) return

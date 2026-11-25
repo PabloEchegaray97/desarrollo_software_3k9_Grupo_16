@@ -5,7 +5,7 @@ import request from 'supertest';
 import type { App } from 'supertest/types.js';
 import { ApiExceptionFilter } from '../../../shared/http/api-exception.filter.js';
 import { chairNotFound, rangeInvalid, rangeTooLarge } from './agenda-errors.js';
-import type { AgendaResponse } from './agenda-response.js';
+import type { AgendaResponse, UpcomingAgendaResponse } from './agenda-response.js';
 import { AgendaController } from './agenda.controller.js';
 import { AgendaService } from './agenda.service.js';
 
@@ -18,10 +18,19 @@ const EMPTY: AgendaResponse = {
   turnos: [],
   dias: [{ fecha: '2027-03-10', tramos: [], bloqueos: [] }],
 };
+const UPCOMING_EMPTY: UpcomingAgendaResponse = {
+  zonaHoraria: 'America/Argentina/Buenos_Aires',
+  desde: '2027-03-10',
+  generadoEn: '2027-03-01T12:00:00.000Z',
+  turnos: [],
+};
 
 describe('AgendaController (sin base de datos)', () => {
   let app: INestApplication<App>;
-  const agenda = { consultar: jest.fn(async (_query: unknown): Promise<AgendaResponse> => EMPTY) };
+  const agenda = {
+    consultar: jest.fn(async (_query: unknown): Promise<AgendaResponse> => EMPTY),
+    consultarProximos: jest.fn(async (_query: unknown): Promise<UpcomingAgendaResponse> => UPCOMING_EMPTY),
+  };
 
   beforeAll(async () => {
     jest.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
@@ -41,7 +50,16 @@ describe('AgendaController (sin base de datos)', () => {
     jest.restoreAllMocks();
   });
 
-  beforeEach(() => agenda.consultar.mockClear());
+  beforeEach(() => {
+    agenda.consultar.mockClear();
+    agenda.consultarProximos.mockClear();
+  });
+
+  it('publica los próximos turnos desde la fecha indicada', async () => {
+    const response = await request(app.getHttpServer()).get('/api/agenda/proximos?desde=2027-03-10').expect(200);
+    expect(response.body).toEqual(UPCOMING_EMPTY);
+    expect(agenda.consultarProximos).toHaveBeenCalledWith(expect.objectContaining({ desde: '2027-03-10' }));
+  });
 
   it('responde 200 con el cuerpo del servicio', async () => {
     const response = await request(app.getHttpServer()).get('/api/agenda?desde=2027-03-10').expect(200);
