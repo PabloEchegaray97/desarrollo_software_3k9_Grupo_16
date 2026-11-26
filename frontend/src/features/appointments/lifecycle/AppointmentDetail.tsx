@@ -96,7 +96,7 @@ export function AppointmentDetail({ appointment, eventos, chairs, patients, proc
               </section>
             ) : null}
 
-            <StatusActions status={appointment.estado} busy={busy} onReschedule={onReschedule} onCancel={onCancel} onChangeStatus={onChangeStatus} />
+            <StatusActions status={appointment.estado} startsAt={appointment.inicio} busy={busy} onReschedule={onReschedule} onCancel={onCancel} onChangeStatus={onChangeStatus} />
           </div>
         ) : (
           <section className="lc-tab-panel lc-tab-panel--history" role="tabpanel" aria-labelledby="lc-history-title">

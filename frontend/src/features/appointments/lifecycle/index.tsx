@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
+import { sileo } from 'sileo'
 import { StatePanel } from '../../../shared/components/StatePanel'
 import { chairsApi, proceduresApi } from '../../catalog/api'
 import type { Chair, Procedure } from '../../catalog/types'
@@ -19,6 +20,12 @@ import type {
   RescheduleInput,
 } from './types'
 
+const STATUS_SUCCESS: Record<ChangeableStatus, string> = {
+  CONFIRMADO: 'Turno confirmado',
+  ATENDIDO: 'Turno marcado como atendido',
+  AUSENTE: 'Ausencia registrada',
+}
+
 type LoadState =
   | { status: 'loading' }
   | { status: 'error'; message: string }
@@ -35,7 +42,6 @@ export function AppointmentLifecyclePage() {
   const requestedAction = readDashboardAction(location.state)
   const [modal, setModal] = useState<'reschedule' | 'cancel' | null>(requestedAction)
   const [busy, setBusy] = useState(false)
-  const [notice, setNotice] = useState<string | null>(null)
   const [focusTick, setFocusTick] = useState(0)
 
   useEffect(() => {
@@ -87,25 +93,24 @@ export function AppointmentLifecyclePage() {
     setState((current) => (current.status === 'ready'
       ? { ...current, appointment: response.turno, eventos: response.historial }
       : current))
-    setNotice(null)
     setFocusTick((tick) => tick + 1)
   }
 
-  const runMutation = async (operation: () => Promise<LifecycleResponse>): Promise<void> => {
+  /** Los modales muestran sus propios errores; acá solo se aplica la respuesta y se avisa el éxito. */
+  const runMutation = async (operation: () => Promise<LifecycleResponse>, successTitle: string): Promise<void> => {
     setBusy(true)
-    setNotice(null)
     try {
       applyResponse(await operation())
-    } catch (cause) {
-      setNotice(toLifecycleProblem(cause).message)
-      throw cause
+      sileo.success({ title: successTitle })
     } finally {
       setBusy(false)
     }
   }
 
   const changeStatus = (estado: ChangeableStatus) => {
-    void runMutation(() => lifecycleApi.changeStatus(id, { estado })).catch(() => undefined)
+    void runMutation(() => lifecycleApi.changeStatus(id, { estado }), STATUS_SUCCESS[estado]).catch((cause: unknown) => {
+      sileo.error({ title: 'No se pudo actualizar el turno', description: toLifecycleProblem(cause).message })
+    })
   }
 
   const closeModal = () => {
@@ -131,7 +136,6 @@ export function AppointmentLifecyclePage() {
 
   return (
     <div className="lc-page">
-      {notice ? <p className="lc-notice" role="alert">{notice}</p> : null}
       <AppointmentDetail
         appointment={state.appointment}
         eventos={state.eventos}
@@ -147,14 +151,14 @@ export function AppointmentLifecyclePage() {
       <CancelModal
         open={modal === 'cancel'}
         onClose={closeModal}
-        onConfirm={(motivo) => runMutation(() => lifecycleApi.cancel(id, { motivo }))}
+        onConfirm={(motivo) => runMutation(() => lifecycleApi.cancel(id, { motivo }), 'Turno cancelado')}
       />
       <RescheduleModal
         open={modal === 'reschedule'}
         appointment={state.appointment}
         chairs={state.chairs}
         onClose={closeModal}
-        onSave={(input: RescheduleInput) => runMutation(() => lifecycleApi.reschedule(id, input))}
+        onSave={(input: RescheduleInput) => runMutation(() => lifecycleApi.reschedule(id, input), 'Turno reprogramado')}
       />
     </div>
   )
