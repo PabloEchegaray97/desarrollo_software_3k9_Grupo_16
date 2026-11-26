@@ -10,11 +10,24 @@ export function toAgendaQueryString(query: AgendaQuery): string {
   return search.toString()
 }
 
+export interface UpcomingAgendaQuery {
+  desde: string
+  sillonId?: string
+  estado?: AgendaQuery['estado']
+  todosEstados?: boolean
+}
+
 export const agendaApi = {
   get: (query: AgendaQuery, signal?: AbortSignal) =>
     apiRequest<AgendaResponse>(`/agenda?${toAgendaQueryString(query)}`, { signal }),
-  getUpcoming: (desde: string, signal?: AbortSignal) =>
-    apiRequest<UpcomingAgendaResponse>(`/agenda/proximos?${new URLSearchParams({ desde })}`, { signal }),
+  getUpcoming: (desdeOrQuery: string | UpcomingAgendaQuery, signal?: AbortSignal) => {
+    const query = typeof desdeOrQuery === 'string' ? { desde: desdeOrQuery } : desdeOrQuery
+    const search = new URLSearchParams({ desde: query.desde })
+    if (query.sillonId) search.set('sillonId', query.sillonId)
+    if (query.estado && query.estado.length > 0) search.set('estado', query.estado.join(','))
+    if (query.todosEstados) search.set('todosEstados', 'true')
+    return apiRequest<UpcomingAgendaResponse>(`/agenda/proximos?${search.toString()}`, { signal })
+  },
 }
 
 interface ChairPage {

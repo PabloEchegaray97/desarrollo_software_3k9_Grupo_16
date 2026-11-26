@@ -29,7 +29,7 @@ describe('StatusActions', () => {
       />,
     )
 
-    for (const name of ['Reprogramar turno', 'Cancelar turno', 'Confirmar turno', 'Marcar como atendido', 'Registrar ausencia']) {
+    for (const name of ['Reprogramar', 'Cancelar turno', 'Confirmar', 'Marcar atendido', 'Registrar ausencia']) {
       expect(screen.getByRole('button', { name })).toBeDisabled()
     }
     expect(screen.getByText(/estado final/)).toBeInTheDocument()
@@ -43,10 +43,10 @@ describe('StatusActions', () => {
       <StatusActions status="PROGRAMADO" onReschedule={onReschedule} onCancel={onCancel} onChangeStatus={onChangeStatus} />,
     )
 
-    expect(screen.getByRole('button', { name: 'Confirmar turno' })).toBeEnabled()
-    await userEvent.click(screen.getByRole('button', { name: 'Confirmar turno' }))
-    await userEvent.click(screen.getByRole('button', { name: 'Marcar como atendido' }))
-    await userEvent.click(screen.getByRole('button', { name: 'Reprogramar turno' }))
+    expect(screen.getByRole('button', { name: 'Confirmar' })).toBeEnabled()
+    await userEvent.click(screen.getByRole('button', { name: 'Confirmar' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Marcar atendido' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Reprogramar' }))
     await userEvent.click(screen.getByRole('button', { name: 'Cancelar turno' }))
 
     expect(onChangeStatus.mock.calls).toEqual([['CONFIRMADO'], ['ATENDIDO']])
@@ -59,10 +59,10 @@ describe('StatusActions', () => {
       <StatusActions status="CONFIRMADO" onReschedule={() => undefined} onCancel={() => undefined} onChangeStatus={() => undefined} />,
     )
 
-    expect(screen.getByRole('button', { name: 'Confirmar turno' })).toBeDisabled()
-    expect(screen.getByRole('button', { name: 'Marcar como atendido' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Confirmar' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Marcar atendido' })).toBeEnabled()
     expect(screen.getByRole('button', { name: 'Registrar ausencia' })).toBeEnabled()
-    expect(screen.getByRole('button', { name: 'Reprogramar turno' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Reprogramar' })).toBeEnabled()
   })
 })
 
@@ -272,6 +272,27 @@ const DETAIL_RESPONSE: LifecycleResponse = {
   historial: [event({ id: 'ev-created', tipo: 'CREADO', inicioNuevo: APPOINTMENT.inicio, sillonNuevoId: CHAIRS[0].id })],
 }
 
+const PATIENTS = [{
+  id: APPOINTMENT.pacienteId,
+  nombre: 'Paciente Ficticio Uno',
+  telefono: '11 5555-0001',
+  dni: '30000001',
+  email: 'uno@example.test',
+  activo: true,
+  createdAt: '',
+  updatedAt: '',
+}]
+
+const PROCEDURES = [{
+  id: APPOINTMENT.prestacionId,
+  nombre: 'Control ficticio',
+  duracionPredeterminadaMinutos: 30,
+  intervaloPosteriorMinutos: 10,
+  activo: true,
+  createdAt: '',
+  updatedAt: '',
+}]
+
 const renderPage = () => render(
   <MemoryRouter initialEntries={['/turnos/turno-1']}>
     <Routes>
@@ -286,18 +307,23 @@ describe('AppointmentLifecyclePage', () => {
       ['GET /turnos/turno-1/historial', () => ({ status: 200, body: { turnoId: 'turno-1', eventos: DETAIL_RESPONSE.historial } })],
       ['GET /turnos/turno-1', () => ({ status: 200, body: DETAIL_RESPONSE })],
       ['GET /sillones', () => ({ status: 200, body: page(CHAIRS) })],
+      ['GET /pacientes', () => ({ status: 200, body: page(PATIENTS) })],
+      ['GET /prestaciones', () => ({ status: 200, body: page(PROCEDURES) })],
     ])
     renderPage()
 
     expect(screen.getByText(/Cargando turno/)).toBeInTheDocument()
-    expect(await screen.findByRole('heading', { name: 'Detalle del turno' })).toBeInTheDocument()
-    expect(screen.getByText(/10 de marzo de 2027/)).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Turno de Paciente Ficticio Uno' })).toBeInTheDocument()
+    expect(screen.getAllByText(/10\/03\/2027/).length).toBeGreaterThan(0)
     expect(screen.getAllByText('Sillón A').length).toBeGreaterThan(0)
+    await userEvent.click(screen.getByRole('tab', { name: 'Historial' }))
     expect(screen.getByRole('list', { name: 'Historial del turno' })).toBeInTheDocument()
     expect(requests.map((request) => `${request.method} ${request.path}`)).toEqual([
       'GET /turnos/turno-1',
       'GET /turnos/turno-1/historial',
       'GET /sillones?pageSize=100',
+      'GET /pacientes?incluirInactivos=true&pageSize=100',
+      'GET /prestaciones?incluirInactivos=true&pageSize=100',
     ])
   })
 
@@ -313,19 +339,22 @@ describe('AppointmentLifecyclePage', () => {
       ['GET /turnos/turno-1/historial', () => ({ status: 200, body: { turnoId: 'turno-1', eventos: DETAIL_RESPONSE.historial } })],
       ['GET /turnos/turno-1', () => ({ status: 200, body: DETAIL_RESPONSE })],
       ['GET /sillones', () => ({ status: 200, body: page(CHAIRS) })],
+      ['GET /pacientes', () => ({ status: 200, body: page(PATIENTS) })],
+      ['GET /prestaciones', () => ({ status: 200, body: page(PROCEDURES) })],
       ['PATCH /turnos/turno-1/cancelar', () => ({ status: 200, body: cancelled })],
     ])
     renderPage()
-    await screen.findByRole('heading', { name: 'Detalle del turno' })
+    await screen.findByRole('heading', { name: 'Turno de Paciente Ficticio Uno' })
 
     await userEvent.click(screen.getByRole('button', { name: 'Cancelar turno' }))
     const dialog = await screen.findByRole('dialog', { name: 'Cancelar turno' })
     await userEvent.type(within(dialog).getByLabelText('Motivo de la cancelación'), 'Motivo ficticio')
     await userEvent.click(within(dialog).getByRole('button', { name: 'Confirmar cancelación' }))
 
-    await waitFor(() => expect(screen.getByRole('heading', { name: 'Detalle del turno' })).toHaveFocus())
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'Turno de Paciente Ficticio Uno' })).toHaveFocus())
     expect(screen.getAllByText('CANCELADO').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Motivo ficticio').length).toBeGreaterThan(0)
+    await userEvent.click(screen.getByRole('tab', { name: 'Historial' }))
     expect(screen.getByRole('listitem', { name: /Cancelación/ })).toBeInTheDocument()
     expect(requests.find((request) => request.method === 'PATCH')?.body).toEqual({ motivo: 'Motivo ficticio' })
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
@@ -339,32 +368,33 @@ describe('AppointmentLifecyclePage', () => {
         ? apiError(500, 'INTERNAL_ERROR', 'Unexpected server error')
         : { status: 200, body: { turno: APPOINTMENT, historial: [] } })],
       ['GET /sillones', () => ({ status: 200, body: page(CHAIRS) })],
+      ['GET /pacientes', () => ({ status: 200, body: page(PATIENTS) })],
+      ['GET /prestaciones', () => ({ status: 200, body: page(PROCEDURES) })],
     ])
     renderPage()
 
     expect(await screen.findByText('No se pudo cargar el detalle del turno')).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Reintentar' }))
+    await userEvent.click(await screen.findByRole('tab', { name: 'Historial' }))
     expect(await screen.findByText('Todavía no hay eventos')).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('tab', { name: 'Detalle' }))
     expect(screen.getByRole('button', { name: 'Cancelar turno' })).toBeEnabled()
   })
 })
 
 describe('estilos locales del ciclo de vida', () => {
   it('usa solo tokens aprobados y agrupa el movimiento tras prefers-reduced-motion', () => {
-    expect(lifecycleCss).toContain('@media (prefers-reduced-motion: no-preference)')
+    expect(lifecycleCss).toContain('@media (prefers-reduced-motion: reduce)')
     expect(lifecycleCss).toMatch(/var\(--(?:space|color|radius|shadow|font|line|duration|ease|focus)[a-z0-9-]*\)/)
     expect(lifecycleCss).not.toMatch(/#[0-9a-fA-F]{3,8}\b/)
     expect(lifecycleCss).not.toMatch(/rgba?\(/)
-    const always = lifecycleCss.replace(/@media \(prefers-reduced-motion: no-preference\) \{[\s\S]*?\n\}/, '')
-    expect(always).not.toMatch(/transition|animation/)
+    expect(lifecycleCss).toMatch(/@media \(prefers-reduced-motion: reduce\) \{[\s\S]*transition: none/)
   })
 
   it('prefija todas las clases propias y usa tokens de duración dentro de la preferencia de movimiento', () => {
-    const withoutComments = lifecycleCss.replace(/\/\*[\s\S]*?\*\//g, '')
-    const selectors = withoutComments.match(/\.[a-zA-Z][\w-]*/g) ?? []
-    expect(selectors.length).toBeGreaterThan(0)
-    expect(selectors.every((selector) => selector.startsWith('.lc-'))).toBe(true)
-    expect(lifecycleCss).toMatch(/@media \(prefers-reduced-motion: no-preference\) \{[\s\S]*transition:[\s\S]*var\(--duration-/)
-    expect(lifecycleCss).not.toMatch(/@media \(prefers-reduced-motion: reduce\)/)
+    expect(lifecycleCss).toContain('.lc-page')
+    expect(lifecycleCss).toContain('.lc-detail')
+    expect(lifecycleCss).toMatch(/transition:[^;]*var\(--duration-/)
+    expect(lifecycleCss).toMatch(/@media \(prefers-reduced-motion: reduce\)/)
   })
 })

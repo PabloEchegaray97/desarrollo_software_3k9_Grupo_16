@@ -39,7 +39,7 @@ describe('edición de disponibilidad semanal', () => {
     expect(await within(schedule).findByRole('switch', { name: 'Abrir lunes' })).not.toBeChecked()
     expect(within(schedule).getByRole('switch', { name: 'Abrir domingo' })).not.toBeChecked()
     expect(within(schedule).getByLabelText('Intervalo general')).toHaveValue('10')
-    expect(screen.getByRole('button', { name: 'Guardar cambios' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Guardar cambios' })).toBeDisabled()
   })
 
   it('guarda días abiertos, varios tramos y el intervalo general en sus contratos existentes', async () => {
@@ -65,7 +65,7 @@ describe('edición de disponibilidad semanal', () => {
     await user.click(await within(schedule).findByRole('switch', { name: 'Abrir lunes' }))
     setTime('Inicio lunes, tramo 1', '09:00')
     setTime('Fin lunes, tramo 1', '13:00')
-    await user.click(within(schedule).getByRole('button', { name: 'Agregar otro tramo' }))
+    await user.click(within(schedule).getByTitle('Agregar otro tramo al lunes'))
     setTime('Inicio lunes, tramo 2', '14:00')
     setTime('Fin lunes, tramo 2', '18:00')
     await user.selectOptions(within(schedule).getByLabelText('Intervalo general'), '15')

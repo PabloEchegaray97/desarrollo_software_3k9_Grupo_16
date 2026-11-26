@@ -38,7 +38,7 @@ describe('AuthPage', () => {
   it('shows the OdoSoft brand on the access screen', async () => {
     mockApi({ '/auth/sesion': () => unauthorized })
     renderAuth()
-    expect(await screen.findByText('OdoSoft')).toBeInTheDocument()
+    expect(await screen.findByLabelText('OdoSoft')).toBeInTheDocument()
   })
 
   it('validates required fields without calling the API', async () => {

@@ -21,21 +21,21 @@
 
 ## 4. Dashboard operativo
 
-- [x] 4.1 Crear `practice-dashboard` en `/` consumiendo la agenda de hoy y contando total y cinco estados sin endpoint nuevo ni cálculos temporales; verificar jornada con datos, vacía y error/reintento en `dashboard.test.tsx`.
-- [x] 4.2 Incorporar accesos principales y `+ Nuevo turno` arriba a la derecha, conservando sesión y foco; verificar navegación y apertura/cierre del modal en `dashboard.test.tsx` y `routes.test.tsx`.
+- [x] 4.1 Crear `practice-dashboard` en `/` con alcances Hoy/Próximos, métricas derivadas de la agenda, agrupación por fecha y paginación sin cálculos temporales; verificar jornada con datos, vacía y error/reintento en `dashboard.test.tsx`.
+- [x] 4.2 Integrar detalle lateral, bottom sheet móvil y acción global `Nuevo turno` desde el shell, conservando sesión y foco; verificar navegación y apertura/cierre del modal en `dashboard.test.tsx` y `routes.test.tsx`.
 - [x] 4.3 Aplicar densidad compacta de escritorio y espaciado móvil con estados claro/oscuro; verificar por tests las clases/semántica y reservar la comprobación visual integral para 9.2.
 
 ## 5. Alta de turno como modal de ruta
 
 - [x] 5.1 Adaptar `/turnos/nuevo` a modal con ubicación de fondo y fallback `/` para acceso directo, manteniendo intacta la lógica de C-05; verificar URL, foco, `Esc`, cierre y restauración del contexto en `routes.test.tsx` y `appointment-create.test.tsx`.
-- [x] 5.2 Adaptar carga, formulario, excepción y resumen al contenedor modal; ofrecer cerrar, crear otro o ir a `/turnos/:id`, y verificar éxito, rechazo, excepción, reintento y navegación en `appointment-create.test.tsx`.
+- [x] 5.2 Adaptar carga, formulario, excepción y resumen al modal de tres pasos; agregar confirmación previa, alta inmediata de paciente y detalle final con única acción Cerrar, verificando éxito, rechazo, excepción y reintento en `appointment-create.test.tsx`.
 - [x] 5.3 Confirmar que reprogramación, cancelación, estado e historial siguen únicamente en la página dedicada y que no se alteraron contratos HTTP; verificar `lifecycle-ui.test.tsx` y los tests existentes del feature.
 
 ## 6. Agenda alternable
 
-- [x] 6.1 Implementar selector accesible Lista/Grilla con lista inicial y preferencia local validada; verificar teclado, persistencia y fallback ante valor corrupto en `agenda.test.tsx`.
-- [x] 6.2 Crear `AgendaGrid` como representación de los mismos turnos, intervalos y bloqueos recibidos, sin inferir huecos ni disponibilidad; verificar orden, selección, estados, excepción y día vacío en `agenda.test.tsx`.
-- [x] 6.3 Integrar detalle, filtros, refresco y sidebar con ambas vistas en claro/oscuro y responsive; verificar que las consultas al backend no cambian y ejecutar tests, lint y build del frontend.
+- [x] 6.1 Implementar selector accesible Lista/Calendario con calendario inicial y preferencia local validada; verificar teclado, persistencia y fallback ante valor corrupto en `agenda.test.tsx`.
+- [x] 6.2 Integrar calendario mensual y lista futura con respuestas autoritativas del backend, sin inferir huecos ni disponibilidad; verificar orden, selección, estados, excepción y día vacío en `agenda.test.tsx`.
+- [x] 6.3 Integrar detalle lateral/modal, filtros, refresco automático y bottom sheets móviles con ambas vistas en claro/oscuro y responsive; verificar tests, lint y build del frontend.
 
 ## 7. Pulido coherente de features fusionadas
 
@@ -52,8 +52,14 @@
 ## 9. Cierre verificable de C-08
 
 - [x] 9.1 Auditar diff y repositorio por secretos, datos reales, integraciones fuera del MVP, dependencias no justificadas, `any`, `dist/`, `coverage/` y paths no previstos; verificar `git diff --check` y documentar cualquier excepción aprobada.
-- [x] 9.2 Recorrer manualmente login, dashboard, sidebar expandido/contraído/drawer, temas, pacientes, catálogos, disponibilidad, alta modal, agenda lista/grilla y lifecycle en 390×844 y 1440×900 sin Playwright; registrar foco, overflow, contraste, carga/vacío/error y diferencias por prioridad.
+- [x] 9.2 Recorrer manualmente login, dashboard, navegación responsive, temas, pacientes, catálogos, disponibilidad, alta modal, agenda Lista/Calendario, bottom sheets y lifecycle en 390×844 y 1440×900 sin Playwright; registrar foco, overflow, contraste, carga/vacío/error y diferencias por prioridad.
 - [x] 9.3 Ejecutar `node scripts/change-scope/check.mjs --branch change/c-08-integration-ui-polish --base main` y `openspec validate c-08-integration-ui-polish --strict`; verificar cero violaciones y que todos los artefactos/evidencias pertenecen al change.
+
+## 10. Reconciliación del pulido final
+
+- [x] 10.1 Reconciliar proposal, design, specs y tareas con el resultado final posterior a la primera verificación: Hoy/Próximos, Lista/Calendario, superficies responsive, confirmación previa y actualización dinámica.
+- [x] 10.2 Incorporar al contrato de agenda futura filtros opcionales por sillón y estado, conservando por defecto únicamente `PROGRAMADO` y `CONFIRMADO` y sin mover reglas temporales a React.
+- [x] 10.3 Repetir validación OpenSpec, tests/builds relevantes y `git diff --check`; anexar el resultado final a `verification.md` antes de commit, merge, sync y archive.
 
 ## Workflow follow-up
 

@@ -8,7 +8,7 @@ describe('agenda-params', () => {
     const state = readViewState(new URLSearchParams(), TODAY)
     expect(state.fecha).toBe(TODAY)
     expect(state.estados).toHaveLength(5)
-    expect(toAgendaQuery(state)).toEqual({ desde: TODAY })
+    expect(toAgendaQuery(state)).toEqual({ desde: '2027-03-01', hasta: '2027-03-31' })
   })
 
   it('una fecha inválida vuelve a hoy', () => {

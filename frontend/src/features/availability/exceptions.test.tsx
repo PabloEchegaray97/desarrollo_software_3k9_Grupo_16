@@ -36,10 +36,6 @@ function setDate(value: string) {
   fireEvent.change(screen.getByLabelText('Fecha de la excepción'), { target: { value } })
 }
 
-function setTime(label: string, value: string) {
-  fireEvent.change(screen.getByLabelText(label), { target: { value } })
-}
-
 afterEach(() => {
   cleanup()
   vi.unstubAllGlobals()
@@ -66,33 +62,17 @@ describe('5.3 Edición de excepciones', () => {
     expect(within(section).getByText('Feriado ficticio')).toBeInTheDocument()
   })
 
-  it('registra un bloqueo parcial con inicio y fin', async () => {
-    const bloqueo = feriado({ id: 'exc-2', fecha: '2026-07-15', tipo: 'BLOQUEO', motivo: 'Mantenimiento ficticio', horaInicio: '11:00', horaFin: '12:30' })
-    const { requests } = renderPage([
+  it('reserva los bloqueos parciales para la vista de Bloqueos', async () => {
+    renderPage([
       ['GET /disponibilidad/excepciones', () => ({ status: 200, body: [] })],
-      ['POST /disponibilidad/excepciones', () => ({ status: 201, body: bloqueo })],
     ])
     await loaded()
     const section = screen.getByRole('region', { name: 'Excepciones' })
 
-    setDate('2026-07-15')
-    await userEvent.selectOptions(within(section).getByLabelText('Tipo de excepción'), 'BLOQUEO')
-    await userEvent.click(within(section).getByLabelText('Tramo parcial'))
-    setTime('Inicio del bloqueo', '11:00')
-    setTime('Fin del bloqueo', '12:30')
-    await userEvent.type(within(section).getByLabelText('Motivo de la excepción'), 'Mantenimiento ficticio')
-    await userEvent.click(within(section).getByRole('button', { name: 'Guardar excepción' }))
-
-    expect(await within(section).findByRole('status')).toHaveTextContent('11:00–12:30')
-    const posts = requests.filter((request) => request.method === 'POST')
-    expect(posts[0].body).toEqual({
-      fecha: '2026-07-15',
-      tipo: 'BLOQUEO',
-      motivo: 'Mantenimiento ficticio',
-      horaInicio: '11:00',
-      horaFin: '12:30',
-    })
-    expect(within(section).getByText('Mantenimiento ficticio')).toBeInTheDocument()
+    const type = within(section).getByLabelText('Tipo de excepción')
+    expect(within(type).queryByRole('option', { name: 'Bloqueo' })).not.toBeInTheDocument()
+    expect(within(type).getByRole('option', { name: 'Feriado' })).toBeInTheDocument()
+    expect(within(type).getByRole('option', { name: 'Vacaciones' })).toBeInTheDocument()
   })
 
   it('no envía cuando el motivo está vacío y marca el campo inválido', async () => {

@@ -10,11 +10,12 @@ import { AgendaToolbar, readAgendaViewPreference, writeAgendaViewPreference, typ
 import { AppointmentDetail } from './AppointmentDetail'
 import { AppointmentRow } from './AppointmentRow'
 import { isDefaultFilters, readViewState, toAgendaQuery, writeViewState, type AgendaViewState } from './agenda-params'
-import { listChairs } from './api'
+import { agendaApi, listChairs } from './api'
+import { describeAgendaError, type AgendaProblem } from './errors'
 import type { AppointmentAgendaPageProps } from './contracts'
 import { formatCivilDate, localDateFromInstant, todayLocal } from './time'
 import { useAgenda } from './useAgenda'
-import type { AgendaTurno, AppointmentStatus, ChairOption } from './types'
+import { APPOINTMENT_STATUSES, type AgendaTurno, type AppointmentStatus, type ChairOption, type UpcomingAgendaResponse } from './types'
 import './agenda.css'
 
 export type { AgendaActionsContext, AgendaActionsRenderer, AppointmentAgendaPageProps } from './contracts'
@@ -47,6 +48,12 @@ function groupByLocalDate(turnos: readonly AgendaTurno[]): Array<{ fecha: string
   return Array.from(groups, ([fecha, items]) => ({ fecha, turnos: items }))
 }
 
+type UpcomingLoad =
+  | { status: 'idle' }
+  | { status: 'loading' }
+  | { status: 'error'; problem: AgendaProblem }
+  | { status: 'ready'; data: UpcomingAgendaResponse; refreshing: boolean; refreshError: AgendaProblem | null }
+
 export function AppointmentAgendaPage({ renderActions }: AppointmentAgendaPageProps = {}) {
   const location = useLocation()
   const [params, setParams] = useSearchParams()
@@ -62,8 +69,43 @@ export function AppointmentAgendaPage({ renderActions }: AppointmentAgendaPagePr
   const [notice, setNotice] = useState<string | null>(null)
   const query = useMemo(() => toAgendaQuery(view), [view])
   const { load, refresh, retry } = useAgenda(query)
+  const [upcomingAttempt, setUpcomingAttempt] = useState(0)
+  const [upcomingLoad, setUpcomingLoad] = useState<UpcomingLoad>({ status: 'idle' })
 
-  useEffect(() => subscribeToAppointmentChanges(() => { void refresh() }), [refresh])
+  useEffect(() => {
+    if (agendaView !== 'list') return
+    if (view.estados.length === 0) {
+      setUpcomingLoad({ status: 'idle' })
+      return
+    }
+    const controller = new AbortController()
+    setUpcomingLoad((prev) =>
+      prev.status === 'ready' ? { ...prev, refreshing: true, refreshError: null } : { status: 'loading' },
+    )
+    agendaApi.getUpcoming({
+      desde: today,
+      todosEstados: true,
+      ...(view.sillonId ? { sillonId: view.sillonId } : {}),
+      ...(view.estados.length < APPOINTMENT_STATUSES.length ? { estado: view.estados } : {}),
+    }, controller.signal).then(
+      (data) => {
+        if (!controller.signal.aborted) setUpcomingLoad({ status: 'ready', data, refreshing: false, refreshError: null })
+      },
+      (error: unknown) => {
+        if (controller.signal.aborted) return
+        const problem = describeAgendaError(error)
+        setUpcomingLoad((prev) =>
+          prev.status === 'ready' ? { ...prev, refreshing: false, refreshError: problem } : { status: 'error', problem },
+        )
+      },
+    )
+    return () => controller.abort()
+  }, [agendaView, today, upcomingAttempt, view.estados, view.sillonId])
+
+  useEffect(() => subscribeToAppointmentChanges(() => {
+    void refresh()
+    setUpcomingAttempt((value) => value + 1)
+  }), [refresh])
 
   const [chairs, setChairs] = useState<ChairOption[]>([])
   const [chairsError, setChairsError] = useState(false)
@@ -88,7 +130,8 @@ export function AppointmentAgendaPage({ renderActions }: AppointmentAgendaPagePr
     }, today))
   }, [setParams, today, view])
 
-  const allTurnos = load.status === 'ready' ? load.data.turnos : []
+  const activeLoad = agendaView === 'grid' ? load : upcomingLoad
+  const allTurnos = activeLoad.status === 'ready' ? activeLoad.data.turnos : []
   const searchQuery = normalizeSearch(appliedSearch)
   const filteredTurnos = useMemo(
     () => allTurnos.filter((turno) => matchesSearch(turno, searchQuery)),
@@ -112,11 +155,11 @@ export function AppointmentAgendaPage({ renderActions }: AppointmentAgendaPagePr
   }, {}), [filteredTurnos])
 
   useEffect(() => {
-    if (load.status === 'ready' && !load.refreshing && view.turnoId && !selected) {
+    if (activeLoad.status === 'ready' && !activeLoad.refreshing && view.turnoId && !selected) {
       setNotice('El turno que estabas viendo ya no figura en esta lista.')
       setParams(writeViewState({ ...view, turnoId: undefined }, today), { replace: true })
     }
-  }, [load, selected, setParams, today, view])
+  }, [activeLoad, selected, setParams, today, view])
 
   const closeDetail = () => {
     const id = view.turnoId
@@ -145,8 +188,7 @@ export function AppointmentAgendaPage({ renderActions }: AppointmentAgendaPagePr
     update({ sillonId: undefined, estados: readViewState(new URLSearchParams(), today).estados })
   }
 
-  const emptyTitle = filtersApplied ? 'Ningún turno coincide con los filtros' : 'No hay turnos para este mes'
-  const emptyDescription = filtersApplied ? 'Probá ajustar la búsqueda o limpiar los filtros.' : 'No hay turnos registrados en el mes visible.'
+  const emptyTitle = filtersApplied ? 'Ningún turno coincide con los filtros' : (agendaView === 'list' ? 'No hay próximos turnos' : 'No hay turnos para este mes')
 
   return (
     <section className="agenda agenda-page">
@@ -175,17 +217,17 @@ export function AppointmentAgendaPage({ renderActions }: AppointmentAgendaPagePr
         <Plus size={24} weight="bold" aria-hidden="true" />
       </Link>
 
-      <section className="agenda-summary" aria-label="Resumen del mes visible">
+      <section className="agenda-summary" aria-label={agendaView === 'list' ? 'Resumen de turnos' : 'Resumen del mes visible'}>
         <article className="agenda-summary__item">
-          <span><small>Total</small><strong>{load.status === 'ready' ? filteredTurnos.length : '—'}</strong></span>
+          <span><small>Total</small><strong>{activeLoad.status === 'ready' ? filteredTurnos.length : '—'}</strong></span>
           <CalendarBlank size={20} aria-hidden="true" />
         </article>
         <article className="agenda-summary__item" data-tone="pending">
-          <span><small>Pendientes</small><strong>{load.status === 'ready' ? statusCounts.PROGRAMADO : '—'}</strong></span>
+          <span><small>Pendientes</small><strong>{activeLoad.status === 'ready' ? statusCounts.PROGRAMADO : '—'}</strong></span>
           <Clock size={20} aria-hidden="true" />
         </article>
         <article className="agenda-summary__item" data-tone="cancelled">
-          <span><small>Cancelados</small><strong>{load.status === 'ready' ? statusCounts.CANCELADO : '—'}</strong></span>
+          <span><small>Cancelados</small><strong>{activeLoad.status === 'ready' ? statusCounts.CANCELADO : '—'}</strong></span>
           <XCircle size={20} aria-hidden="true" />
         </article>
       </section>
@@ -211,16 +253,20 @@ export function AppointmentAgendaPage({ renderActions }: AppointmentAgendaPagePr
             filtersOpen={filtersOpen}
             hasActiveFilters={filtersApplied}
             onToggleFilters={() => setFiltersOpen((open) => !open)}
-            refreshing={load.status === 'ready' && load.refreshing}
-            generadoEn={load.status === 'ready' ? load.data.generadoEn : null}
-            onRefresh={() => { setNotice(null); void refresh() }}
+            refreshing={activeLoad.status === 'ready' && activeLoad.refreshing}
+            generadoEn={activeLoad.status === 'ready' ? activeLoad.data.generadoEn : null}
+            onRefresh={() => {
+              setNotice(null)
+              if (agendaView === 'grid') void refresh()
+              else setUpcomingAttempt((value) => value + 1)
+            }}
           />
 
           {notice ? <p className="agenda-notice" role="status">{notice}</p> : null}
-          {load.status === 'ready' && load.refreshError ? (
+          {activeLoad.status === 'ready' && activeLoad.refreshError ? (
             <p className="agenda-notice" data-tone="error" role="alert">
-              No se pudo actualizar; se muestran los datos anteriores. {load.refreshError.message}
-              {load.refreshError.requestId ? ` (ref. ${load.refreshError.requestId})` : ''}
+              No se pudo actualizar; se muestran los datos anteriores. {activeLoad.refreshError.message}
+              {activeLoad.refreshError.requestId ? ` (ref. ${activeLoad.refreshError.requestId})` : ''}
             </p>
           ) : null}
 
@@ -229,7 +275,7 @@ export function AppointmentAgendaPage({ renderActions }: AppointmentAgendaPagePr
               <div>
                 <h2>{formatCivilDate(view.fecha)}</h2>
                 <p>
-                  {load.status === 'ready'
+                  {activeLoad.status === 'ready'
                     ? `${visibleTurnos.length} ${visibleTurnos.length === 1 ? 'turno' : 'turnos'} para esta fecha`
                     : 'Consultá la agenda por fecha y estado.'}
                 </p>
@@ -238,36 +284,37 @@ export function AppointmentAgendaPage({ renderActions }: AppointmentAgendaPagePr
             </header>
           ) : null}
 
-          {load.status === 'idle' ? (
+          {activeLoad.status === 'idle' ? (
             <StatePanel state="empty" title="Sin estados elegidos" description="Elegí al menos un estado para ver turnos." />
           ) : null}
-          {load.status === 'loading' ? (
-            <StatePanel state="loading" title="Cargando turnos" description="Buscando los turnos del mes visible." />
+          {activeLoad.status === 'loading' ? (
+            <StatePanel state="loading" title="Cargando turnos" description={agendaView === 'list' ? 'Buscando todos los turnos próximos.' : 'Buscando los turnos del mes visible.'} />
           ) : null}
-          {load.status === 'error' ? (
+          {activeLoad.status === 'error' ? (
             <StatePanel
               state="error"
-              title={load.problem.kind === 'range' ? 'Fecha rechazada' : 'No se pudo cargar la agenda'}
-              description={load.problem.message}
-              actionLabel={load.problem.kind === 'range' ? undefined : 'Reintentar'}
-              onAction={retry}
+              title={activeLoad.problem.kind === 'range' ? 'Fecha rechazada' : 'No se pudo cargar la agenda'}
+              description={activeLoad.problem.message}
+              actionLabel={activeLoad.problem.kind === 'range' ? undefined : 'Reintentar'}
+              onAction={() => {
+                if (agendaView === 'grid') retry()
+                else setUpcomingAttempt((value) => value + 1)
+              }}
             />
           ) : null}
-          {load.status === 'ready' ? (
+          {activeLoad.status === 'ready' ? (
             <>
               {visibleTurnos.length === 0 ? (
-                agendaView === 'grid' ? (
-                  <div className="agenda-empty" role="status">
-                    <CalendarBlank size={34} weight="fill" aria-hidden="true" />
-                    <p>La agenda está libre este día.</p>
+                <div className="agenda-empty" role="status">
+                  <CalendarBlank size={34} weight="fill" aria-hidden="true" />
+                  <p>{filtersApplied ? 'Ningún turno coincide con los filtros' : (agendaView === 'grid' ? 'La agenda está libre este día.' : emptyTitle)}</p>
+                  {!filtersApplied ? (
                     <Link className="agenda-empty__action" to="/turnos/nuevo" state={{ backgroundLocation: location }}>
                       <Plus size={15} weight="bold" aria-hidden="true" />
                       Crear turno
                     </Link>
-                  </div>
-                ) : (
-                  <StatePanel state="empty" title={emptyTitle} description={emptyDescription} />
-                )
+                  ) : null}
+                </div>
               ) : (
                 <div className={`agenda-results${showSideDetail ? ' agenda-results--detail' : ''}`}>
                   <div className="agenda-results__list">

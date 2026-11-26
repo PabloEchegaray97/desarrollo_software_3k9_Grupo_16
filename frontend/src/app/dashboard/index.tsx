@@ -280,8 +280,9 @@ export function PracticeDashboard() {
   const todayAppointments = load.status === 'ready' ? load.today : []
   const upcomingAppointments = load.status === 'ready' ? load.upcoming : []
   const nextAppointment = upcomingAppointments.find((turno) => isOperative(turno) && Date.parse(turno.inicio) >= now)
-  const pendingCount = todayAppointments.filter(({ estado }) => estado === 'PROGRAMADO').length
-  const confirmedCount = todayAppointments.filter(({ estado }) => estado === 'CONFIRMADO').length
+  const totalKpiLabel = scope === 'today' ? 'Turnos hoy' : 'Próximos turnos'
+  const pendingCount = appointments.filter(({ estado }) => estado === 'PROGRAMADO').length
+  const confirmedCount = appointments.filter(({ estado }) => estado === 'CONFIRMADO').length
   const totalPages = Math.max(1, Math.ceil(appointments.length / pageSize))
   const currentPage = Math.min(page, totalPages)
   const visibleAppointments = appointments.slice((currentPage - 1) * pageSize, currentPage * pageSize)
@@ -352,9 +353,9 @@ export function PracticeDashboard() {
 
       {load.status === 'ready' ? (
         <>
-          <section className="dashboard-summary" aria-label="Resumen de hoy">
-            <article aria-label={`Turnos hoy: ${todayAppointments.length}`}>
-              <div><small>Turnos hoy</small><strong>{todayAppointments.length}</strong></div>
+          <section className="dashboard-summary" aria-label={scope === 'today' ? 'Resumen de hoy' : 'Resumen de próximos turnos'}>
+            <article aria-label={`${totalKpiLabel}: ${appointments.length}`}>
+              <div><small>{totalKpiLabel}</small><strong>{appointments.length}</strong></div>
               <CalendarBlank size={20} aria-hidden="true" />
             </article>
             <article aria-label={`Pendientes: ${pendingCount}`}>

@@ -12,21 +12,19 @@ import { TextField } from './fields'
 // La configuración compartida no habilita `globals`, por lo que RTL no limpia automáticamente.
 afterEach(() => cleanup())
 
-const adminUiCss = readFileSync(resolve(process.cwd(), 'src/features/catalog/ui/admin-ui.css'), 'utf8').replace(/\r\n/g, '\n')
+const modalCss = readFileSync(resolve(process.cwd(), 'src/shared/components/app-modal.css'), 'utf8').replace(/\r\n/g, '\n')
 
 describe('estilos administrativos', () => {
   it('usa el token de overlay compartido con ambos temas', () => {
-    expect(adminUiCss).toContain('.adm-modal::backdrop { background: var(--color-overlay); }')
-    expect(adminUiCss).not.toMatch(/#[0-9a-fA-F]{3,8}\b/)
-    expect(adminUiCss).not.toMatch(/rgba?\(/)
+    expect(modalCss).toMatch(/\.app-modal-backdrop\s*\{[^}]*background: var\(--color-overlay\)/s)
   })
 
   it('centra los modales en escritorio y los ancla como bottom sheet en móvil', () => {
-    expect(adminUiCss).toContain('.adm-modal {\n  position: fixed; inset: 0; margin: auto;')
-    expect(adminUiCss).toContain('@media (max-width: 48rem)')
-    expect(adminUiCss).toContain('inset: auto 0 0;')
-    expect(adminUiCss).toContain('border-radius: var(--radius-lg) var(--radius-lg) 0 0;')
-    expect(adminUiCss).toContain('env(safe-area-inset-bottom)')
+    expect(modalCss).toMatch(/\.app-modal-backdrop\s*\{[^}]*place-items: center/s)
+    expect(modalCss).toContain('@media (max-width: 48rem)')
+    expect(modalCss).toMatch(/\.app-modal-backdrop\s*\{[^}]*align-items: end/s)
+    expect(modalCss).toContain('border-radius: 1.5rem 1.5rem 0 0;')
+    expect(modalCss).toContain('env(safe-area-inset-bottom)')
   })
 })
 
@@ -41,15 +39,13 @@ describe('AdminModal', () => {
     expect(onClose).toHaveBeenCalledTimes(1)
   })
 
-  it('cierra con Esc (evento cancel del dialog nativo)', () => {
+  it('cierra con Escape desde el diálogo compartido', () => {
     const onClose = vi.fn()
     render(<AdminModal open title="Nueva prestación" onClose={onClose}><p>Contenido</p></AdminModal>)
 
-    const cancel = new Event('cancel', { cancelable: true })
-    fireEvent(screen.getByRole('dialog'), cancel)
+    fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' })
 
     expect(onClose).toHaveBeenCalledTimes(1)
-    expect(cancel.defaultPrevented).toBe(true)
   })
 
   it('no renderiza contenido cuando está cerrado', () => {

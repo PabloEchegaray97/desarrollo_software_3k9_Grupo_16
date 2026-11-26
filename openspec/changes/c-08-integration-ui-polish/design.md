@@ -47,25 +47,31 @@ Se agregará únicamente `@phosphor-icons/react`, previa modificación controlad
 
 Alternativa descartada: SVG copiados o una mezcla de librerías. Perdería consistencia y aumentaría mantenimiento.
 
-### 4. Dashboard sin endpoint nuevo
+### 4. Dashboard con alcance Hoy/Próximos
 
-`practice-dashboard` consultará `GET /api/agenda` para hoy mediante el cliente existente y contará total y estados de la respuesta. Los accesos rápidos serán enlaces reales a los módulos. La acción `+ Nuevo turno` abrirá la ruta modal. No se calcularán disponibilidad, ocupación futura ni métricas clínicas.
+`practice-dashboard` consulta `GET /api/agenda` para Hoy y `GET /api/agenda/proximos?desde=YYYY-MM-DD` para Próximos turnos. El selector conserva ambos alcances dentro del dashboard; los próximos se ordenan y agrupan por fecha, se paginan y posicionan inicialmente la página que contiene el siguiente turno operativo. La acción `Nuevo turno` vive en el shell y abre la ruta modal. No se calculan disponibilidad, huecos ni conflictos en React.
 
-Alternativa descartada: crear `/api/dashboard`. Para un solo día y un único usuario duplicaría datos y contrato sin aportar valor al MVP.
+Alternativa descartada: crear `/api/dashboard`. La agenda sigue siendo el contrato operativo y el endpoint de próximos permite filtros de estado y sillón sin duplicar un modelo analítico.
 
-### 5. Alta como modal de ruta; ciclo de vida como página
+### 5. Alta en tres pasos como modal de ruta; ciclo de vida como página
 
 `/turnos/nuevo` seguirá siendo una URL navegable, pero `AppRoutes` la presentará como modal. Las aperturas internas conservarán la ubicación de fondo en el estado de navegación; un acceso directo usará `/` como fondo estable. Un componente modal compartido manejará diálogo, foco inicial, encierro de foco, `Esc`, backdrop y retorno al disparador.
 
-La lógica de carga y alta de C-05 se conservará en el feature; se adaptará su contenedor y resultado. `/turnos/:appointmentId` continuará como página dedicada para reprogramar, cancelar, cambiar estado e inspeccionar historial.
+La lógica de carga y alta de C-05 permanece en el feature, presentada como: selección de prestación/sillón, selección o alta de paciente, fecha/horario y confirmación previa. Un paciente recién creado aparece inmediatamente entre los recientes. Tras persistir, el modal muestra `Detalle del turno` y únicamente permite cerrar; `/turnos/:appointmentId` continúa como página dedicada para reprogramar, cancelar, cambiar estado e inspeccionar historial.
 
 Alternativa descartada: mover también el ciclo de vida a modales. Encadenaría diálogos complejos y haría más frágil la navegación y el foco.
 
-### 6. Agenda lista/grilla como dos renderizadores de la misma respuesta
+### 6. Agenda Lista/Calendario con contratos temporales autoritativos
 
-Lista seguirá siendo el valor inicial. La preferencia `list | grid` se persistirá localmente y no formará parte de los filtros de API. `AgendaGrid` recibirá los mismos `turnos` y `dia` que la lista, respetará su orden y posicionará visualmente por horas ya informadas; no buscará huecos ni declarará disponibilidad. Selección, detalle, filtros y refresco seguirán compartidos.
+Calendario es el valor inicial. La preferencia interna `list | grid` se persiste localmente, pero la interfaz comunica `Lista` y `Calendario`. Lista consulta todos los turnos desde hoy; Calendario consulta el rango visible y permite elegir un día. En escritorio, la lista abre detalle lateral y el calendario abre detalle modal; en móvil, el día y las acciones usan bottom sheets coherentes. Ninguna representación busca huecos ni declara disponibilidad.
 
-Alternativa descartada: nueva consulta o lógica de disponibilidad para la grilla. Contradiría la autoridad del backend y duplicaría reglas temporales.
+Alternativa descartada: calcular disponibilidad desde el calendario. Contradiría la autoridad del backend y duplicaría reglas temporales.
+
+### 10. Invalidación local después de mutaciones
+
+Las mutaciones de turnos publican un evento local tipado. Dashboard y Agenda se suscriben y vuelven a consultar sus contratos; de este modo un turno creado o modificado aparece sin `F5`, sin compartir cachés mutables ni trasladar reglas temporales al cliente.
+
+Alternativa descartada: esperar navegación o recarga manual. Dejaría información obsoleta visible después de una operación exitosa.
 
 ### 7. Carga de entorno antes de validación
 

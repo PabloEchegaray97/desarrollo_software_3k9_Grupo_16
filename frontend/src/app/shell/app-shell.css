@@ -157,6 +157,7 @@
 .shell-nav {
   flex: 1;
   min-height: 0;
+  overflow-x: hidden;
   overflow-y: auto;
 }
 
@@ -226,23 +227,6 @@
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   clip-path: inset(50%);
-}
-
-.app-sidebar[data-collapsed='true'] .shell-link:hover::after,
-.app-sidebar[data-collapsed='true'] .shell-link:focus-visible::after {
-  position: absolute;
-  z-index: 2;
-  top: 50%;
-  left: calc(100% + var(--space-2));
-  padding: var(--space-2) var(--space-3);
-  transform: translateY(-50%);
-  border: 0;
-  border-radius: var(--radius-sm);
-  color: var(--color-text);
-  background: var(--color-surface);
-  box-shadow: none;
-  content: attr(data-tooltip);
-  white-space: nowrap;
 }
 
 .shell-sidebar__footer {

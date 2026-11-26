@@ -3,7 +3,7 @@
 ## MODIFIED Requirements
 
 ### Requirement: Formulario de alta de turno
-La interfaz SHALL presentar el alta asociada a `/turnos/nuevo` como un modal sobre el contexto autenticado. SHALL ofrecer paciente activo mediante búsqueda, prestación activa, sillón activo, fecha y hora locales, y sobrescrituras opcionales de duración e intervalo que muestran los valores predeterminados vigentes.
+La interfaz SHALL presentar el alta asociada a `/turnos/nuevo` como un modal de tres pasos sobre el contexto autenticado. SHALL permitir elegir prestación y sillón activos, buscar o crear un paciente activo, elegir fecha y hora locales y revisar una confirmación antes de persistir. Las sobrescrituras opcionales de duración e intervalo SHALL mostrar los valores predeterminados vigentes.
 
 #### Scenario: Valores de referencia
 - **GIVEN** una prestación de 30 minutos sin intervalo propio y el intervalo global en 10 minutos
@@ -17,6 +17,15 @@ La interfaz SHALL presentar el alta asociada a `/turnos/nuevo` como un modal sob
 #### Scenario: Campos obligatorios
 - **WHEN** el odontólogo intenta confirmar sin paciente, prestación, sillón, fecha u hora
 - **THEN** la interfaz marca los campos faltantes y no envía la solicitud
+
+#### Scenario: Paciente recién creado
+- **WHEN** el odontólogo crea un paciente desde el alta
+- **THEN** el paciente aparece inmediatamente entre los recientes, queda disponible para seleccionarlo y no requiere recargar el modal
+
+#### Scenario: Confirmación previa
+- **GIVEN** paciente, prestación, sillón, fecha y horario válidos
+- **WHEN** el odontólogo intenta agendar
+- **THEN** el modal muestra paciente, prestación, sillón, horario y duración y no persiste hasta que se confirma el resumen
 
 #### Scenario: Apertura desde una acción global
 - **GIVEN** una pantalla autenticada con la acción `+ Nuevo turno`
@@ -50,12 +59,12 @@ El modal SHALL mostrar estados de carga y error al obtener opciones, asociar err
 ## ADDED Requirements
 
 ### Requirement: Separación entre alta y gestión del turno
-El modal SHALL limitarse a crear turnos y mostrar su confirmación. Reprogramación, cancelación, cambio de estado e historial SHALL permanecer en `/turnos/:appointmentId`; el modal SHALL enlazar a esa página cuando ya exista un turno.
+El modal SHALL limitarse a crear turnos y mostrar su confirmación. Reprogramación, cancelación, cambio de estado e historial SHALL permanecer en `/turnos/:appointmentId`. Después de persistir, el encabezado SHALL indicar `Detalle del turno` y la única acción final SHALL ser `Cerrar`.
 
 #### Scenario: Turno creado
 - **WHEN** el alta finaliza correctamente
-- **THEN** el modal muestra el resumen y ofrece cerrar, crear otro o abrir la gestión del turno creado
+- **THEN** el modal muestra el detalle de paciente, prestación, sillón, fecha, horario, duración e intervalo y ofrece únicamente cerrar
 
-#### Scenario: Gestionar un turno existente
-- **WHEN** el usuario elige gestionar el turno desde el resumen
-- **THEN** el modal se cierra y la aplicación navega a `/turnos/<id>`
+#### Scenario: Cerrar el detalle creado
+- **WHEN** el usuario elige Cerrar
+- **THEN** el modal se cierra, vuelve al contexto de origen y las vistas suscriptas actualizan sus turnos sin exigir `F5`

@@ -5,6 +5,7 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { apiError, mockApi, page } from '../catalog/test-utils'
+import { notifyAppointmentsChanged } from '../appointments/events'
 import { AGENDA_VIEW_STORAGE_KEY } from './AgendaToolbar'
 import { AppointmentAgendaPage } from './index'
 import type { AgendaResponse, AgendaTurno } from './types'
@@ -33,9 +34,8 @@ describe('AppointmentAgendaPage', () => {
     const { requests } = mockApi([['GET /sillones', () => ({ status: 200, body: chairs })], ['GET /agenda', () => ({ status: 200, body: response([turno()]) })]])
     renderAgenda()
     expect(await screen.findByText('Paciente Ficticio')).toBeTruthy()
-    expect(screen.getByText('10:00–10:40')).toBeTruthy()
+    expect(screen.getByText('10:00 - 10:40')).toBeTruthy()
     expect(within(screen.getByRole('list', { name: 'Turnos del día' })).getByText('Programado')).toBeTruthy()
-    expect(screen.getByText(/Actualizado a las 09:30/)).toBeTruthy()
     expect(screen.getByText(/Disponibilidad: 09:00–13:00/)).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Lista' })).toHaveAttribute('aria-pressed', 'false')
     expect(screen.getByRole('button', { name: 'Calendario' })).toHaveAttribute('aria-pressed', 'true')
@@ -57,7 +57,8 @@ describe('AppointmentAgendaPage', () => {
     expect(listButton).toHaveAttribute('aria-pressed', 'true')
     expect(localStorage.getItem(AGENDA_VIEW_STORAGE_KEY)).toBe('list')
     expect(screen.getByRole('list', { name: 'Turnos del miércoles, 10 de marzo de 2027' })).toBeInTheDocument()
-    expect(requests.filter((request) => request.path.startsWith('/agenda'))).toHaveLength(1)
+    expect(requests.filter((request) => request.path.startsWith('/agenda'))).toHaveLength(2)
+    expect(requests.some((request) => request.path.startsWith('/agenda/proximos?desde='))).toBe(true)
 
     await userEvent.click(screen.getByRole('button', { name: /^10:00.*Paciente Ficticio/ }))
     expect(screen.getByRole('complementary', { name: 'Detalle del turno' })).toBeInTheDocument()
@@ -88,7 +89,8 @@ describe('AppointmentAgendaPage', () => {
     await userEvent.type(screen.getByRole('searchbox'), 'Paciente Ficticio{Enter}')
 
     expect(screen.queryByText('Paciente Secundario')).not.toBeInTheDocument()
-    expect(requests.filter((request) => request.path.startsWith('/agenda'))).toHaveLength(1)
+    expect(requests.filter((request) => request.path.startsWith('/agenda'))).toHaveLength(2)
+    expect(requests.some((request) => request.path.startsWith('/agenda/proximos?desde='))).toBe(true)
     expect(requests.some((request) => request.path.startsWith('/pacientes'))).toBe(false)
   })
 
@@ -197,15 +199,15 @@ describe('AppointmentAgendaPage', () => {
     const grid = screen.getByRole('list', { name: 'Turnos del día' })
     expect(Array.from(grid.querySelectorAll('[data-turno-id]')).map((row) => row.getAttribute('data-turno-id')))
       .toEqual(['later-from-backend', 'earlier-from-backend'])
-    expect(within(grid).getByText('Intervalo 11:40–11:50')).toBeInTheDocument()
-    expect(within(grid).getByText('Intervalo 09:40–09:50')).toBeInTheDocument()
+    expect(within(grid).getByText('11:00 - 11:40')).toBeInTheDocument()
+    expect(within(grid).getByText('09:00 - 09:40')).toBeInTheDocument()
     expect(grid.querySelector('[data-status="CONFIRMADO"]')).toBeInTheDocument()
     expect(grid.querySelector('[data-status="CANCELADO"]')).toBeInTheDocument()
     expect(within(grid).getByText('Fuera de disponibilidad')).toBeInTheDocument()
     expect(screen.getByText('Feriado')).toBeInTheDocument()
     await userEvent.click(within(grid).getAllByRole('button')[0])
     expect(screen.getByRole('dialog', { name: 'Paciente Ficticio' })).toBeInTheDocument()
-    expect(screen.queryByRole('complementary', { name: 'Detalle del turno' })).not.toBeInTheDocument()
+    expect(screen.getByRole('complementary', { name: 'Detalle del turno' })).toBeInTheDocument()
     expect(within(grid).getAllByRole('button')[0]).toHaveAttribute('aria-pressed', 'true')
   })
 
@@ -239,7 +241,7 @@ describe('AppointmentAgendaPage', () => {
     expect(await screen.findByText('La agenda está libre este día.')).toBeTruthy()
     cleanup()
     renderAgenda('/agenda?fecha=2027-03-10&estado=AUSENTE')
-    expect(await screen.findByText('La agenda está libre este día.')).toBeTruthy()
+    expect(await screen.findByText('Ningún turno coincide con los filtros')).toBeTruthy()
   })
 
   it('no consulta si no hay estados marcados', async () => {
@@ -263,7 +265,7 @@ describe('AppointmentAgendaPage', () => {
     renderAgenda()
     await screen.findByText('Paciente Ficticio')
     expect(screen.getByRole('list', { name: 'Turnos del día' })).toBeInTheDocument()
-    await userEvent.click(screen.getByRole('button', { name: 'Actualizar' }))
+    notifyAppointmentsChanged()
     expect(await screen.findByRole('alert')).toBeTruthy()
     expect(screen.getByText('Paciente Ficticio')).toBeTruthy()
     expect(screen.getByRole('list', { name: 'Turnos del día' })).toBeInTheDocument()
@@ -297,12 +299,15 @@ describe('AppointmentAgendaPage', () => {
   it('envía sillón y estados al backend', async () => {
     const { requests } = mockApi([['GET /sillones', () => ({ status: 200, body: chairs })], ['GET /agenda', () => ({ status: 200, body: response([]) })]])
     renderAgenda('/agenda?fecha=2027-03-10&sillon=s1&estado=CONFIRMADO,AUSENTE')
-    await screen.findByText('La agenda está libre este día.')
+    await screen.findByText('Ningún turno coincide con los filtros')
     const agendaRequest = requests.find((r) => r.path.startsWith('/agenda'))
     expect(agendaRequest?.path).toContain('sillonId=s1')
     expect(decodeURIComponent(agendaRequest?.path ?? '')).toContain('estado=CONFIRMADO,AUSENTE')
     await userEvent.click(screen.getByRole('button', { name: 'Lista' }))
-    expect(requests.filter((request) => request.path.startsWith('/agenda'))).toHaveLength(1)
+    expect(requests.filter((request) => request.path.startsWith('/agenda'))).toHaveLength(2)
+    const upcomingRequest = requests.find((request) => request.path.startsWith('/agenda/proximos'))
+    expect(upcomingRequest?.path).toContain('sillonId=s1')
+    expect(decodeURIComponent(upcomingRequest?.path ?? '')).toContain('estado=CONFIRMADO,AUSENTE')
   })
 })
 

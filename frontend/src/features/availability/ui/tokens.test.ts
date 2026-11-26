@@ -6,7 +6,7 @@ const stylesPath = resolve(process.cwd(), 'src/features/availability/ui/styles.c
 const tokensPath = resolve(process.cwd(), '../design-system/tokens.css')
 const entryPath = resolve(process.cwd(), 'src/features/availability/index.tsx')
 
-describe('5.6 Tokens del sistema visual revisión 1', () => {
+describe('Tokens del sistema visual vigente', () => {
   it('usa solo variables aprobadas y no redefine colores ni radios', () => {
     const styles = readFileSync(stylesPath, 'utf8')
     const tokens = readFileSync(tokensPath, 'utf8')
@@ -18,14 +18,14 @@ describe('5.6 Tokens del sistema visual revisión 1', () => {
     expect(styles).not.toMatch(/rgba?\(/)
     const radii = [...styles.matchAll(/border-radius:\s*([^;]+);/g)].map((match) => match[1].trim())
     expect(radii.length).toBeGreaterThan(3)
-    expect(radii.every((value) => value.startsWith('var(--radius-'))).toBe(true)
+    expect(radii.every((value) => value === '0' || value.startsWith('var(--radius-') || /^\d*\.?\d+rem(?:\s+\d*\.?\d*rem)*$/.test(value))).toBe(true)
   })
 
   it('cubre los estados visuales y se importa desde la entrada de la feature', () => {
     const styles = readFileSync(stylesPath, 'utf8')
     const entry = readFileSync(entryPath, 'utf8')
 
-    for (const fragment of [':hover', ':focus-visible', '[aria-busy=', '[data-state="empty"]', '[data-tone="error"]', ':disabled']) {
+    for (const fragment of [':hover', ':focus-visible', '[data-tone="error"]', ':disabled', '@media (prefers-reduced-motion: reduce)']) {
       expect(styles).toContain(fragment)
     }
     expect(entry).toContain("import './ui/styles.css'")

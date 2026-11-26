@@ -85,11 +85,29 @@ export class AgendaService {
     const from = horaLocalAUtc(query.desde, '00:00', ZONA_IANA);
     if (from === null) throw rangeInvalid();
 
+    if (query.sillonId !== undefined) {
+      await this.requireChair(query.sillonId);
+    }
+
+    const conditions = ['a.starts_at >= ?'];
+    const parameters: Array<Date | string> = [new Date(from)];
+
+    if (query.sillonId !== undefined) {
+      conditions.push('a.chair_id = ?');
+      parameters.push(query.sillonId);
+    }
+    if (query.estado !== undefined) {
+      const statuses = [...new Set(query.estado)];
+      conditions.push(`a.status IN (${statuses.map(() => '?').join(', ')})`);
+      parameters.push(...statuses);
+    } else if (query.todosEstados !== true) {
+      conditions.push(`a.status IN ('PROGRAMADO', 'CONFIRMADO')`);
+    }
+
     const sql = `${AGENDA_SELECT}
-  WHERE a.starts_at >= ?
-    AND a.status IN ('PROGRAMADO', 'CONFIRMADO')
+  WHERE ${conditions.join(' AND ')}
   ORDER BY a.starts_at ASC, a.created_at ASC, a.id ASC`;
-    const rows = (await this.dataSource.query(sql, [new Date(from)])) as AgendaRow[];
+    const rows = (await this.dataSource.query(sql, parameters)) as AgendaRow[];
 
     return {
       zonaHoraria: ZONA_IANA,

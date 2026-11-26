@@ -51,14 +51,15 @@ describe('PatientsPage', () => {
     expect(await screen.findByText('Todavía no hay pacientes')).toBeInTheDocument()
   })
 
-  it('busca con debounce y reinicia la página', async () => {
+  it('busca al enviar el criterio y reinicia la página', async () => {
     const { requests } = mockApi([['GET /pacientes', () => ({ status: 200, body: page([patient()]) })]])
     renderPage()
-    await screen.findByText('Paciente Ficticio Uno')
+    await screen.findByRole('button', { name: /Paciente Ficticio Uno.*30000001/i })
 
-    await userEvent.type(screen.getByLabelText('Buscar pacientes'), '5555-0001')
+    await userEvent.type(screen.getByLabelText('Buscar cliente'), '5555-0001')
+    await userEvent.click(screen.getByRole('button', { name: 'Buscar' }))
 
-    await waitFor(() => expect(requests.at(-1)?.path).toBe('/pacientes?q=5555-0001&pageSize=20'))
+    await waitFor(() => expect(requests.at(-1)?.path).toBe('/pacientes?q=5555-0001&incluirInactivos=true&pageSize=20'))
     expect(requests.filter((request) => request.path.includes('q=')).length).toBe(1)
   })
 
@@ -70,7 +71,7 @@ describe('PatientsPage', () => {
     renderPage()
     const dialog = await openNewPatientForm()
     await fillRequired(dialog)
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Guardar' }))
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Guardar paciente' }))
 
     expect(await screen.findByText('Paciente «Paciente Ficticio Uno» guardado.')).toBeInTheDocument()
     expect(requests.find((request) => request.method === 'POST')?.body).toEqual({
@@ -92,7 +93,7 @@ describe('PatientsPage', () => {
     renderPage()
     const dialog = await openNewPatientForm()
     await fillRequired(dialog)
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Guardar' }))
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Guardar paciente' }))
 
     expect(await within(dialog).findByText('Posible paciente duplicado')).toBeInTheDocument()
     expect(within(dialog).getByRole('list', { name: 'Pacientes coincidentes' })).toHaveTextContent('Paciente Ficticio Uno (inactivo)')
@@ -115,7 +116,7 @@ describe('PatientsPage', () => {
     renderPage()
     const dialog = await openNewPatientForm()
     await fillRequired(dialog)
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Guardar' }))
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Guardar paciente' }))
     // Sin `details.candidatos` (backend previo a CR-01) la advertencia igual se muestra.
     expect(await within(dialog).findByText('Posible paciente duplicado')).toBeInTheDocument()
 
@@ -136,7 +137,7 @@ describe('PatientsPage', () => {
     const dialog = await openNewPatientForm()
     await fillRequired(dialog, 'Otra Persona Ficticia', '11 5555-0009')
     await userEvent.type(within(dialog).getByLabelText(/DNI/), '30.000.001')
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Guardar' }))
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Guardar paciente' }))
 
     const dni = within(dialog).getByLabelText(/DNI/)
     expect(await within(dialog).findByText('Ya existe un paciente con ese DNI')).toBeInTheDocument()
@@ -149,7 +150,7 @@ describe('PatientsPage', () => {
     const { requests } = mockApi([['GET /pacientes', () => ({ status: 200, body: page([]) })]])
     renderPage()
     const dialog = await openNewPatientForm()
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Guardar' }))
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Guardar paciente' }))
 
     expect(within(dialog).getByText('Ingresá el nombre del paciente.')).toBeInTheDocument()
     expect(within(dialog).getByText('Ingresá un teléfono de contacto.')).toBeInTheDocument()
@@ -166,10 +167,10 @@ describe('PatientsPage', () => {
     const dialog = screen.getByRole('dialog', { name: 'Editar paciente' })
     expect(within(dialog).getByLabelText(/DNI/)).toHaveValue('30000001')
 
-    const email = within(dialog).getByLabelText(/Email/)
+    const email = within(dialog).getByLabelText(/Correo/)
     await userEvent.clear(email)
     await userEvent.type(email, 'nuevo@example.test')
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Guardar' }))
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Guardar paciente' }))
 
     await waitFor(() => expect(requests.find((request) => request.method === 'PUT')?.body).toEqual({
       nombre: 'Paciente Ficticio Uno',

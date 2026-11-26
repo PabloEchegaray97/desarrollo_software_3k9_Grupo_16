@@ -69,6 +69,7 @@ describe('5.5 Estados y accesibilidad', () => {
     const weekly = screen.getByRole('region', { name: 'Horario de atención' })
     await within(weekly).findByDisplayValue('09:00')
     const save = screen.getByRole('button', { name: 'Guardar cambios' })
+    await userEvent.selectOptions(within(weekly).getByLabelText('Intervalo general'), '11')
 
     await userEvent.click(save)
 
@@ -98,6 +99,7 @@ describe('5.5 Estados y accesibilidad', () => {
     render(<AvailabilityPage />)
     const weekly = screen.getByRole('region', { name: 'Horario de atención' })
     await within(weekly).findByDisplayValue('09:00')
+    await userEvent.selectOptions(within(weekly).getByLabelText('Intervalo general'), '11')
 
     await userEvent.click(screen.getByRole('button', { name: 'Guardar cambios' }))
 

@@ -163,3 +163,22 @@ Estado: completada y aprobada por Pablo.
 - Se revisaron los flujos principales sin Playwright: login, dashboard, sidebar expandido/contraído y drawer móvil, temas claro/oscuro, pacientes, catálogos, disponibilidad, alta modal, agenda lista/grilla y lifecycle.
 - Se revisaron los viewports 390×844 y 1440×900.
 - No se encontraron diferencias pendientes de foco, overflow, contraste, carga, vacío, error o movimiento que requirieran corrección.
+
+## Reconciliación posterior al pulido final
+
+Fecha: 2026-11-25
+Estado: documentación reconciliada; cierre automático pendiente.
+
+- Pablo confirmó que terminó el pulido visual de C-08. No se utilizó Playwright ni se generaron capturas automatizadas.
+- Se actualizaron proposal, design, tasks y specs delta para reflejar el resultado final: navegación responsive, dashboard Hoy/Próximos, agenda Lista/Calendario, detalles contextuales, bottom sheets, confirmación previa del alta y actualización dinámica.
+- `openspec validate c-08-integration-ui-polish --strict`: aprobado.
+- Backend `agenda.controller.spec.ts` + `agenda.service.spec.ts`: 2 suites y 34 pruebas aprobadas.
+- Backend build: aprobado.
+- Frontend `dashboard.test.tsx`: 1 suite y 11 pruebas aprobadas.
+- `git diff --check`: aprobado; solo informó la normalización LF/CRLF esperable del entorno Windows.
+- Frontend TypeScript (`tsc -b`): aprobado después de retirar la declaración obsoleta `emptyDescription`.
+- Frontend `agenda.test.tsx`: 18/18 pruebas aprobadas después de reconciliar formato horario, contratos Lista/Calendario, filtros y refresco por evento.
+- Suite frontend completa: 26 archivos y 186/186 pruebas aprobadas después de reconciliar las expectativas con la interfaz final.
+- Frontend TypeScript (`tsc -b`) y build de producción: aprobados; Vite informó únicamente la advertencia no bloqueante de chunk mayor a 500 kB.
+- Backend agenda: 4 suites y 66/66 pruebas aprobadas; build NestJS aprobado.
+- Tarea 10.3 completada: validaciones finales aprobadas antes de sync y archive.

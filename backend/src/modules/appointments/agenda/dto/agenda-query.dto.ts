@@ -1,5 +1,5 @@
 import { Transform } from 'class-transformer';
-import { ArrayNotEmpty, IsArray, IsIn, IsOptional, IsUUID, Matches } from 'class-validator';
+import { ArrayNotEmpty, IsArray, IsBoolean, IsIn, IsOptional, IsUUID, Matches } from 'class-validator';
 import { APPOINTMENT_STATUSES, type AppointmentStatus } from '../../core/domain/appointment-status.js';
 
 /** Fecha local `YYYY-MM-DD`. Que exista en el calendario lo decide `resolveAgendaRange`. */
@@ -39,4 +39,20 @@ export class AgendaQueryDto {
 export class UpcomingAgendaQueryDto {
   @Matches(AGENDA_LOCAL_DATE)
   desde: string;
+
+  @IsOptional()
+  @IsUUID()
+  sillonId?: string;
+
+  @IsOptional()
+  @Transform(({ value }: { value: unknown }) => toStatusList(value))
+  @IsArray()
+  @ArrayNotEmpty()
+  @IsIn(APPOINTMENT_STATUSES, { each: true })
+  estado?: AppointmentStatus[];
+
+  @IsOptional()
+  @Transform(({ value }: { value: unknown }) => value === 'true' || value === true)
+  @IsBoolean()
+  todosEstados?: boolean;
 }

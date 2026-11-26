@@ -28,7 +28,7 @@ El frontend SHALL ofrecer en `/acceso` un formulario con email y contraseña obl
 - **THEN** se redirige a `/`
 
 ### Requirement: Shell responsive con cierre de sesión
-Con sesión vigente, el shell SHALL mostrar la marca OdoSoft y un sidebar izquierdo redondeado con Inicio, Agenda, Pacientes, Prestaciones y sillones, y Disponibilidad. En escritorio SHALL ser fijo y contraíble; en móvil SHALL funcionar como drawer. El control de tema, el email y Cerrar sesión SHALL permanecer dentro del sidebar usando el design system revisión 2.
+Con sesión vigente, el shell SHALL mostrar la marca OdoSoft y navegación hacia Inicio, Agenda, Pacientes, Prestaciones, Disponibilidad y Bloqueos. En escritorio SHALL usar un sidebar izquierdo fijo y contraíble con la acción global `Nuevo turno`, el control de tema y Cerrar sesión en su sector inferior. En móvil SHALL ofrecer navegación inferior para los destinos principales y acceso a los restantes controles sin ocultar contenido ni bloquear su desplazamiento.
 
 #### Scenario: Escritorio
 - **GIVEN** un viewport de 1440×900
@@ -43,7 +43,7 @@ Con sesión vigente, el shell SHALL mostrar la marca OdoSoft y un sidebar izquie
 #### Scenario: Móvil
 - **GIVEN** un viewport de 390×844
 - **WHEN** se muestra el shell
-- **THEN** la navegación se abre como drawer desde un botón accesible (`aria-expanded`), no produce desplazamiento horizontal y se cierra al elegir un destino o con `Esc`
+- **THEN** los destinos principales permanecen accesibles desde la navegación inferior, los controles adicionales se abren desde un botón con nombre accesible y no se produce desplazamiento horizontal
 
 #### Scenario: Cerrar sesión
 - **WHEN** el usuario elige Cerrar sesión

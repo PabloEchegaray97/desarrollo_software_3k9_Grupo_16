@@ -87,11 +87,10 @@ describe('AppShell', () => {
     mockApi({ '/auth/sesion': () => authenticated })
     renderShell('/prestaciones')
     const nav = await screen.findByRole('navigation', { name: 'Navegación principal' })
-    for (const name of ['Inicio', 'Agenda', 'Pacientes', 'Prestaciones', 'Disponibilidad']) {
+    for (const name of ['Inicio', 'Agenda', 'Pacientes', 'Prestaciones', 'Disponibilidad', 'Bloqueos']) {
       expect(within(nav).getByRole('link', { name })).toBeInTheDocument()
     }
     expect(within(nav).getByRole('link', { name: 'Prestaciones' })).toHaveAttribute('aria-current', 'page')
-    expect(screen.getByText(FICTIONAL_USER.email)).toBeInTheDocument()
     expect(within(nav).getByRole('link', { name: 'Prestaciones' }).querySelector('svg'))
       .toHaveAttribute('data-phosphor-weight', 'fill')
     expect(within(nav).getByRole('link', { name: 'Agenda' }).querySelector('svg'))
@@ -104,12 +103,13 @@ describe('AppShell', () => {
     const user = userEvent.setup()
     await screen.findByRole('navigation', { name: 'Navegación principal' })
 
-    await user.click(screen.getByRole('button', { name: 'Contraer navegación' }))
+    await user.click(screen.getByRole('button', { name: 'Contraer barra lateral' }))
     expect(document.querySelector('.app-shell')).toHaveAttribute('data-sidebar-collapsed', 'true')
     expect(localStorage.getItem('odosoft.sidebar-collapsed')).toBe('true')
-    expect(screen.getByRole('link', { name: 'Agenda' })).toHaveAttribute('title', 'Agenda')
+    expect(within(screen.getByRole('navigation', { name: 'Navegación principal' })).getByRole('link', { name: 'Agenda' }))
+      .toHaveAttribute('title', 'Agenda')
 
-    await user.click(screen.getByRole('button', { name: 'Expandir navegación' }))
+    await user.click(screen.getByRole('button', { name: 'Expandir barra lateral' }))
     expect(document.querySelector('.app-shell')).toHaveAttribute('data-sidebar-collapsed', 'false')
     expect(localStorage.getItem('odosoft.sidebar-collapsed')).toBe('false')
   })
@@ -120,9 +120,10 @@ describe('AppShell', () => {
     const user = userEvent.setup()
     await screen.findByRole('navigation', { name: 'Navegación principal' })
 
-    await user.click(screen.getByRole('button', { name: 'Tema Oscuro' }))
+    await user.click(screen.getByRole('button', { name: 'Elegir tema, actual: claro' }))
+    await user.click(screen.getByRole('button', { name: 'Oscuro' }))
 
-    expect(screen.getByRole('button', { name: 'Tema Oscuro' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('button', { name: 'Elegir tema, actual: oscuro' })).toBeInTheDocument()
     expect(document.documentElement).toHaveAttribute('data-theme', 'dark')
     expect(localStorage.getItem('odosoft.theme')).toBe('dark')
   })

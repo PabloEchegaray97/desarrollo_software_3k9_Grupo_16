@@ -7,11 +7,12 @@ Las capacidades del MVP ya están integradas, pero la aplicación todavía conse
 ## What Changes
 
 - Adoptar el nombre **OdoSoft** y preparar la revisión 2 del design system, manteniendo la paleta azul/verde, radios acordados y datos ficticios, pero incorporando tema claro/oscuro completo. La revisión visual compartida quedará pendiente de aprobación manual antes de Apply.
-- Sustituir la navegación superior por un sidebar izquierdo redondeado, fijo y contraíble en escritorio, convertido en drawer accesible en móvil; incluir navegación, control de tema, cuenta y cierre de sesión.
+- Sustituir la navegación superior por un sidebar izquierdo redondeado, fijo y contraíble en escritorio, con navegación inferior adaptada a móvil; incluir navegación, acción global de nuevo turno, control de tema y cierre de sesión.
 - Incorporar `@phosphor-icons/react`: variante regular por defecto y `fill` para destino/estado activo, sin usar iconos como único medio de comunicar significado.
-- Convertir `/` en un dashboard compacto con métricas operativas del día, accesos a las áreas principales y la acción prominente `+ Nuevo turno` arriba a la derecha.
-- Permitir alternar la agenda entre lista y grilla usando la misma respuesta autoritativa del backend, sin calcular disponibilidad, huecos ni conflictos en React.
-- Abrir el alta de turno en un modal accesible desde las acciones globales, conservando reprogramación, cancelación, cambios de estado e historial en la página dedicada `/turnos/:appointmentId`.
+- Convertir `/` en un dashboard compacto con métricas operativas, selector `Hoy`/`Próximos turnos`, paginación, detalle lateral en escritorio y acciones en bottom sheet móvil.
+- Permitir alternar la agenda entre Lista y Calendario: la lista consulta todos los turnos futuros y el calendario representa el mes y día elegidos usando respuestas autoritativas del backend, sin calcular disponibilidad, huecos ni conflictos en React.
+- Abrir el alta de turno como modal de ruta en tres pasos, confirmar el resumen antes de persistir y mostrar al finalizar un detalle de solo lectura con la única acción `Cerrar`. Reprogramación, cancelación, cambios de estado e historial permanecen en `/turnos/:appointmentId`.
+- Actualizar dashboard y agenda inmediatamente después de crear o modificar un turno mediante un evento local tipado, sin exigir recarga manual de la página.
 - Mantener pacientes, prestaciones y sillones como listados con altas/ediciones en modales; reducir textos auxiliares redundantes cuando etiqueta, título y contexto ya sean suficientes.
 - Corregir y documentar el arranque reproducible con `.env`, completar ejemplos sin secretos, seeds/datos de demostración ficticios, guion de demo y evidencia automática/manual del recorrido completo.
 - Ejecutar y reconciliar suites unitarias, API/E2E, integración con MariaDB real, lint y builds; revisar manualmente 390×844 y 1440×900 sin Playwright.
@@ -21,13 +22,13 @@ Las capacidades del MVP ya están integradas, pero la aplicación todavía conse
 
 ### New Capabilities
 
-- `practice-dashboard`: portada autenticada con métricas del día, accesos operativos y acción global para crear un turno.
+- `practice-dashboard`: portada autenticada con métricas, selector de alcance Hoy/Próximos, listado paginado, detalle contextual y acceso global al alta.
 
 ### Modified Capabilities
 
-- `app-shell`: identidad OdoSoft, sidebar/drawer contraíble, navegación con iconos, preferencia de tema y acceso persistente al cierre de sesión.
-- `appointment-agenda-ui`: vista alternable entre lista y grilla, integrada con el shell y el acceso global al alta.
-- `appointment-booking-ui`: alta de turno presentada como modal accesible, sin trasladar al modal las operaciones posteriores del ciclo de vida.
+- `app-shell`: identidad OdoSoft, sidebar contraíble, navegación responsive con iconos, acción global de nuevo turno, preferencia de tema y cierre de sesión.
+- `appointment-agenda-ui`: vista alternable entre Lista y Calendario, detalle lateral/modal/bottom sheet según contexto y actualización dinámica.
+- `appointment-booking-ui`: alta de turno presentada como modal accesible de tres pasos, con confirmación previa y detalle final sin trasladar al modal las operaciones posteriores del ciclo de vida.
 - `application-runtime`: arranque backend con `.env`, documentación y datos ficticios reproducibles, más verificación integral de entrega.
 
 ## Impact
